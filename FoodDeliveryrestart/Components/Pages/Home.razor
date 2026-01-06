@@ -1,0 +1,109 @@
+﻿@page "/"
+
+<div class="landing">
+
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-inner">
+            <div class="deliver-row">
+                <span class="pin" aria-hidden="true"><i class="bi bi-geo-alt"></i></span>
+                <span class="deliver-label">Delivering to:</span>
+
+                <button class="deliver-pill" type="button">
+                    @SelectedLocation <span class="caret">▾</span>
+                </button>
+            </div>
+
+            <h1 class="hero-title">Welcome to Food Delivery</h1>
+            <p class="hero-subtitle">
+                Discover your favorite meals from the best restaurants in town
+            </p>
+
+            <div class="search-wrap">
+                <span class="search-icon" aria-hidden="true"><i class="bi bi-search"></i></span>
+                <input class="search-input"
+                       placeholder="Search for food or restaurants..."
+                       @bind="SearchText" />
+            </div>
+        </div>
+    </section>
+
+    <!-- CATEGORY PILLS -->
+    <section class="cats">
+        <div class="cats-row">
+            @foreach (var c in Categories)
+            {
+                <button class="cat-pill" type="button" @onclick="() => SelectedCategory = c.Name">
+                    <span class="cat-emoji">@c.Icon</span>
+                    <span>@c.Name</span>
+                </button>
+            }
+        </div>
+    </section>
+
+    <!-- PROMOS -->
+    <section class="promos">
+        <div class="promo-grid">
+            <div class="promo-card promo-orange">
+                <div class="promo-title">🔥 20% Off Selected Restaurants</div>
+                <div class="promo-sub">Use code <b>SAVE20</b> at checkout</div>
+            </div>
+
+            <div class="promo-card promo-purple">
+                <div class="promo-title">🚚 Free Delivery for Orders above $15</div>
+                <div class="promo-sub">Limited time offer</div>
+            </div>
+
+            <div class="promo-card promo-green">
+                <div class="promo-title">⭐ Weekend Specials</div>
+                <div class="promo-sub">Get exclusive deals this weekend</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- POPULAR RESTAURANTS -->
+    <section class="popular">
+        <div class="section-title">Popular Restaurants</div>
+
+        <div class="rest-grid">
+            @foreach (var r in Restaurants)
+            {
+                <a class="rest-card" href="/restaurants">
+                    <img class="rest-img" src="@r.ImageUrl" alt="@r.Name" />
+                    <div class="rest-body">
+                        <div class="rest-name">@r.Name</div>
+                        <div class="rest-meta">
+                            <span class="chip">@r.Tag</span>
+                            <span class="dot">•</span>
+                            <span>@r.Time</span>
+                        </div>
+                    </div>
+                </a>
+            }
+        </div>
+    </section>
+
+</div>
+
+@code {
+    private string SelectedLocation = "Pasir Ris, Singapore";
+    private string SearchText = "";
+    private string SelectedCategory = "All";
+
+    private List<(string Name, string Icon)> Categories = new()
+    {
+        ("Western", "🍔"),
+        ("Asian", "🥢"),
+        ("Healthy", "🥗"),
+        ("Drinks", "🧋"),
+        ("Japanese", "🍣"),
+        ("Dessert", "🍰"),
+    };
+
+    private List<(string Name, string Tag, string Time, string ImageUrl)> Restaurants = new()
+    {
+        ("Pasta Corner", "Italian", "25–35 min", "https://images.unsplash.com/photo-1521389508051-d7ffb5dc8b8b?auto=format&fit=crop&w=1200&q=60"),
+        ("Pizza House", "Pizza", "20–30 min", "https://images.unsplash.com/photo-1548365328-8b849e6f7f82?auto=format&fit=crop&w=1200&q=60"),
+        ("Burger Lab", "Burgers", "15–25 min", "https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1200&q=60"),
+    };
+}

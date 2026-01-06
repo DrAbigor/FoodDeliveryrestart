@@ -1,0 +1,61 @@
+﻿@page "/register"
+@inject NavigationManager Nav
+@inject FoodDeliveryrestart.Services.AuthState Auth
+
+<div class="auth-page">
+    <div class="auth-card">
+        <h2 class="auth-title">Register</h2>
+        <p class="auth-sub">Create your account.</p>
+
+        <label class="auth-label">Email</label>
+        <input class="auth-input" @bind="Email" placeholder="name@email.com" />
+
+        <label class="auth-label">Password</label>
+        <input class="auth-input" type="password" @bind="Password" placeholder="••••••••" />
+
+        <label class="auth-label">Confirm Password</label>
+        <input class="auth-input" type="password" @bind="ConfirmPassword" placeholder="••••••••" />
+
+        @if (!string.IsNullOrWhiteSpace(Error))
+        {
+            <div class="auth-error">@Error</div>
+        }
+
+        <button class="auth-btn" @onclick="DoRegister">Create Account</button>
+
+        <div class="auth-footer">
+            Already have an account?
+            <a class="auth-link" href="/login">Login</a>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string Email = "";
+    private string Password = "";
+    private string ConfirmPassword = "";
+    private string Error = "";
+
+    private void DoRegister()
+    {
+        Error = "";
+
+        if (string.IsNullOrWhiteSpace(Email) ||
+            string.IsNullOrWhiteSpace(Password) ||
+            string.IsNullOrWhiteSpace(ConfirmPassword))
+        {
+            Error = "Please fill in all fields.";
+            return;
+        }
+
+        if (Password != ConfirmPassword)
+        {
+            Error = "Passwords do not match.";
+            return;
+        }
+
+        // UI-only register (no DB)
+        Auth.Login(Email.Trim());
+        Nav.NavigateTo("/profile");
+    }
+}

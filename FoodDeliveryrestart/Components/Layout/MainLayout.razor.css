@@ -1,0 +1,124 @@
+/* Make sure the layout takes full width (kills template sidebar behaviour) */
+:global(body) {
+    margin: 0;
+}
+
+.topbar {
+    height: 72px;
+    background: #fff;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+/* BRAND */
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 800;
+    text-decoration: none;
+    color: #111;
+}
+
+.brand-mark {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff3ea;
+    color: #f08a2a;
+}
+
+.brand-text {
+    font-size: 16px;
+}
+
+/* LINKS */
+.toplinks {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+}
+
+.toplink {
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+    padding: 6px 4px;
+    text-decoration: none;
+}
+
+    .toplink:hover {
+        color: #f08a2a;
+    }
+
+    .toplink.active {
+        color: #f08a2a;
+        font-weight: 800;
+    }
+
+/* ICONS */
+.topicons {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.iconbtn {
+    position: relative;
+    width: 42px;
+    height: 42px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #f3f4f6;
+    color: #111;
+    text-decoration: none;
+}
+
+    .iconbtn:hover {
+        background: #e9e9e9;
+    }
+
+    .iconbtn i {
+        font-size: 18px;
+        line-height: 1;
+    }
+
+.badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: #ff4d4f;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 800;
+    display: grid;
+    place-items: center;
+}
+
+.app-main {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+    .toplinks {
+        display: none;
+    }
+}

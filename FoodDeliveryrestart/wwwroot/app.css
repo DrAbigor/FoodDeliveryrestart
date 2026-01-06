@@ -1,0 +1,20 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    background: #f6f6f7;
+    color: #222;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+a {
+    color: inherit;
+}
+
+/* Remove any template max-width constraints */
+.container, .container-fluid, main {
+    max-width: none !important;
+}

@@ -1,0 +1,13 @@
+﻿@using FoodDeliveryrestart.Components.Layout
+
+<Router AppAssembly="@typeof(App).Assembly">
+    <Found Context="routeData">
+        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+    </Found>
+
+    <NotFound>
+        <LayoutView Layout="@typeof(MainLayout)">
+            <p style="padding:24px;">Page not found.</p>
+        </LayoutView>
+    </NotFound>
+</Router>

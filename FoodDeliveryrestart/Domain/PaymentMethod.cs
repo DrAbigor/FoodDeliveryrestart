@@ -1,7 +1,7 @@
 ﻿namespace FoodDeliveryrestart.Domain;
 
     public class PaymentMethod : BaseDomainModel
-{
+   {
     public PaymentMethod()
     {
         Payments = new HashSet<Payment>();
@@ -18,4 +18,4 @@
     // Navigation
     public User? User { get; set; }
     public ICollection<Payment>? Payments { get; set; }
-}
+   }

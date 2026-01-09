@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FoodDeliveryrestart.Migrations
 {
     [DbContext(typeof(FoodDeliveryrestartContext))]
-    [Migration("20260108055026_SeedDate")]
-    partial class SeedDate
+    [Migration("20260109132542_updatedSeedData")]
+    partial class updatedSeedData
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -388,10 +388,12 @@ namespace FoodDeliveryrestart.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("CardHolderName")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("CardType")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
@@ -419,6 +421,47 @@ namespace FoodDeliveryrestart.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("PaymentMethod");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CardHolderName = "Seed User",
+                            CardType = "Visa",
+                            CreatedBy = "Seed",
+                            DateCreated = new DateTime(2026, 1, 9, 13, 25, 41, 43, DateTimeKind.Utc).AddTicks(7092),
+                            DateUpdated = new DateTime(2026, 1, 9, 13, 25, 41, 43, DateTimeKind.Utc).AddTicks(7096),
+                            ExpiryMonth = 12,
+                            ExpiryYear = 2026,
+                            UpdatedBy = "Seed",
+                            UserId = 1
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CardHolderName = "Seed User",
+                            CardType = "MasterCard",
+                            CreatedBy = "Seed",
+                            DateCreated = new DateTime(2026, 1, 9, 13, 25, 41, 43, DateTimeKind.Utc).AddTicks(7101),
+                            DateUpdated = new DateTime(2026, 1, 9, 13, 25, 41, 43, DateTimeKind.Utc).AddTicks(7102),
+                            ExpiryMonth = 10,
+                            ExpiryYear = 2025,
+                            UpdatedBy = "Seed",
+                            UserId = 1
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CardHolderName = "Seed User",
+                            CardType = "AMEX",
+                            CreatedBy = "Seed",
+                            DateCreated = new DateTime(2026, 1, 9, 13, 25, 41, 43, DateTimeKind.Utc).AddTicks(7107),
+                            DateUpdated = new DateTime(2026, 1, 9, 13, 25, 41, 43, DateTimeKind.Utc).AddTicks(7108),
+                            ExpiryMonth = 6,
+                            ExpiryYear = 2027,
+                            UpdatedBy = "Seed",
+                            UserId = 1
+                        });
                 });
 
             modelBuilder.Entity("FoodDeliveryrestart.Domain.Restaurant", b =>
@@ -498,6 +541,19 @@ namespace FoodDeliveryrestart.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("User");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CreatedBy = "Seed",
+                            DateCreated = new DateTime(2026, 1, 9, 21, 25, 41, 43, DateTimeKind.Local).AddTicks(7905),
+                            DateUpdated = new DateTime(2026, 1, 9, 21, 25, 41, 43, DateTimeKind.Local).AddTicks(7921),
+                            Email = "seed@food.com",
+                            Name = "Seed User",
+                            Password = "Password123",
+                            UpdatedBy = "Seed"
+                        });
                 });
 
             modelBuilder.Entity("FoodDeliveryrestart.Domain.Address", b =>
@@ -622,7 +678,7 @@ namespace FoodDeliveryrestart.Migrations
                     b.HasOne("FoodDeliveryrestart.Domain.User", "User")
                         .WithMany("PaymentMethods")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("User");

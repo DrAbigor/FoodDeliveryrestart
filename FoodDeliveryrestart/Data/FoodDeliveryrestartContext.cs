@@ -1,15 +1,17 @@
-﻿using System;
+﻿using FoodDeliveryrestart.Configurations.Entities;
+using FoodDeliveryrestart.Domain;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Emit;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using FoodDeliveryrestart.Domain;
 
 namespace FoodDeliveryrestart.Data
 {
     public class FoodDeliveryrestartContext : DbContext
     {
-        public FoodDeliveryrestartContext (DbContextOptions<FoodDeliveryrestartContext> options)
+        public FoodDeliveryrestartContext(DbContextOptions<FoodDeliveryrestartContext> options)
             : base(options)
         {
         }
@@ -29,6 +31,11 @@ namespace FoodDeliveryrestart.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.ApplyConfiguration(new PaymentMethodSeed());
+            modelBuilder.ApplyConfiguration(new Mallseed());
+            modelBuilder.ApplyConfiguration(new RestaurantSeed());
+            modelBuilder.ApplyConfiguration(new UserSeed());
 
             // FIX: multiple cascade paths (User -> GroupOrderMember)
             modelBuilder.Entity<GroupOrderMember>()
@@ -54,7 +61,17 @@ namespace FoodDeliveryrestart.Data
                .WithMany()
                .HasForeignKey(p => p.PaymentMethodId)
                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<PaymentMethod>()
+               .HasOne(pm => pm.User)
+               .WithMany(u => u.PaymentMethods)
+               .HasForeignKey(pm => pm.UserId)
+               .OnDelete(DeleteBehavior.Restrict);
+
+
+
         }
+
 
     }
 }

@@ -4,6 +4,7 @@ using FoodDeliveryrestart.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FoodDeliveryrestart.Migrations
 {
     [DbContext(typeof(FoodDeliveryrestartContext))]
-    partial class FoodDeliveryrestartContextModelSnapshot : ModelSnapshot
+    [Migration("20260109134526_AddMallSeed")]
+    partial class AddMallSeed
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -191,8 +194,8 @@ namespace FoodDeliveryrestart.Migrations
                             Id = 1,
                             Address = "4 Tampines Central 5, Singapore 529510",
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 9, 21, 50, 26, 445, DateTimeKind.Local).AddTicks(7701),
-                            DateUpdated = new DateTime(2026, 1, 9, 21, 50, 26, 445, DateTimeKind.Local).AddTicks(7717),
+                            DateCreated = new DateTime(2026, 1, 9, 21, 45, 24, 559, DateTimeKind.Local).AddTicks(1823),
+                            DateUpdated = new DateTime(2026, 1, 9, 21, 45, 24, 559, DateTimeKind.Local).AddTicks(1837),
                             MallName = "Tampines Mall",
                             UpdatedBy = "Seed"
                         },
@@ -201,8 +204,8 @@ namespace FoodDeliveryrestart.Migrations
                             Id = 2,
                             Address = "1 HarbourFront Walk, Singapore 098585",
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 9, 21, 50, 26, 445, DateTimeKind.Local).AddTicks(7721),
-                            DateUpdated = new DateTime(2026, 1, 9, 21, 50, 26, 445, DateTimeKind.Local).AddTicks(7722),
+                            DateCreated = new DateTime(2026, 1, 9, 21, 45, 24, 559, DateTimeKind.Local).AddTicks(1841),
+                            DateUpdated = new DateTime(2026, 1, 9, 21, 45, 24, 559, DateTimeKind.Local).AddTicks(1842),
                             MallName = "Vivo City",
                             UpdatedBy = "Seed"
                         },
@@ -211,8 +214,8 @@ namespace FoodDeliveryrestart.Migrations
                             Id = 3,
                             Address = "181 Orchard Rd, Singapore 238896",
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 9, 21, 50, 26, 445, DateTimeKind.Local).AddTicks(7724),
-                            DateUpdated = new DateTime(2026, 1, 9, 21, 50, 26, 445, DateTimeKind.Local).AddTicks(7725),
+                            DateCreated = new DateTime(2026, 1, 9, 21, 45, 24, 559, DateTimeKind.Local).AddTicks(1845),
+                            DateUpdated = new DateTime(2026, 1, 9, 21, 45, 24, 559, DateTimeKind.Local).AddTicks(1846),
                             MallName = "Orchard Central",
                             UpdatedBy = "Seed"
                         });
@@ -458,8 +461,8 @@ namespace FoodDeliveryrestart.Migrations
                             CardHolderName = "Seed User",
                             CardType = "Visa",
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 9, 13, 50, 26, 445, DateTimeKind.Utc).AddTicks(7213),
-                            DateUpdated = new DateTime(2026, 1, 9, 13, 50, 26, 445, DateTimeKind.Utc).AddTicks(7220),
+                            DateCreated = new DateTime(2026, 1, 9, 13, 45, 24, 559, DateTimeKind.Utc).AddTicks(1393),
+                            DateUpdated = new DateTime(2026, 1, 9, 13, 45, 24, 559, DateTimeKind.Utc).AddTicks(1398),
                             ExpiryMonth = 12,
                             ExpiryYear = 2026,
                             UpdatedBy = "Seed",
@@ -471,8 +474,8 @@ namespace FoodDeliveryrestart.Migrations
                             CardHolderName = "Seed User",
                             CardType = "MasterCard",
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 9, 13, 50, 26, 445, DateTimeKind.Utc).AddTicks(7225),
-                            DateUpdated = new DateTime(2026, 1, 9, 13, 50, 26, 445, DateTimeKind.Utc).AddTicks(7226),
+                            DateCreated = new DateTime(2026, 1, 9, 13, 45, 24, 559, DateTimeKind.Utc).AddTicks(1405),
+                            DateUpdated = new DateTime(2026, 1, 9, 13, 45, 24, 559, DateTimeKind.Utc).AddTicks(1405),
                             ExpiryMonth = 10,
                             ExpiryYear = 2025,
                             UpdatedBy = "Seed",
@@ -484,8 +487,8 @@ namespace FoodDeliveryrestart.Migrations
                             CardHolderName = "Seed User",
                             CardType = "AMEX",
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 9, 13, 50, 26, 445, DateTimeKind.Utc).AddTicks(7231),
-                            DateUpdated = new DateTime(2026, 1, 9, 13, 50, 26, 445, DateTimeKind.Utc).AddTicks(7232),
+                            DateCreated = new DateTime(2026, 1, 9, 13, 45, 24, 559, DateTimeKind.Utc).AddTicks(1410),
+                            DateUpdated = new DateTime(2026, 1, 9, 13, 45, 24, 559, DateTimeKind.Utc).AddTicks(1411),
                             ExpiryMonth = 6,
                             ExpiryYear = 2027,
                             UpdatedBy = "Seed",
@@ -533,125 +536,6 @@ namespace FoodDeliveryrestart.Migrations
                     b.HasIndex("MallId");
 
                     b.ToTable("Restaurant");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            CreatedBy = "Seed",
-                            CuisineType = "Western",
-                            DateCreated = new DateTime(2026, 1, 9, 21, 50, 26, 445, DateTimeKind.Local).AddTicks(7928),
-                            DateUpdated = new DateTime(2026, 1, 9, 21, 50, 26, 445, DateTimeKind.Local).AddTicks(7929),
-                            LocationWithinMall = "1-67",
-                            MallId = 1,
-                            Name = "Pasta Corner",
-                            OperatingHours = "24/7",
-                            UpdatedBy = "Seed"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            CreatedBy = "Seed",
-                            CuisineType = "Western Food",
-                            DateCreated = new DateTime(2026, 1, 9, 21, 50, 26, 445, DateTimeKind.Local).AddTicks(7933),
-                            DateUpdated = new DateTime(2026, 1, 9, 21, 50, 26, 445, DateTimeKind.Local).AddTicks(7934),
-                            LocationWithinMall = "1-66",
-                            MallId = 1,
-                            Name = "Pizza House",
-                            OperatingHours = "24/7",
-                            UpdatedBy = "Seed"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            CreatedBy = "Seed",
-                            CuisineType = "Western",
-                            DateCreated = new DateTime(2026, 1, 9, 21, 50, 26, 445, DateTimeKind.Local).AddTicks(7937),
-                            DateUpdated = new DateTime(2026, 1, 9, 21, 50, 26, 445, DateTimeKind.Local).AddTicks(7938),
-                            LocationWithinMall = "1-68",
-                            MallId = 1,
-                            Name = "Burger Lab",
-                            OperatingHours = "10am-10pm",
-                            UpdatedBy = "Seed"
-                        },
-                        new
-                        {
-                            Id = 4,
-                            CreatedBy = "Seed",
-                            CuisineType = "Fast Food",
-                            DateCreated = new DateTime(2026, 1, 9, 21, 50, 26, 445, DateTimeKind.Local).AddTicks(7941),
-                            DateUpdated = new DateTime(2026, 1, 9, 21, 50, 26, 445, DateTimeKind.Local).AddTicks(7942),
-                            LocationWithinMall = "8-88",
-                            MallId = 2,
-                            Name = "McDonald's",
-                            OperatingHours = "24/7",
-                            UpdatedBy = "Seed"
-                        },
-                        new
-                        {
-                            Id = 5,
-                            CreatedBy = "Seed",
-                            CuisineType = "Fast Food",
-                            DateCreated = new DateTime(2026, 1, 9, 21, 50, 26, 445, DateTimeKind.Local).AddTicks(7945),
-                            DateUpdated = new DateTime(2026, 1, 9, 21, 50, 26, 445, DateTimeKind.Local).AddTicks(7946),
-                            LocationWithinMall = "8-89",
-                            MallId = 2,
-                            Name = "KFC",
-                            OperatingHours = "24/7",
-                            UpdatedBy = "Seed"
-                        },
-                        new
-                        {
-                            Id = 6,
-                            CreatedBy = "Seed",
-                            CuisineType = "Fast Food",
-                            DateCreated = new DateTime(2026, 1, 9, 21, 50, 26, 445, DateTimeKind.Local).AddTicks(7950),
-                            DateUpdated = new DateTime(2026, 1, 9, 21, 50, 26, 445, DateTimeKind.Local).AddTicks(7951),
-                            LocationWithinMall = "8-90",
-                            MallId = 2,
-                            Name = "Jollibee",
-                            OperatingHours = "10am-10pm",
-                            UpdatedBy = "Seed"
-                        },
-                        new
-                        {
-                            Id = 7,
-                            CreatedBy = "Seed",
-                            CuisineType = "Dessert",
-                            DateCreated = new DateTime(2026, 1, 9, 21, 50, 26, 445, DateTimeKind.Local).AddTicks(7954),
-                            DateUpdated = new DateTime(2026, 1, 9, 21, 50, 26, 445, DateTimeKind.Local).AddTicks(7955),
-                            LocationWithinMall = "1-23",
-                            MallId = 3,
-                            Name = "Yochi",
-                            OperatingHours = "10am-10pm",
-                            UpdatedBy = "Seed"
-                        },
-                        new
-                        {
-                            Id = 8,
-                            CreatedBy = "Seed",
-                            CuisineType = "Fast Food",
-                            DateCreated = new DateTime(2026, 1, 9, 21, 50, 26, 445, DateTimeKind.Local).AddTicks(7958),
-                            DateUpdated = new DateTime(2026, 1, 9, 21, 50, 26, 445, DateTimeKind.Local).AddTicks(7959),
-                            LocationWithinMall = "1-24",
-                            MallId = 3,
-                            Name = "A&W",
-                            OperatingHours = "10am-10pm",
-                            UpdatedBy = "Seed"
-                        },
-                        new
-                        {
-                            Id = 9,
-                            CreatedBy = "Seed",
-                            CuisineType = "Thai Food",
-                            DateCreated = new DateTime(2026, 1, 9, 21, 50, 26, 445, DateTimeKind.Local).AddTicks(7962),
-                            DateUpdated = new DateTime(2026, 1, 9, 21, 50, 26, 445, DateTimeKind.Local).AddTicks(7963),
-                            LocationWithinMall = "1-25",
-                            MallId = 3,
-                            Name = "Sanook Kitchen",
-                            OperatingHours = "10am-10pm",
-                            UpdatedBy = "Seed"
-                        });
                 });
 
             modelBuilder.Entity("FoodDeliveryrestart.Domain.User", b =>
@@ -695,8 +579,8 @@ namespace FoodDeliveryrestart.Migrations
                         {
                             Id = 1,
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 9, 21, 50, 26, 445, DateTimeKind.Local).AddTicks(8380),
-                            DateUpdated = new DateTime(2026, 1, 9, 21, 50, 26, 445, DateTimeKind.Local).AddTicks(8382),
+                            DateCreated = new DateTime(2026, 1, 9, 21, 45, 24, 559, DateTimeKind.Local).AddTicks(2445),
+                            DateUpdated = new DateTime(2026, 1, 9, 21, 45, 24, 559, DateTimeKind.Local).AddTicks(2446),
                             Email = "seed@food.com",
                             Name = "Seed User",
                             Password = "Password123",

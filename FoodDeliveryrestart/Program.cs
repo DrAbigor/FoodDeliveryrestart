@@ -3,6 +3,9 @@ using FoodDeliveryrestart.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using FoodDeliveryrestart.Data;
+using FoodDeliveryrestart.Components.Account;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContextFactory<FoodDeliveryrestartContext>(options =>
@@ -16,6 +19,28 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddSingleton<AuthState>();
+
+builder.Services.AddCascadingAuthenticationState();
+
+builder.Services.AddScoped<IdentityUserAccessor>();
+
+builder.Services.AddScoped<IdentityRedirectManager>();
+
+builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
+
+builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultScheme = IdentityConstants.ApplicationScheme;
+        options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
+    })
+    .AddIdentityCookies();
+
+builder.Services.AddIdentityCore<FoodDeliveryrestartUser>(options => options.SignIn.RequireConfirmedAccount = true)
+    .AddEntityFrameworkStores<IdentityContext>()
+    .AddSignInManager()
+    .AddDefaultTokenProviders();
+
+builder.Services.AddSingleton<IEmailSender<FoodDeliveryrestartUser>, IdentityNoOpEmailSender>();
 
 var app = builder.Build();
 
@@ -32,6 +57,8 @@ app.UseAntiforgery();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
+app.MapAdditionalIdentityEndpoints();;
 
 app.Run();
 

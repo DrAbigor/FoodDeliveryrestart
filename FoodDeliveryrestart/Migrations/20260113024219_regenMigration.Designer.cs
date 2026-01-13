@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FoodDeliveryrestart.Migrations
 {
     [DbContext(typeof(FoodDeliveryrestartContext))]
-    [Migration("20260109132542_updatedSeedData")]
-    partial class updatedSeedData
+    [Migration("20260113024219_regenMigration")]
+    partial class regenMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,6 +24,97 @@ namespace FoodDeliveryrestart.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("FoodDeliveryrestart.Data.FoodDeliveryrestartUser", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("AccessFailedCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("FirstName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LastName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("LockoutEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTimeOffset?>("LockoutEnd")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("NormalizedEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("NormalizedUserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("PhoneNumberConfirmed")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("SecurityStamp")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("UserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedEmail")
+                        .HasDatabaseName("EmailIndex");
+
+                    b.HasIndex("NormalizedUserName")
+                        .IsUnique()
+                        .HasDatabaseName("UserNameIndex")
+                        .HasFilter("[NormalizedUserName] IS NOT NULL");
+
+                    b.ToTable("AspNetUsers", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "c1a2b3c4-d5e6-4789-8901-234567890abc",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "c453afad-bee7-4778-b928-e8848f24094f",
+                            Email = "admin@localhost.com",
+                            EmailConfirmed = true,
+                            FirstName = "Admin",
+                            LastName = "User",
+                            LockoutEnabled = false,
+                            NormalizedEmail = "ADMIN@LOCALHOST.COM",
+                            NormalizedUserName = "ADMIN@LOCALHOST.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAENLoiZN5v8qt6Vtt5slmksDwTaaGs43DL72Ke2SoakSZBv66IN/KnQ9Cf0BgF2CdIQ==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "0a10e755-6bed-4455-be5f-d9ef6d256f3a",
+                            TwoFactorEnabled = false,
+                            UserName = "admin@localhost.com"
+                        });
+                });
 
             modelBuilder.Entity("FoodDeliveryrestart.Domain.Address", b =>
                 {
@@ -187,6 +278,38 @@ namespace FoodDeliveryrestart.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Mall");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Address = "4 Tampines Central 5, Singapore 529510",
+                            CreatedBy = "System",
+                            DateCreated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9306),
+                            DateUpdated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9320),
+                            MallName = "Tampines Mall",
+                            UpdatedBy = "System"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Address = "1 HarbourFront Walk, Singapore 098585",
+                            CreatedBy = "System",
+                            DateCreated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9322),
+                            DateUpdated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9323),
+                            MallName = "Vivo City",
+                            UpdatedBy = "System"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Address = "181 Orchard Rd, Singapore 238896",
+                            CreatedBy = "System",
+                            DateCreated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9325),
+                            DateUpdated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9325),
+                            MallName = "Orchard Central",
+                            UpdatedBy = "System"
+                        });
                 });
 
             modelBuilder.Entity("FoodDeliveryrestart.Domain.MenuItem", b =>
@@ -356,9 +479,6 @@ namespace FoodDeliveryrestart.Migrations
                     b.Property<int>("PaymentMethodId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("PaymentMethodId1")
-                        .HasColumnType("int");
-
                     b.Property<string>("PaymentStatus")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -367,14 +487,15 @@ namespace FoodDeliveryrestart.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("OrderId")
                         .IsUnique();
 
                     b.HasIndex("PaymentMethodId");
-
-                    b.HasIndex("PaymentMethodId1");
 
                     b.ToTable("Payment");
                 });
@@ -388,12 +509,10 @@ namespace FoodDeliveryrestart.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("CardHolderName")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CardType")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
@@ -421,47 +540,6 @@ namespace FoodDeliveryrestart.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("PaymentMethod");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            CardHolderName = "Seed User",
-                            CardType = "Visa",
-                            CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 9, 13, 25, 41, 43, DateTimeKind.Utc).AddTicks(7092),
-                            DateUpdated = new DateTime(2026, 1, 9, 13, 25, 41, 43, DateTimeKind.Utc).AddTicks(7096),
-                            ExpiryMonth = 12,
-                            ExpiryYear = 2026,
-                            UpdatedBy = "Seed",
-                            UserId = 1
-                        },
-                        new
-                        {
-                            Id = 2,
-                            CardHolderName = "Seed User",
-                            CardType = "MasterCard",
-                            CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 9, 13, 25, 41, 43, DateTimeKind.Utc).AddTicks(7101),
-                            DateUpdated = new DateTime(2026, 1, 9, 13, 25, 41, 43, DateTimeKind.Utc).AddTicks(7102),
-                            ExpiryMonth = 10,
-                            ExpiryYear = 2025,
-                            UpdatedBy = "Seed",
-                            UserId = 1
-                        },
-                        new
-                        {
-                            Id = 3,
-                            CardHolderName = "Seed User",
-                            CardType = "AMEX",
-                            CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 9, 13, 25, 41, 43, DateTimeKind.Utc).AddTicks(7107),
-                            DateUpdated = new DateTime(2026, 1, 9, 13, 25, 41, 43, DateTimeKind.Utc).AddTicks(7108),
-                            ExpiryMonth = 6,
-                            ExpiryYear = 2027,
-                            UpdatedBy = "Seed",
-                            UserId = 1
-                        });
                 });
 
             modelBuilder.Entity("FoodDeliveryrestart.Domain.Restaurant", b =>
@@ -504,6 +582,125 @@ namespace FoodDeliveryrestart.Migrations
                     b.HasIndex("MallId");
 
                     b.ToTable("Restaurant");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CreatedBy = "",
+                            CuisineType = "Western",
+                            DateCreated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9533),
+                            DateUpdated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9534),
+                            LocationWithinMall = "1-67",
+                            MallId = 1,
+                            Name = "Pasta Corner",
+                            OperatingHours = "24/7",
+                            UpdatedBy = ""
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CreatedBy = "Seed",
+                            CuisineType = "Western Food",
+                            DateCreated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9558),
+                            DateUpdated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9559),
+                            LocationWithinMall = "1-66",
+                            MallId = 1,
+                            Name = "Pizza House",
+                            OperatingHours = "24/7",
+                            UpdatedBy = "Seed"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CreatedBy = "Seed",
+                            CuisineType = "Western",
+                            DateCreated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9561),
+                            DateUpdated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9561),
+                            LocationWithinMall = "1-68",
+                            MallId = 1,
+                            Name = "Burger Lab",
+                            OperatingHours = "10am-10pm",
+                            UpdatedBy = "Seed"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            CreatedBy = "Datetime.now",
+                            CuisineType = "Fast Food",
+                            DateCreated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9563),
+                            DateUpdated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9563),
+                            LocationWithinMall = "8-88",
+                            MallId = 2,
+                            Name = "McDonald's",
+                            OperatingHours = "24/7",
+                            UpdatedBy = "Seed"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            CreatedBy = "Seed",
+                            CuisineType = "Fast Food",
+                            DateCreated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9565),
+                            DateUpdated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9565),
+                            LocationWithinMall = "8-89",
+                            MallId = 2,
+                            Name = "KFC",
+                            OperatingHours = "24/7",
+                            UpdatedBy = "Seed"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            CreatedBy = "Seed",
+                            CuisineType = "Fast Food",
+                            DateCreated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9567),
+                            DateUpdated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9568),
+                            LocationWithinMall = "8-90",
+                            MallId = 2,
+                            Name = "Jollibee",
+                            OperatingHours = "10am-10pm",
+                            UpdatedBy = "Seed"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            CreatedBy = "Seed",
+                            CuisineType = "Dessert",
+                            DateCreated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9569),
+                            DateUpdated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9570),
+                            LocationWithinMall = "1-23",
+                            MallId = 3,
+                            Name = "Yochi",
+                            OperatingHours = "10am-10pm",
+                            UpdatedBy = "Seed"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            CreatedBy = "Seed",
+                            CuisineType = "Fast Food",
+                            DateCreated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9571),
+                            DateUpdated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9572),
+                            LocationWithinMall = "1-24",
+                            MallId = 3,
+                            Name = "A&W",
+                            OperatingHours = "10am-10pm",
+                            UpdatedBy = "Seed"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            CreatedBy = "Seed",
+                            CuisineType = "Thai Food",
+                            DateCreated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9573),
+                            DateUpdated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9574),
+                            LocationWithinMall = "1-25",
+                            MallId = 3,
+                            Name = "Sanook Kitchen",
+                            OperatingHours = "10am-10pm",
+                            UpdatedBy = "Seed"
+                        });
                 });
 
             modelBuilder.Entity("FoodDeliveryrestart.Domain.User", b =>
@@ -541,19 +738,139 @@ namespace FoodDeliveryrestart.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("User");
+                });
 
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 9, 21, 25, 41, 43, DateTimeKind.Local).AddTicks(7905),
-                            DateUpdated = new DateTime(2026, 1, 9, 21, 25, 41, 43, DateTimeKind.Local).AddTicks(7921),
-                            Email = "seed@food.com",
-                            Name = "Seed User",
-                            Password = "Password123",
-                            UpdatedBy = "Seed"
-                        });
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("NormalizedName")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedName")
+                        .IsUnique()
+                        .HasDatabaseName("RoleNameIndex")
+                        .HasFilter("[NormalizedName] IS NOT NULL");
+
+                    b.ToTable("AspNetRoles", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RoleId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AspNetRoleClaims", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AspNetUserClaims", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+                {
+                    b.Property<string>("LoginProvider")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ProviderKey")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ProviderDisplayName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("LoginProvider", "ProviderKey");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AspNetUserLogins", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("RoleId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("UserId", "RoleId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AspNetUserRoles", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("LoginProvider")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("UserId", "LoginProvider", "Name");
+
+                    b.ToTable("AspNetUserTokens", (string)null);
                 });
 
             modelBuilder.Entity("FoodDeliveryrestart.Domain.Address", b =>
@@ -666,19 +983,15 @@ namespace FoodDeliveryrestart.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("FoodDeliveryrestart.Domain.PaymentMethod", null)
-                        .WithMany("Payments")
-                        .HasForeignKey("PaymentMethodId1");
-
                     b.Navigation("PaymentMethods");
                 });
 
             modelBuilder.Entity("FoodDeliveryrestart.Domain.PaymentMethod", b =>
                 {
                     b.HasOne("FoodDeliveryrestart.Domain.User", "User")
-                        .WithMany("PaymentMethods")
+                        .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("User");
@@ -693,6 +1006,57 @@ namespace FoodDeliveryrestart.Migrations
                         .IsRequired();
 
                     b.Navigation("Mall");
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+                {
+                    b.HasOne("FoodDeliveryrestart.Data.FoodDeliveryrestartUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+                {
+                    b.HasOne("FoodDeliveryrestart.Data.FoodDeliveryrestartUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FoodDeliveryrestart.Data.FoodDeliveryrestartUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+                {
+                    b.HasOne("FoodDeliveryrestart.Data.FoodDeliveryrestartUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("FoodDeliveryrestart.Domain.GroupOrder", b =>
@@ -721,11 +1085,6 @@ namespace FoodDeliveryrestart.Migrations
                     b.Navigation("Payment");
                 });
 
-            modelBuilder.Entity("FoodDeliveryrestart.Domain.PaymentMethod", b =>
-                {
-                    b.Navigation("Payments");
-                });
-
             modelBuilder.Entity("FoodDeliveryrestart.Domain.Restaurant", b =>
                 {
                     b.Navigation("MenuItems");
@@ -740,8 +1099,6 @@ namespace FoodDeliveryrestart.Migrations
                     b.Navigation("GroupOrders");
 
                     b.Navigation("Orders");
-
-                    b.Navigation("PaymentMethods");
                 });
 #pragma warning restore 612, 618
         }

@@ -19,8 +19,8 @@ namespace FoodDeliveryrestart.Configurations.Entities
                     MallId = 1,
                     DateCreated = DateTime.Now,
                     DateUpdated = DateTime.Now,
-                    CreatedBy = "Seed",
-                    UpdatedBy = "Seed"
+                    CreatedBy = "",
+                    UpdatedBy = ""
                 },
                 new Restaurant
                 {
@@ -58,7 +58,7 @@ namespace FoodDeliveryrestart.Configurations.Entities
                     MallId = 2,
                     DateCreated = DateTime.Now,
                     DateUpdated = DateTime.Now,
-                    CreatedBy = "Seed",
+                    CreatedBy = "Datetime.now",
                     UpdatedBy = "Seed"
                 },
                 new Restaurant

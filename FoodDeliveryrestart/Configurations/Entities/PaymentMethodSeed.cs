@@ -28,8 +28,8 @@ public class PaymentMethodSeed : IEntityTypeConfiguration<PaymentMethod>
                 UserId = 1,
                 DateCreated = DateTime.UtcNow,
                 DateUpdated = DateTime.UtcNow,
-                CreatedBy = "Seed",
-                UpdatedBy = "Seed"
+                CreatedBy = "System",
+                UpdatedBy = "System"
             },
             new PaymentMethod
             {
@@ -41,8 +41,8 @@ public class PaymentMethodSeed : IEntityTypeConfiguration<PaymentMethod>
                 UserId = 1,
                 DateCreated = DateTime.UtcNow,
                 DateUpdated = DateTime.UtcNow,
-                CreatedBy = "Seed",
-                UpdatedBy = "Seed"
+                CreatedBy = "System",
+                UpdatedBy = "System"
             },
             new PaymentMethod
             {
@@ -54,8 +54,8 @@ public class PaymentMethodSeed : IEntityTypeConfiguration<PaymentMethod>
                 UserId = 1,
                 DateCreated = DateTime.UtcNow,
                 DateUpdated = DateTime.UtcNow,
-                CreatedBy = "Seed",
-                UpdatedBy = "Seed"
+                CreatedBy = "System",
+                UpdatedBy = "System"
             }
         );
     }

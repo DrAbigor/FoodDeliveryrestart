@@ -12,6 +12,6 @@
         public ICollection<GroupOrder>? GroupOrders { get; set; }
         public ICollection<GroupOrderMember>? GroupOrderMembers { get; set; }
         public ICollection<Order>? Orders { get; set; }
-        public ICollection<PaymentMethod>? PaymentMethods { get; set; }
+        //public ICollection<PaymentMethod>? PaymentMethods { get; set; }
     }
 }

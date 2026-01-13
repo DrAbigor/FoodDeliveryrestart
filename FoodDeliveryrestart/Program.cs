@@ -36,7 +36,7 @@ builder.Services.AddAuthentication(options =>
     .AddIdentityCookies();
 
 builder.Services.AddIdentityCore<FoodDeliveryrestartUser>(options => options.SignIn.RequireConfirmedAccount = true)
-    .AddEntityFrameworkStores<IdentityContext>()
+    .AddEntityFrameworkStores<FoodDeliveryrestartContext>()
     .AddSignInManager()
     .AddDefaultTokenProviders();
 

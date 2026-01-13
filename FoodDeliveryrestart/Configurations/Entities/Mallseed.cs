@@ -16,8 +16,8 @@ namespace FoodDeliveryrestart.Configurations.Entities
                 Address = "4 Tampines Central 5, Singapore 529510",
                 DateCreated = DateTime.Now,
                 DateUpdated = DateTime.Now,
-                CreatedBy = "Seed",
-                UpdatedBy = "Seed"
+                CreatedBy = "System",
+                UpdatedBy = "System"
             },
             new Mall
             {
@@ -26,8 +26,8 @@ namespace FoodDeliveryrestart.Configurations.Entities
                 Address = "1 HarbourFront Walk, Singapore 098585",
                 DateCreated = DateTime.Now,
                 DateUpdated = DateTime.Now,
-                CreatedBy = "Seed",
-                UpdatedBy = "Seed"
+                CreatedBy = "System",
+                UpdatedBy = "System"
             },
             new Mall
             {
@@ -36,8 +36,8 @@ namespace FoodDeliveryrestart.Configurations.Entities
                 Address = "181 Orchard Rd, Singapore 238896",
                 DateCreated = DateTime.Now,
                 DateUpdated = DateTime.Now,
-                CreatedBy = "Seed",
-                UpdatedBy = "Seed"
+                CreatedBy = "System",
+                UpdatedBy = "System"
             }          
            );
         }

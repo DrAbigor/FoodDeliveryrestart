@@ -41,6 +41,12 @@ namespace FoodDeliveryrestart.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<string>("FirstName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LastName")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
 
@@ -85,6 +91,26 @@ namespace FoodDeliveryrestart.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "c1a2b3c4-d5e6-4789-8901-234567890abc",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "c453afad-bee7-4778-b928-e8848f24094f",
+                            Email = "admin@localhost.com",
+                            EmailConfirmed = true,
+                            FirstName = "Admin",
+                            LastName = "User",
+                            LockoutEnabled = false,
+                            NormalizedEmail = "ADMIN@LOCALHOST.COM",
+                            NormalizedUserName = "ADMIN@LOCALHOST.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAENLoiZN5v8qt6Vtt5slmksDwTaaGs43DL72Ke2SoakSZBv66IN/KnQ9Cf0BgF2CdIQ==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "0a10e755-6bed-4455-be5f-d9ef6d256f3a",
+                            TwoFactorEnabled = false,
+                            UserName = "admin@localhost.com"
+                        });
                 });
 
             modelBuilder.Entity("FoodDeliveryrestart.Domain.Address", b =>
@@ -255,31 +281,31 @@ namespace FoodDeliveryrestart.Migrations
                         {
                             Id = 1,
                             Address = "4 Tampines Central 5, Singapore 529510",
-                            CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 13, 9, 51, 7, 129, DateTimeKind.Local).AddTicks(9731),
-                            DateUpdated = new DateTime(2026, 1, 13, 9, 51, 7, 129, DateTimeKind.Local).AddTicks(9745),
+                            CreatedBy = "System",
+                            DateCreated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9306),
+                            DateUpdated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9320),
                             MallName = "Tampines Mall",
-                            UpdatedBy = "Seed"
+                            UpdatedBy = "System"
                         },
                         new
                         {
                             Id = 2,
                             Address = "1 HarbourFront Walk, Singapore 098585",
-                            CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 13, 9, 51, 7, 129, DateTimeKind.Local).AddTicks(9747),
-                            DateUpdated = new DateTime(2026, 1, 13, 9, 51, 7, 129, DateTimeKind.Local).AddTicks(9748),
+                            CreatedBy = "System",
+                            DateCreated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9322),
+                            DateUpdated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9323),
                             MallName = "Vivo City",
-                            UpdatedBy = "Seed"
+                            UpdatedBy = "System"
                         },
                         new
                         {
                             Id = 3,
                             Address = "181 Orchard Rd, Singapore 238896",
-                            CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 13, 9, 51, 7, 129, DateTimeKind.Local).AddTicks(9749),
-                            DateUpdated = new DateTime(2026, 1, 13, 9, 51, 7, 129, DateTimeKind.Local).AddTicks(9750),
+                            CreatedBy = "System",
+                            DateCreated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9325),
+                            DateUpdated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9325),
                             MallName = "Orchard Central",
-                            UpdatedBy = "Seed"
+                            UpdatedBy = "System"
                         });
                 });
 
@@ -450,9 +476,6 @@ namespace FoodDeliveryrestart.Migrations
                     b.Property<int>("PaymentMethodId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("PaymentMethodId1")
-                        .HasColumnType("int");
-
                     b.Property<string>("PaymentStatus")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -461,14 +484,15 @@ namespace FoodDeliveryrestart.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("OrderId")
                         .IsUnique();
 
                     b.HasIndex("PaymentMethodId");
-
-                    b.HasIndex("PaymentMethodId1");
 
                     b.ToTable("Payment");
                 });
@@ -482,12 +506,10 @@ namespace FoodDeliveryrestart.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("CardHolderName")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CardType")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
@@ -515,47 +537,6 @@ namespace FoodDeliveryrestart.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("PaymentMethod");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            CardHolderName = "Seed User",
-                            CardType = "Visa",
-                            CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 13, 1, 51, 7, 129, DateTimeKind.Utc).AddTicks(9277),
-                            DateUpdated = new DateTime(2026, 1, 13, 1, 51, 7, 129, DateTimeKind.Utc).AddTicks(9280),
-                            ExpiryMonth = 12,
-                            ExpiryYear = 2026,
-                            UpdatedBy = "Seed",
-                            UserId = 1
-                        },
-                        new
-                        {
-                            Id = 2,
-                            CardHolderName = "Seed User",
-                            CardType = "MasterCard",
-                            CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 13, 1, 51, 7, 129, DateTimeKind.Utc).AddTicks(9284),
-                            DateUpdated = new DateTime(2026, 1, 13, 1, 51, 7, 129, DateTimeKind.Utc).AddTicks(9285),
-                            ExpiryMonth = 10,
-                            ExpiryYear = 2025,
-                            UpdatedBy = "Seed",
-                            UserId = 1
-                        },
-                        new
-                        {
-                            Id = 3,
-                            CardHolderName = "Seed User",
-                            CardType = "AMEX",
-                            CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 13, 1, 51, 7, 129, DateTimeKind.Utc).AddTicks(9287),
-                            DateUpdated = new DateTime(2026, 1, 13, 1, 51, 7, 129, DateTimeKind.Utc).AddTicks(9289),
-                            ExpiryMonth = 6,
-                            ExpiryYear = 2027,
-                            UpdatedBy = "Seed",
-                            UserId = 1
-                        });
                 });
 
             modelBuilder.Entity("FoodDeliveryrestart.Domain.Restaurant", b =>
@@ -603,23 +584,23 @@ namespace FoodDeliveryrestart.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedBy = "Seed",
+                            CreatedBy = "",
                             CuisineType = "Western",
-                            DateCreated = new DateTime(2026, 1, 13, 9, 51, 7, 129, DateTimeKind.Local).AddTicks(9875),
-                            DateUpdated = new DateTime(2026, 1, 13, 9, 51, 7, 129, DateTimeKind.Local).AddTicks(9876),
+                            DateCreated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9533),
+                            DateUpdated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9534),
                             LocationWithinMall = "1-67",
                             MallId = 1,
                             Name = "Pasta Corner",
                             OperatingHours = "24/7",
-                            UpdatedBy = "Seed"
+                            UpdatedBy = ""
                         },
                         new
                         {
                             Id = 2,
                             CreatedBy = "Seed",
                             CuisineType = "Western Food",
-                            DateCreated = new DateTime(2026, 1, 13, 9, 51, 7, 129, DateTimeKind.Local).AddTicks(9882),
-                            DateUpdated = new DateTime(2026, 1, 13, 9, 51, 7, 129, DateTimeKind.Local).AddTicks(9883),
+                            DateCreated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9558),
+                            DateUpdated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9559),
                             LocationWithinMall = "1-66",
                             MallId = 1,
                             Name = "Pizza House",
@@ -631,8 +612,8 @@ namespace FoodDeliveryrestart.Migrations
                             Id = 3,
                             CreatedBy = "Seed",
                             CuisineType = "Western",
-                            DateCreated = new DateTime(2026, 1, 13, 9, 51, 7, 129, DateTimeKind.Local).AddTicks(9884),
-                            DateUpdated = new DateTime(2026, 1, 13, 9, 51, 7, 129, DateTimeKind.Local).AddTicks(9885),
+                            DateCreated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9561),
+                            DateUpdated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9561),
                             LocationWithinMall = "1-68",
                             MallId = 1,
                             Name = "Burger Lab",
@@ -642,10 +623,10 @@ namespace FoodDeliveryrestart.Migrations
                         new
                         {
                             Id = 4,
-                            CreatedBy = "Seed",
+                            CreatedBy = "Datetime.now",
                             CuisineType = "Fast Food",
-                            DateCreated = new DateTime(2026, 1, 13, 9, 51, 7, 129, DateTimeKind.Local).AddTicks(9887),
-                            DateUpdated = new DateTime(2026, 1, 13, 9, 51, 7, 129, DateTimeKind.Local).AddTicks(9887),
+                            DateCreated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9563),
+                            DateUpdated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9563),
                             LocationWithinMall = "8-88",
                             MallId = 2,
                             Name = "McDonald's",
@@ -657,8 +638,8 @@ namespace FoodDeliveryrestart.Migrations
                             Id = 5,
                             CreatedBy = "Seed",
                             CuisineType = "Fast Food",
-                            DateCreated = new DateTime(2026, 1, 13, 9, 51, 7, 129, DateTimeKind.Local).AddTicks(9889),
-                            DateUpdated = new DateTime(2026, 1, 13, 9, 51, 7, 129, DateTimeKind.Local).AddTicks(9889),
+                            DateCreated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9565),
+                            DateUpdated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9565),
                             LocationWithinMall = "8-89",
                             MallId = 2,
                             Name = "KFC",
@@ -670,8 +651,8 @@ namespace FoodDeliveryrestart.Migrations
                             Id = 6,
                             CreatedBy = "Seed",
                             CuisineType = "Fast Food",
-                            DateCreated = new DateTime(2026, 1, 13, 9, 51, 7, 129, DateTimeKind.Local).AddTicks(9891),
-                            DateUpdated = new DateTime(2026, 1, 13, 9, 51, 7, 129, DateTimeKind.Local).AddTicks(9892),
+                            DateCreated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9567),
+                            DateUpdated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9568),
                             LocationWithinMall = "8-90",
                             MallId = 2,
                             Name = "Jollibee",
@@ -683,8 +664,8 @@ namespace FoodDeliveryrestart.Migrations
                             Id = 7,
                             CreatedBy = "Seed",
                             CuisineType = "Dessert",
-                            DateCreated = new DateTime(2026, 1, 13, 9, 51, 7, 129, DateTimeKind.Local).AddTicks(9894),
-                            DateUpdated = new DateTime(2026, 1, 13, 9, 51, 7, 129, DateTimeKind.Local).AddTicks(9894),
+                            DateCreated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9569),
+                            DateUpdated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9570),
                             LocationWithinMall = "1-23",
                             MallId = 3,
                             Name = "Yochi",
@@ -696,8 +677,8 @@ namespace FoodDeliveryrestart.Migrations
                             Id = 8,
                             CreatedBy = "Seed",
                             CuisineType = "Fast Food",
-                            DateCreated = new DateTime(2026, 1, 13, 9, 51, 7, 129, DateTimeKind.Local).AddTicks(9896),
-                            DateUpdated = new DateTime(2026, 1, 13, 9, 51, 7, 129, DateTimeKind.Local).AddTicks(9896),
+                            DateCreated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9571),
+                            DateUpdated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9572),
                             LocationWithinMall = "1-24",
                             MallId = 3,
                             Name = "A&W",
@@ -709,8 +690,8 @@ namespace FoodDeliveryrestart.Migrations
                             Id = 9,
                             CreatedBy = "Seed",
                             CuisineType = "Thai Food",
-                            DateCreated = new DateTime(2026, 1, 13, 9, 51, 7, 129, DateTimeKind.Local).AddTicks(9898),
-                            DateUpdated = new DateTime(2026, 1, 13, 9, 51, 7, 129, DateTimeKind.Local).AddTicks(9899),
+                            DateCreated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9573),
+                            DateUpdated = new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9574),
                             LocationWithinMall = "1-25",
                             MallId = 3,
                             Name = "Sanook Kitchen",
@@ -754,19 +735,6 @@ namespace FoodDeliveryrestart.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("User");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 13, 9, 51, 7, 130, DateTimeKind.Local).AddTicks(50),
-                            DateUpdated = new DateTime(2026, 1, 13, 9, 51, 7, 130, DateTimeKind.Local).AddTicks(52),
-                            Email = "seed@food.com",
-                            Name = "Seed User",
-                            Password = "Password123",
-                            UpdatedBy = "Seed"
-                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -1012,19 +980,15 @@ namespace FoodDeliveryrestart.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("FoodDeliveryrestart.Domain.PaymentMethod", null)
-                        .WithMany("Payments")
-                        .HasForeignKey("PaymentMethodId1");
-
                     b.Navigation("PaymentMethods");
                 });
 
             modelBuilder.Entity("FoodDeliveryrestart.Domain.PaymentMethod", b =>
                 {
                     b.HasOne("FoodDeliveryrestart.Domain.User", "User")
-                        .WithMany("PaymentMethods")
+                        .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("User");
@@ -1118,11 +1082,6 @@ namespace FoodDeliveryrestart.Migrations
                     b.Navigation("Payment");
                 });
 
-            modelBuilder.Entity("FoodDeliveryrestart.Domain.PaymentMethod", b =>
-                {
-                    b.Navigation("Payments");
-                });
-
             modelBuilder.Entity("FoodDeliveryrestart.Domain.Restaurant", b =>
                 {
                     b.Navigation("MenuItems");
@@ -1137,8 +1096,6 @@ namespace FoodDeliveryrestart.Migrations
                     b.Navigation("GroupOrders");
 
                     b.Navigation("Orders");
-
-                    b.Navigation("PaymentMethods");
                 });
 #pragma warning restore 612, 618
         }

@@ -24,7 +24,7 @@ namespace FoodDeliveryrestart.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.ApplyConfiguration(new PaymentMethodSeed());
+            //modelBuilder.ApplyConfiguration(new PaymentMethodSeed());
             modelBuilder.ApplyConfiguration(new Mallseed());
             modelBuilder.ApplyConfiguration(new RestaurantSeed());
             modelBuilder.ApplyConfiguration(new UserSeed());
@@ -42,11 +42,11 @@ namespace FoodDeliveryrestart.Data
                 .HasForeignKey(o => o.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<Payment>()
-               .HasOne(p => p.PaymentMethods)
-               .WithMany(pm => pm.Payments)
-               .HasForeignKey(p => p.PaymentMethodId)
-               .OnDelete(DeleteBehavior.NoAction);
+            //modelBuilder.Entity<Payment>()
+            //   .HasOne(p => p.PaymentMethods)
+            //   .WithMany(pm => pm.Payments)
+            //   .HasForeignKey(p => p.PaymentMethodId)
+            //   .OnDelete(DeleteBehavior.NoAction);
 
             modelBuilder.Entity<Payment>()
                .HasOne(p => p.PaymentMethods)
@@ -54,11 +54,11 @@ namespace FoodDeliveryrestart.Data
                .HasForeignKey(p => p.PaymentMethodId)
                .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<PaymentMethod>()
-               .HasOne(pm => pm.User)
-               .WithMany(u => u.PaymentMethods)
-               .HasForeignKey(pm => pm.UserId)
-               .OnDelete(DeleteBehavior.Restrict);
+            //modelBuilder.Entity<PaymentMethod>()
+            //   .HasOne(pm => pm.User)
+            //   .WithMany(u => u.PaymentMethods)
+            //   .HasForeignKey(pm => pm.UserId)
+            //   .OnDelete(DeleteBehavior.Restrict);
 
 
 

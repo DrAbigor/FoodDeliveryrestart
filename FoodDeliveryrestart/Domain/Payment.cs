@@ -12,6 +12,7 @@
 
         // Foreign Key
         public int PaymentMethodId { get; set; }
+        public int UserId { get; set; }
 
         // Navigation
         public PaymentMethod PaymentMethods { get; set; }

@@ -18,3 +18,151 @@ a {
 .container, .container-fluid, main {
     max-width: none !important;
 }
+
+/* ===== GLOBAL TRANSITION ===== */
+button, a, .promo-card, .rest-card {
+    transition: all 0.25s ease;
+    cursor: pointer;
+}
+
+/* ===== DELIVERY LOCATION BUTTON ===== */
+.deliver-pill:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-1px);
+}
+
+/* ===== SEARCH BAR ===== */
+.search-input:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.35);
+}
+
+/* ===== CATEGORY PILLS ===== */
+.cat-pill {
+    border-radius: 999px;
+    background: #f3f4f6;
+}
+
+    .cat-pill:hover {
+        background: #ffedd5;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+    }
+
+/* ===== PROMO CARDS ===== */
+.promo-card:hover {
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: 0 14px 30px rgba(0,0,0,0.18);
+}
+
+/* ===== RESTAURANT CARDS ===== */
+.rest-card {
+    text-decoration: none;
+    color: inherit;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+    .rest-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 16px 35px rgba(0,0,0,0.2);
+    }
+
+        .rest-card:hover .rest-img {
+            transform: scale(1.05);
+        }
+
+.rest-img {
+    transition: transform 0.3s ease;
+}
+
+/* ===== NAVIGATION (if you add later) ===== */
+.nav-link:hover {
+    color: #f97316;
+    border-bottom: 2px solid #f97316;
+}
+/* ========== GROUP ORDERS PAGE ========== */
+
+.grouporders-page {
+    max-width: 1100px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.go-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.go-title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #1f2937;
+}
+
+.go-subtitle {
+    color: #6b7280;
+    margin-top: 6px;
+}
+
+/* Create Button */
+.btn-create {
+    background: linear-gradient(135deg, #ff8a00, #ff6a00);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 999px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+    .btn-create:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(255, 138, 0, 0.3);
+    }
+
+/* Card */
+.go-card {
+    background: white;
+    border-radius: 18px;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+/* Table */
+.go-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+    .go-table th {
+        text-align: left;
+        font-weight: 700;
+        color: #374151;
+        padding-bottom: 12px;
+    }
+
+    .go-table td {
+        padding: 14px 8px;
+        border-top: 1px solid #f1f1f1;
+        color: #374151;
+    }
+
+/* Actions */
+.go-actions a {
+    margin-right: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    color: #ff8a00;
+}
+
+    .go-actions a:hover {
+        text-decoration: underline;
+    }
+
+.go-actions .danger {
+    color: #dc2626;
+}
+

@@ -42,6 +42,8 @@ builder.Services.AddIdentityCore<FoodDeliveryrestartUser>(options => options.Sig
 
 builder.Services.AddSingleton<IEmailSender<FoodDeliveryrestartUser>, IdentityNoOpEmailSender>();
 
+builder.Services.AddScoped<CartService>();
+
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())

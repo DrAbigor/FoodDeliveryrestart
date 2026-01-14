@@ -1,0 +1,67 @@
+﻿@page "/grouporders/selectmall"
+@using System.Linq
+@using System.Collections.Generic
+@using FoodDeliveryrestart.Domain
+@using FoodDeliveryrestart.Data
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.Forms
+@inject IDbContextFactory<FoodDeliveryrestartContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<h3>Select a Mall</h3>
+
+@if (malls is null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (!malls.Any())
+{
+    <p><em>No malls available.</em></p>
+}
+else
+{
+    <InputRadioGroup TValue="int" @bind-Value="selectedMallId" class="list-group">
+        @foreach (var m in malls)
+        {
+            var id = $"mall-{m.Id}";
+            <label class="list-group-item d-flex align-items-center" for="@id">
+                <InputRadio TValue="int" id="@id" Value="@m.Id" class="form-check-input me-2" />
+                <div>
+                    <strong>@m.MallName</strong><br />
+                    <small class="text-muted">@m.Address</small>
+                </div>
+            </label>
+        }
+    </InputRadioGroup>
+
+    <div class="mt-3">
+        <button class="btn btn-primary" @onclick="Finish" disabled="@(selectedMallId == 0)">Finish</button>
+        <button class="btn btn-secondary ms-2" @onclick="Cancel">Cancel</button>
+    </div>
+}
+
+@code {
+    private List<Mall>? malls;
+    private int selectedMallId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await using var ctx = await DbFactory.CreateDbContextAsync();
+        malls = await ctx.Mall.OrderBy(m => m.MallName).ToListAsync();
+
+        if (malls?.Count > 0)
+        {
+            selectedMallId = malls[0].Id;
+        }
+    }
+
+    private void Finish()
+    {
+        if (selectedMallId != 0)
+        {
+            NavigationManager.NavigateTo($"/grouporders/malls/{selectedMallId}/restaurants");
+        }
+    }
+
+    private void Cancel() => NavigationManager.NavigateTo("/grouporders");
+}

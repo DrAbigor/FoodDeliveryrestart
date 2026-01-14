@@ -4,34 +4,46 @@
 @using FoodDeliveryrestart.Domain
 @using FoodDeliveryrestart.Data
 @implements IAsyncDisposable
-@inject IDbContextFactory<FoodDeliveryrestart.Data.FoodDeliveryrestartContext> DbFactory
+@inject IDbContextFactory<FoodDeliveryrestartContext> DbFactory
 
-<PageTitle>Index</PageTitle>
+<PageTitle>Group Orders</PageTitle>
 
-<h1>Index</h1>
+<div class="grouporders-page">
 
-<p>
-    <a href="grouporders/create">Create New</a>
-</p>
+    <!-- Header -->
+    <div class="go-header">
+        <div>
+            <h1 class="go-title">Group Orders</h1>
+            <p class="go-subtitle">
+                Create or join group orders with friends and order together 🍽️
+            </p>
+        </div>
 
-<QuickGrid Class="table" Items="context.GroupOrder">
-    <PropertyColumn Property="grouporder => grouporder.GroupCode" />
-    <PropertyColumn Property="grouporder => grouporder.CreatedTime" />
-    <PropertyColumn Property="grouporder => grouporder.Status" />
-    <PropertyColumn Property="grouporder => grouporder.ClosedTime" />
-    <PropertyColumn Property="grouporder => grouporder.MallId" />
-    <PropertyColumn Property="grouporder => grouporder.UserId" />
-    <PropertyColumn Property="grouporder => grouporder.DateCreated" />
-    <PropertyColumn Property="grouporder => grouporder.DateUpdated" />
-    <PropertyColumn Property="grouporder => grouporder.CreatedBy" />
-    <PropertyColumn Property="grouporder => grouporder.UpdatedBy" />
+        <a class="btn-create" href="/grouporders/create">
+            + Create Group Order
+        </a>
+    </div>
 
-    <TemplateColumn Context="grouporder">
-        <a href="@($"grouporders/edit?id={grouporder.Id}")">Edit</a> |
-        <a href="@($"grouporders/details?id={grouporder.Id}")">Details</a> |
-        <a href="@($"grouporders/delete?id={grouporder.Id}")">Delete</a>
-    </TemplateColumn>
-</QuickGrid>
+    <!-- Table Card -->
+    <div class="go-card">
+        <QuickGrid Class="go-table" Items="context.GroupOrder">
+            <PropertyColumn Title="Code" Property="g => g.GroupCode" />
+            <PropertyColumn Title="Created" Property="g => g.CreatedTime" />
+            <PropertyColumn Title="Status" Property="g => g.Status" />
+            <PropertyColumn Title="Closed" Property="g => g.ClosedTime" />
+            <PropertyColumn Title="Mall" Property="g => g.MallId" />
+
+            <TemplateColumn Title="Actions" Context="g">
+                <div class="go-actions">
+                    <a href="@($"/grouporders/details?id={g.Id}")">View</a>
+                    <a href="@($"/grouporders/edit?id={g.Id}")">Edit</a>
+                    <a class="danger" href="@($"/grouporders/delete?id={g.Id}")">Delete</a>
+                </div>
+            </TemplateColumn>
+        </QuickGrid>
+    </div>
+
+</div>
 
 @code {
     private FoodDeliveryrestartContext context = default!;
@@ -41,5 +53,6 @@
         context = DbFactory.CreateDbContext();
     }
 
-    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+    public async ValueTask DisposeAsync()
+        => await context.DisposeAsync();
 }

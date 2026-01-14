@@ -293,10 +293,10 @@ namespace FoodDeliveryrestart.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    CardType = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CardType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     ExpiryMonth = table.Column<int>(type: "int", nullable: false),
                     ExpiryYear = table.Column<int>(type: "int", nullable: false),
-                    CardHolderName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CardHolderName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
                     UserId = table.Column<int>(type: "int", nullable: false),
                     DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DateUpdated = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -444,17 +444,17 @@ namespace FoodDeliveryrestart.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     PaymentDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    PaymentStatus = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    PaymentStatus = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Amount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     OrderId = table.Column<int>(type: "int", nullable: false),
                     PaymentMethodId = table.Column<int>(type: "int", nullable: false),
                     UserId = table.Column<int>(type: "int", nullable: false),
                     DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DateUpdated = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -474,18 +474,42 @@ namespace FoodDeliveryrestart.Migrations
                 });
 
             migrationBuilder.InsertData(
+                table: "AspNetRoles",
+                columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
+                values: new object[,]
+                {
+                    { "ad2bcf0c-20db-474f-8407-5a6b159518ba", null, "Administrator", "ADMINISTRATOR" },
+                    { "bd2bcf0c-20db-474f-8407-5a6b159518bb", null, "Customer", "CUSTOMER" }
+                });
+
+            migrationBuilder.InsertData(
                 table: "AspNetUsers",
                 columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "Email", "EmailConfirmed", "FirstName", "LastName", "LockoutEnabled", "LockoutEnd", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "TwoFactorEnabled", "UserName" },
-                values: new object[] { "c1a2b3c4-d5e6-4789-8901-234567890abc", 0, "c453afad-bee7-4778-b928-e8848f24094f", "admin@localhost.com", true, "Admin", "User", false, null, "ADMIN@LOCALHOST.COM", "ADMIN@LOCALHOST.COM", "AQAAAAIAAYagAAAAENLoiZN5v8qt6Vtt5slmksDwTaaGs43DL72Ke2SoakSZBv66IN/KnQ9Cf0BgF2CdIQ==", null, false, "0a10e755-6bed-4455-be5f-d9ef6d256f3a", false, "admin@localhost.com" });
+                values: new object[] { "c1a2b3c4-d5e6-4789-8901-234567890abc", 0, "311596ec-c05e-4e51-ac60-91601886a0cf", "admin@localhost.com", true, "Admin", "User", false, null, "ADMIN@LOCALHOST.COM", "ADMIN@LOCALHOST.COM", "AQAAAAIAAYagAAAAEAknbbAIkoRVJmeUFD0D7smSm0VSfeU/M5POUlOSsfWphCB/ZL/mlGkd7Lf05QBLEQ==", null, false, "0aa301c9-56b9-4606-abb1-e33d01a85fb0", false, "admin@localhost.com" });
 
             migrationBuilder.InsertData(
                 table: "Mall",
                 columns: new[] { "Id", "Address", "CreatedBy", "DateCreated", "DateUpdated", "MallName", "UpdatedBy" },
                 values: new object[,]
                 {
-                    { 1, "4 Tampines Central 5, Singapore 529510", "System", new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9306), new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9320), "Tampines Mall", "System" },
-                    { 2, "1 HarbourFront Walk, Singapore 098585", "System", new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9322), new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9323), "Vivo City", "System" },
-                    { 3, "181 Orchard Rd, Singapore 238896", "System", new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9325), new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9325), "Orchard Central", "System" }
+                    { 1, "4 Tampines Central 5, Singapore 529510", "System", new DateTime(2026, 1, 14, 19, 18, 34, 53, DateTimeKind.Local).AddTicks(8731), new DateTime(2026, 1, 14, 19, 18, 34, 53, DateTimeKind.Local).AddTicks(8745), "Tampines Mall", "System" },
+                    { 2, "1 HarbourFront Walk, Singapore 098585", "System", new DateTime(2026, 1, 14, 19, 18, 34, 53, DateTimeKind.Local).AddTicks(8747), new DateTime(2026, 1, 14, 19, 18, 34, 53, DateTimeKind.Local).AddTicks(8747), "Vivo City", "System" },
+                    { 3, "181 Orchard Rd, Singapore 238896", "System", new DateTime(2026, 1, 14, 19, 18, 34, 53, DateTimeKind.Local).AddTicks(8748), new DateTime(2026, 1, 14, 19, 18, 34, 53, DateTimeKind.Local).AddTicks(8749), "Orchard Central", "System" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "User",
+                columns: new[] { "Id", "CreatedBy", "DateCreated", "DateUpdated", "Email", "Name", "Password", "PhoneNumber", "UpdatedBy" },
+                values: new object[] { 1, "System", new DateTime(2026, 1, 14, 11, 18, 34, 53, DateTimeKind.Utc).AddTicks(7238), new DateTime(2026, 1, 14, 11, 18, 34, 53, DateTimeKind.Utc).AddTicks(7243), "system@local", "System", "changeme", null, "System" });
+
+            migrationBuilder.InsertData(
+                table: "PaymentMethod",
+                columns: new[] { "Id", "CardHolderName", "CardType", "CreatedBy", "DateCreated", "DateUpdated", "ExpiryMonth", "ExpiryYear", "UpdatedBy", "UserId" },
+                values: new object[,]
+                {
+                    { 1, "Seed User", "Visa", "System", new DateTime(2026, 1, 14, 11, 18, 34, 53, DateTimeKind.Utc).AddTicks(8484), new DateTime(2026, 1, 14, 11, 18, 34, 53, DateTimeKind.Utc).AddTicks(8485), 12, 2026, "System", 1 },
+                    { 2, "Seed User", "MasterCard", "System", new DateTime(2026, 1, 14, 11, 18, 34, 53, DateTimeKind.Utc).AddTicks(8578), new DateTime(2026, 1, 14, 11, 18, 34, 53, DateTimeKind.Utc).AddTicks(8578), 10, 2025, "System", 1 },
+                    { 3, "Seed User", "AMEX", "System", new DateTime(2026, 1, 14, 11, 18, 34, 53, DateTimeKind.Utc).AddTicks(8581), new DateTime(2026, 1, 14, 11, 18, 34, 53, DateTimeKind.Utc).AddTicks(8581), 6, 2027, "System", 1 }
                 });
 
             migrationBuilder.InsertData(
@@ -493,15 +517,15 @@ namespace FoodDeliveryrestart.Migrations
                 columns: new[] { "Id", "CreatedBy", "CuisineType", "DateCreated", "DateUpdated", "LocationWithinMall", "MallId", "Name", "OperatingHours", "UpdatedBy" },
                 values: new object[,]
                 {
-                    { 1, "", "Western", new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9533), new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9534), "1-67", 1, "Pasta Corner", "24/7", "" },
-                    { 2, "Seed", "Western Food", new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9558), new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9559), "1-66", 1, "Pizza House", "24/7", "Seed" },
-                    { 3, "Seed", "Western", new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9561), new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9561), "1-68", 1, "Burger Lab", "10am-10pm", "Seed" },
-                    { 4, "Datetime.now", "Fast Food", new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9563), new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9563), "8-88", 2, "McDonald's", "24/7", "Seed" },
-                    { 5, "Seed", "Fast Food", new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9565), new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9565), "8-89", 2, "KFC", "24/7", "Seed" },
-                    { 6, "Seed", "Fast Food", new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9567), new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9568), "8-90", 2, "Jollibee", "10am-10pm", "Seed" },
-                    { 7, "Seed", "Dessert", new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9569), new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9570), "1-23", 3, "Yochi", "10am-10pm", "Seed" },
-                    { 8, "Seed", "Fast Food", new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9571), new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9572), "1-24", 3, "A&W", "10am-10pm", "Seed" },
-                    { 9, "Seed", "Thai Food", new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9573), new DateTime(2026, 1, 13, 10, 42, 18, 665, DateTimeKind.Local).AddTicks(9574), "1-25", 3, "Sanook Kitchen", "10am-10pm", "Seed" }
+                    { 1, "", "Western", new DateTime(2026, 1, 14, 19, 18, 34, 53, DateTimeKind.Local).AddTicks(8879), new DateTime(2026, 1, 14, 19, 18, 34, 53, DateTimeKind.Local).AddTicks(8879), "1-67", 1, "Pasta Corner", "24/7", "" },
+                    { 2, "Seed", "Western Food", new DateTime(2026, 1, 14, 19, 18, 34, 53, DateTimeKind.Local).AddTicks(8881), new DateTime(2026, 1, 14, 19, 18, 34, 53, DateTimeKind.Local).AddTicks(8882), "1-66", 1, "Pizza House", "24/7", "Seed" },
+                    { 3, "Seed", "Western", new DateTime(2026, 1, 14, 19, 18, 34, 53, DateTimeKind.Local).AddTicks(8883), new DateTime(2026, 1, 14, 19, 18, 34, 53, DateTimeKind.Local).AddTicks(8884), "1-68", 1, "Burger Lab", "10am-10pm", "Seed" },
+                    { 4, "Datetime.now", "Fast Food", new DateTime(2026, 1, 14, 19, 18, 34, 53, DateTimeKind.Local).AddTicks(8885), new DateTime(2026, 1, 14, 19, 18, 34, 53, DateTimeKind.Local).AddTicks(8886), "8-88", 2, "McDonald's", "24/7", "Seed" },
+                    { 5, "Seed", "Fast Food", new DateTime(2026, 1, 14, 19, 18, 34, 53, DateTimeKind.Local).AddTicks(8887), new DateTime(2026, 1, 14, 19, 18, 34, 53, DateTimeKind.Local).AddTicks(8888), "8-89", 2, "KFC", "24/7", "Seed" },
+                    { 6, "Seed", "Fast Food", new DateTime(2026, 1, 14, 19, 18, 34, 53, DateTimeKind.Local).AddTicks(8889), new DateTime(2026, 1, 14, 19, 18, 34, 53, DateTimeKind.Local).AddTicks(8889), "8-90", 2, "Jollibee", "10am-10pm", "Seed" },
+                    { 7, "Seed", "Dessert", new DateTime(2026, 1, 14, 19, 18, 34, 53, DateTimeKind.Local).AddTicks(8891), new DateTime(2026, 1, 14, 19, 18, 34, 53, DateTimeKind.Local).AddTicks(8891), "1-23", 3, "Yochi", "10am-10pm", "Seed" },
+                    { 8, "Seed", "Fast Food", new DateTime(2026, 1, 14, 19, 18, 34, 53, DateTimeKind.Local).AddTicks(8893), new DateTime(2026, 1, 14, 19, 18, 34, 53, DateTimeKind.Local).AddTicks(8893), "1-24", 3, "A&W", "10am-10pm", "Seed" },
+                    { 9, "Seed", "Thai Food", new DateTime(2026, 1, 14, 19, 18, 34, 53, DateTimeKind.Local).AddTicks(8895), new DateTime(2026, 1, 14, 19, 18, 34, 53, DateTimeKind.Local).AddTicks(8895), "1-25", 3, "Sanook Kitchen", "10am-10pm", "Seed" }
                 });
 
             migrationBuilder.CreateIndex(

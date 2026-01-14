@@ -1,12 +1,7 @@
 ﻿namespace FoodDeliveryrestart.Domain;
 
-    public class PaymentMethod : BaseDomainModel
-   {
-    //public PaymentMethod()
-    //{
-    //    Payments = new HashSet<Payment>();
-    //}
-    public int Id { get; set; }
+public class PaymentMethod : BaseDomainModel
+{
     public string? CardType { get; set; }
     public int ExpiryMonth { get; set; }
     public int ExpiryYear { get; set; }
@@ -17,5 +12,5 @@
 
     // Navigation
     public User? User { get; set; }
-    //public ICollection<Payment>? Payments { get; set; }
-   }
+    public ICollection<Payment> Payments { get; set; } = new HashSet<Payment>();
+}

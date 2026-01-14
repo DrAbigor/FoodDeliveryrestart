@@ -1,33 +1,42 @@
 ﻿using FoodDeliveryrestart.Configurations.Entities;
-using FoodDeliveryrestart.Data;
 using FoodDeliveryrestart.Domain;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace FoodDeliveryrestart.Data
 {
-    public class FoodDeliveryrestartContext(DbContextOptions<FoodDeliveryrestartContext> options) : IdentityDbContext<FoodDeliveryrestartUser>(options)
+    public class FoodDeliveryrestartContext : IdentityDbContext<FoodDeliveryrestartUser>
     {
-        public DbSet<FoodDeliveryrestart.Domain.User> User { get; set; } = default!;
-        public DbSet<FoodDeliveryrestart.Domain.Restaurant> Restaurant { get; set; } = default!;
-        public DbSet<FoodDeliveryrestart.Domain.OrderItem> OrderItem { get; set; } = default!;
-        public DbSet<FoodDeliveryrestart.Domain.Order> Order { get; set; } = default!;
-        public DbSet<FoodDeliveryrestart.Domain.MenuItem> MenuItem { get; set; } = default!;
-        public DbSet<FoodDeliveryrestart.Domain.Mall> Mall { get; set; } = default!;
-        public DbSet<FoodDeliveryrestart.Domain.GroupOrderMember> GroupOrderMember { get; set; } = default!;
-        public DbSet<FoodDeliveryrestart.Domain.GroupOrder> GroupOrder { get; set; } = default!;
-        public DbSet<FoodDeliveryrestart.Domain.Address> Address { get; set; } = default!;
-        public DbSet<FoodDeliveryrestart.Domain.Payment> Payment { get; set; } = default!;
-        public DbSet<FoodDeliveryrestart.Domain.PaymentMethod> PaymentMethod { get; set; } = default!;
+        public FoodDeliveryrestartContext(DbContextOptions<FoodDeliveryrestartContext> options)
+            : base(options)
+        {
+        }
+
+        public DbSet<User> User { get; set; } = default!;
+        public DbSet<Restaurant> Restaurant { get; set; } = default!;
+        public DbSet<OrderItem> OrderItem { get; set; } = default!;
+        public DbSet<Order> Order { get; set; } = default!;
+        public DbSet<MenuItem> MenuItem { get; set; } = default!;
+        public DbSet<Mall> Mall { get; set; } = default!;
+        public DbSet<GroupOrderMember> GroupOrderMember { get; set; } = default!;
+        public DbSet<GroupOrder> GroupOrder { get; set; } = default!;
+        public DbSet<Address> Address { get; set; } = default!;
+        public DbSet<Payment> Payment { get; set; } = default!;
+        public DbSet<PaymentMethod> PaymentMethod { get; set; } = default!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            //modelBuilder.ApplyConfiguration(new PaymentMethodSeed());
+            // Identity seed/configuration
+            modelBuilder.ApplyConfiguration(new RoleSeed());
+            modelBuilder.ApplyConfiguration(new UserSeed());
+
+            // domain seeds (ensure DomainUserSeed is still applied if you need the domain User row)
+            modelBuilder.ApplyConfiguration(new DomainUserSeed());
+            modelBuilder.ApplyConfiguration(new PaymentMethodSeed());
             modelBuilder.ApplyConfiguration(new Mallseed());
             modelBuilder.ApplyConfiguration(new RestaurantSeed());
-            modelBuilder.ApplyConfiguration(new UserSeed());
 
             // FIX: multiple cascade paths (User -> GroupOrderMember)
             modelBuilder.Entity<GroupOrderMember>()
@@ -42,26 +51,12 @@ namespace FoodDeliveryrestart.Data
                 .HasForeignKey(o => o.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            //modelBuilder.Entity<Payment>()
-            //   .HasOne(p => p.PaymentMethods)
-            //   .WithMany(pm => pm.Payments)
-            //   .HasForeignKey(p => p.PaymentMethodId)
-            //   .OnDelete(DeleteBehavior.NoAction);
-
+            // Single Payment -> PaymentMethod relationship (singular navigation)
             modelBuilder.Entity<Payment>()
-               .HasOne(p => p.PaymentMethods)
-               .WithMany()
+               .HasOne(p => p.PaymentMethod)
+               .WithMany(pm => pm.Payments)
                .HasForeignKey(p => p.PaymentMethodId)
                .OnDelete(DeleteBehavior.Restrict);
-
-            //modelBuilder.Entity<PaymentMethod>()
-            //   .HasOne(pm => pm.User)
-            //   .WithMany(u => u.PaymentMethods)
-            //   .HasForeignKey(pm => pm.UserId)
-            //   .OnDelete(DeleteBehavior.Restrict);
-
-
-
         }
     }
 }

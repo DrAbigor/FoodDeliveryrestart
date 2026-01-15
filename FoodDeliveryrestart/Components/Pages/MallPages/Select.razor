@@ -5,50 +5,93 @@
 @using FoodDeliveryrestart.Data
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Web
 @inject IDbContextFactory<FoodDeliveryrestartContext> DbFactory
 @inject NavigationManager NavigationManager
 
-<h3>Select a Mall</h3>
+<PageTitle>Select a Mall - Group Orders</PageTitle>
 
-@if (malls is null)
-{
-    <p><em>Loading...</em></p>
-}
-else if (!malls.Any())
-{
-    <p><em>No malls available.</em></p>
-}
-else
-{
-    <InputRadioGroup TValue="int" @bind-Value="selectedMallId" class="list-group">
-        @foreach (var m in malls)
-        {
-            var id = $"mall-{m.Id}";
-            <label class="list-group-item d-flex align-items-center" for="@id">
-                <InputRadio TValue="int" id="@id" Value="@m.Id" class="form-check-input me-2" />
-                <div>
-                    <strong>@m.MallName</strong><br />
-                    <small class="text-muted">@m.Address</small>
-                </div>
-            </label>
-        }
-    </InputRadioGroup>
-
-    <div class="mt-3">
-        <button class="btn btn-primary" @onclick="Finish" disabled="@(selectedMallId == 0)">Finish</button>
-        <button class="btn btn-secondary ms-2" @onclick="Cancel">Cancel</button>
+<div class="group-order-hero">
+    <div class="hero-content">
+        <h1>Start a Group Order</h1>
+        <p class="subtitle">Select a mall to begin ordering with your group</p>
     </div>
-}
+</div>
+
+<div class="group-order-container">
+    @if (malls is null)
+    {
+        <div class="loading-state">
+            <div class="spinner"></div>
+            <p>Loading malls...</p>
+        </div>
+    }
+    else if (!malls.Any())
+    {
+        <div class="empty-state">
+            <i class="bi bi-shop" style="font-size: 64px; color: #d1d5db;"></i>
+            <h3>No malls available</h3>
+            <p>Please check back later</p>
+        </div>
+    }
+    else
+    {
+        <div class="mall-selection-card">
+            <InputRadioGroup TValue="int" @bind-Value="selectedMallId">
+                <div class="mall-grid">
+                    @foreach (var m in malls)
+                    {
+                        var id = $"mall-{m.Id}";
+                        <label class="mall-option @(selectedMallId == m.Id ? "selected" : "")" for="@id" tabindex="0" @onclick="() => SelectMall(m.Id)" @onkeydown="(e) => OnKeyDown(e, m.Id)">
+                            <InputRadio TValue="int" id="@id" Value="@m.Id" class="mall-radio" @onchange="() => SelectMall(m.Id)" style="pointer-events:auto" />
+                            <div class="mall-icon">
+                                <i class="bi bi-shop"></i>
+                            </div>
+                            <div class="mall-info">
+                                <h3>@m.MallName</h3>
+                                <p><i class="bi bi-geo-alt"></i> @m.Address</p>
+                            </div>
+                            <div class="check-mark">
+                                <i class="bi bi-check-circle-fill"></i>
+                            </div>
+                        </label>
+                    }
+                </div>
+            </InputRadioGroup>
+
+            <div class="action-buttons">
+                <button class="btn-cancel" @onclick="Cancel">
+                    <i class="bi bi-arrow-left"></i> Back
+                </button>
+                <button class="btn-continue" @onclick="Finish" disabled="@(selectedMallId == 0)">
+                    Continue <i class="bi bi-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    }
+</div>
 
 @code {
     private List<Mall>? malls;
     private int selectedMallId;
 
+    private void SelectMall(int id)
+    {
+        selectedMallId = id;
+    }
+
+    private void OnKeyDown(KeyboardEventArgs e, int id)
+    {
+        if (e.Key == "Enter" || e.Key == " ")
+        {
+            SelectMall(id);
+        }
+    }
+
     protected override async Task OnInitializedAsync()
     {
         await using var ctx = await DbFactory.CreateDbContextAsync();
         malls = await ctx.Mall.OrderBy(m => m.MallName).ToListAsync();
-
         if (malls?.Count > 0)
         {
             selectedMallId = malls[0].Id;

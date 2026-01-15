@@ -44,6 +44,9 @@ builder.Services.AddSingleton<IEmailSender<FoodDeliveryrestartUser>, IdentityNoO
 
 builder.Services.AddScoped<CartService>();
 
+// State to hold selected restaurants for group orders during navigation
+builder.Services.AddScoped<GroupOrderState>();
+
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())

@@ -1,0 +1,93 @@
+@page "/grouporders/malls/{MallId:int}/restaurants/fororder"
+
+@using System.Linq
+@using Microsoft.EntityFrameworkCore
+@using FoodDeliveryrestart.Data
+@using FoodDeliveryrestart.Domain
+@inject IDbContextFactory<FoodDeliveryrestartContext> DbFactory
+@inject NavigationManager NavigationManager
+@inject FoodDeliveryrestart.Services.GroupOrderState GroupOrderState
+
+<h3>Restaurants available in this mall</h3>
+
+<!-- Top filter nav: All + each restaurant in the mall (click to filter) -->
+<ul class="nav nav-pills mb-3">
+    <li class="nav-item">
+        <a class="nav-link @(filterRestaurantId == null ? "active" : "")" href="#" @onclick="() => SelectFilter(null)">All</a>
+    </li>
+    @foreach (var r in restaurants ?? Enumerable.Empty<Restaurant>())
+    {
+        <li class="nav-item" @key="r.Id">
+            <a class="nav-link @(filterRestaurantId == r.Id ? "active" : "")" href="#" @onclick="() => SelectFilter(r.Id)">
+                @r.Name
+                @if (GroupOrderState.SelectedRestaurantIds?.Contains(r.Id) == true)
+                {
+                    <span class="badge bg-success ms-2">Selected</span>
+                }
+            </a>
+        </li>
+    }
+</ul>
+
+@if (restaurants is null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (!restaurants.Any())
+{
+    <p>No restaurants found in this mall. <a href="@($"/grouporders/malls/{MallId}/restaurants")">Return to selection</a></p>
+}
+else
+{
+    <div class="list-group">
+        @foreach (var r in filteredRestaurants)
+        {
+            var allowed = GroupOrderState.SelectedRestaurantIds?.Contains(r.Id) == true;
+            <div class="list-group-item d-flex justify-content-between align-items-center" style="cursor:pointer" @onclick="() => SelectAndGoToMenu(r.Id)">
+                <div>
+                    <strong>@r.Name</strong>
+                    <div class="text-muted">@r.CuisineType</div>
+                </div>
+                <div class="text-end">
+                    @if (allowed)
+                    {
+                        <span class="badge bg-success me-2">Available for group order</span>
+                    }
+                    <button class="btn btn-outline-primary" @onclick:stopPropagation="true" @onclick="() => GoToMenu(r.Id)">View Menu</button>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int MallId { get; set; }
+
+    private List<Restaurant>? restaurants;
+    private List<Restaurant> filteredRestaurants => filterRestaurantId == null ? (restaurants ?? new List<Restaurant>()) : (restaurants?.Where(r => r.Id == filterRestaurantId).ToList() ?? new List<Restaurant>());
+    private int? filterRestaurantId;
+
+    protected override void OnInitialized()
+    {
+        using var ctx = DbFactory.CreateDbContext();
+        // load all restaurants in the selected mall
+        restaurants = ctx.Restaurant.Where(r => r.MallId == MallId).ToList();
+    }
+
+    private void GoToMenu(int restaurantId)
+    {
+        NavigationManager.NavigateTo($"/grouporders/restaurants/{restaurantId}/menuitems");
+    }
+
+    private void SelectFilter(int? restaurantId)
+    {
+        filterRestaurantId = restaurantId;
+    }
+
+    private void SelectAndGoToMenu(int restaurantId)
+    {
+        // clicking the whole row should immediately navigate to menu
+        GoToMenu(restaurantId);
+    }
+}

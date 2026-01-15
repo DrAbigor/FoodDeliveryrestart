@@ -1,45 +1,156 @@
 ﻿@page "/grouporders/malls/{MallId:int}/restaurants"
-
+@using System.Linq
 @using Microsoft.EntityFrameworkCore
-@using Microsoft.AspNetCore.Components.QuickGrid
+@using Microsoft.AspNetCore.Components
 @using FoodDeliveryrestart.Domain
 @using FoodDeliveryrestart.Data
 @implements IAsyncDisposable
 @inject IDbContextFactory<FoodDeliveryrestart.Data.FoodDeliveryrestartContext> DbFactory
+@inject NavigationManager NavigationManager
+@inject FoodDeliveryrestart.Services.GroupOrderState GroupOrderState
 
-<PageTitle>Index</PageTitle>
+<PageTitle>Select Restaurants - Group Order</PageTitle>
 
-<h1>Index</h1>
+<div class="group-order-hero">
+    <div class="hero-content">
+        <h1>Select Restaurants</h1>
+        @if (mall != null)
+        {
+            <p class="subtitle">Choose restaurants from @mall.MallName</p>
+        }
+    </div>
+</div>
 
-<p>
-    <a href="restaurants/create">Create New</a>
-</p>
+<div class="group-order-container">
+    @if (restaurants is null)
+    {
+        <div class="loading-state">
+            <div class="spinner"></div>
+            <p>Loading restaurants...</p>
+        </div>
+    }
+    else if (!restaurants.Any())
+    {
+        <div class="empty-state">
+            <i class="bi bi-shop" style="font-size: 64px; color: #d1d5db;"></i>
+            <h3>No restaurants available</h3>
+            <p>This mall doesn't have any restaurants yet</p>
+            <button class="btn-cancel mt-3" @onclick="GoBack">
+                <i class="bi bi-arrow-left"></i> Back to Malls
+            </button>
+        </div>
+    }
+    else
+    {
+        <div class="restaurant-selection-card">
+            <div class="selection-header">
+                <h2>Available Restaurants</h2>
+                <div class="selection-count">
+                    <span class="count-badge">@selected.Count</span> selected
+                </div>
+            </div>
 
-<QuickGrid Class="table" Items="context.Restaurant">
-    <PropertyColumn Property="restaurant => restaurant.Name" />
-    <PropertyColumn Property="restaurant => restaurant.CuisineType" />
-    <PropertyColumn Property="restaurant => restaurant.OperatingHours" />
-    <PropertyColumn Property="restaurant => restaurant.LocationWithinMall" />
-    <PropertyColumn Property="restaurant => restaurant.MallId" />
-    <PropertyColumn Property="restaurant => restaurant.DateCreated" />
-    <PropertyColumn Property="restaurant => restaurant.DateUpdated" />
-    <PropertyColumn Property="restaurant => restaurant.CreatedBy" />
-    <PropertyColumn Property="restaurant => restaurant.UpdatedBy" />
+            <div class="restaurant-selection-grid">
+                @foreach (var restaurant in restaurants)
+                {
+                    var isSelected = selected.Contains(restaurant.Id);
+                    <div class="restaurant-select-card @(isSelected ? "selected" : "")"
+                         @onclick="() => Toggle(restaurant.Id)">
+                        <div class="select-checkbox">
+                            @if (isSelected)
+                            {
+                                <i class="bi bi-check-circle-fill"></i>
+                            }
+                            else
+                            {
+                                <i class="bi bi-circle"></i>
+                            }
+                        </div>
 
-    <TemplateColumn Context="restaurant">
-        <a href="@($"restaurants/edit?id={restaurant.Id}")">Edit</a> |
-        <a href="@($"restaurants/details?id={restaurant.Id}")">Details</a> |
-        <a href="@($"restaurants/delete?id={restaurant.Id}")">Delete</a>
-    </TemplateColumn>
-</QuickGrid>
+                        <div class="restaurant-select-icon">
+                            <i class="bi bi-shop"></i>
+                        </div>
+
+                        <div class="restaurant-select-info">
+                            <h3>@restaurant.Name</h3>
+                            <div class="restaurant-meta">
+                                <span class="cuisine-tag">
+                                    <i class="bi bi-tag"></i> @restaurant.CuisineType
+                                </span>
+                                @if (!string.IsNullOrEmpty(restaurant.LocationWithinMall))
+                                {
+                                    <span class="location-tag">
+                                        <i class="bi bi-geo-alt"></i> @restaurant.LocationWithinMall
+                                    </span>
+                                }
+                            </div>
+                            @if (!string.IsNullOrEmpty(restaurant.OperatingHours))
+                            {
+                                <p class="hours-text">
+                                    <i class="bi bi-clock"></i> @restaurant.OperatingHours
+                                </p>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn-cancel" @onclick="GoBack">
+                    <i class="bi bi-arrow-left"></i> Back
+                </button>
+                <button class="btn-continue" @onclick="Finish" disabled="@(!selected.Any())">
+                    Continue with @selected.Count Restaurant@(selected.Count != 1 ? "s" : "") <i class="bi bi-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    }
+</div>
 
 @code {
-    private FoodDeliveryrestartContext context = default!;
+    private FoodDeliveryrestartContext? context;
+    private List<Restaurant>? restaurants;
+    private Mall? mall;
+
+    [Parameter]
+    public int MallId { get; set; }
+
+    private HashSet<int> selected = new();
+
+    private void Toggle(int id)
+    {
+        if (!selected.Add(id))
+            selected.Remove(id);
+    }
+
+    private void Finish()
+    {
+        if (!selected.Any())
+            return;
+
+        GroupOrderState.SelectedRestaurantIds = selected.ToList();
+        NavigationManager.NavigateTo($"/grouporders/malls/{MallId}/restaurants/fororder");
+    }
+
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo("/grouporders/selectmall");
+    }
 
     protected override void OnInitialized()
     {
         context = DbFactory.CreateDbContext();
+
+        mall = context.Mall.FirstOrDefault(m => m.Id == MallId);
+        restaurants = context.Restaurant
+            .Where(r => r.MallId == MallId)
+            .OrderBy(r => r.Name)
+            .ToList();
     }
 
-    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+    public async ValueTask DisposeAsync()
+    {
+        if (context is not null)
+            await context.DisposeAsync();
+    }
 }

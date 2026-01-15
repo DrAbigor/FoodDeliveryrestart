@@ -13,7 +13,7 @@
     <nav class="toplinks">
         <a class="toplink @(IsActive("/") ? "active" : "")" href="/">Home</a>
         <a class="toplink @(IsActive("/restaurants") ? "active" : "")" href="/restaurants">Restaurants</a>
-        <a class="toplink @(IsActive("/group-orders") ? "active" : "")" href="/group-orders">Group Orders</a>
+        <a class="toplink @(IsActive("/grouporders") ? "active" : "")" href="/grouporders/selectmall">Group Orders</a>
     </nav>
 
     <div class="topicons">
@@ -45,11 +45,4 @@
         return currentPath.StartsWith(path.Trim('/'), StringComparison.OrdinalIgnoreCase);
     }
 }
-<nav class="nav-links">
-    <NavLink href="/" class="nav-link">Home</NavLink>
-    <NavLink href="/restaurants" class="nav-link">Restaurants</NavLink>
-    <NavLink href="/grouporders" class="nav-link">Group Orders</NavLink>
-    <NavLink href="/orders" class="nav-link">Orders</NavLink>
-    <NavLink href="/grouporders/malls">Group Orders</NavLink>
 
-</nav>

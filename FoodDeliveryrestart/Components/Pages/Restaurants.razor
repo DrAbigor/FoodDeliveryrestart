@@ -1,0 +1,121 @@
+﻿@page "/restaurants"
+@using System.Linq
+@using Microsoft.EntityFrameworkCore
+@using FoodDeliveryrestart.Domain
+@using FoodDeliveryrestart.Data
+@implements IAsyncDisposable
+@inject IDbContextFactory<FoodDeliveryrestart.Data.FoodDeliveryrestartContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>All Restaurants - Food Delivery</PageTitle>
+
+<div class="restaurants-hero">
+    <div class="hero-content">
+        <h1>All Restaurants</h1>
+        <p class="subtitle">Browse all available restaurants and their menus</p>
+
+        <div class="search-container">
+            <i class="bi bi-search search-icon"></i>
+            <input type="text"
+                   class="search-input"
+                   placeholder="Search restaurants by name or cuisine..."
+                   @bind="searchText"
+                   @bind:event="oninput" />
+        </div>
+    </div>
+</div>
+
+<div class="restaurants-container">
+    @if (restaurants is null)
+    {
+        <div class="loading-state">
+            <div class="spinner"></div>
+            <p>Loading restaurants...</p>
+        </div>
+    }
+    else if (!FilteredRestaurants.Any())
+    {
+        <div class="no-results">
+            <i class="bi bi-search" style="font-size: 48px; color: #d1d5db;"></i>
+            <p>No restaurants match your search.</p>
+        </div>
+    }
+    else
+    {
+        <div class="restaurant-grid">
+            @foreach (var restaurant in FilteredRestaurants)
+            {
+                <div class="restaurant-card">
+                    <div class="card-header">
+                        <h3>@restaurant.Name</h3>
+                        <span class="cuisine-badge">@restaurant.CuisineType</span>
+                    </div>
+
+                    <div class="card-details">
+                        @if (!string.IsNullOrEmpty(restaurant.LocationWithinMall))
+                        {
+                            <div class="detail-item">
+                                <i class="bi bi-geo-alt"></i>
+                                <span>@restaurant.LocationWithinMall</span>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(restaurant.OperatingHours))
+                        {
+                            <div class="detail-item">
+                                <i class="bi bi-clock"></i>
+                                <span>@restaurant.OperatingHours</span>
+                            </div>
+                        }
+                    </div>
+
+                    <button class="view-menu-btn" @onclick="() => ViewMenu(restaurant.Id)">
+                        View Menu
+                    </button>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private FoodDeliveryrestartContext? context;
+    private List<Restaurant>? restaurants;
+    private string searchText = "";
+
+    private IEnumerable<Restaurant> FilteredRestaurants
+    {
+        get
+        {
+            if (restaurants is null)
+                return Enumerable.Empty<Restaurant>();
+
+            if (string.IsNullOrWhiteSpace(searchText))
+                return restaurants;
+
+            var search = searchText.ToLowerInvariant();
+            return restaurants.Where(r =>
+                (r.Name ?? string.Empty).ToLowerInvariant().Contains(search) ||
+                (r.CuisineType ?? string.Empty).ToLowerInvariant().Contains(search)
+            );
+        }
+    }
+
+    private void ViewMenu(int restaurantId)
+    {
+        NavigationManager.NavigateTo($"/restaurants/{restaurantId}/menu");
+    }
+
+    protected override void OnInitialized()
+    {
+        context = DbFactory.CreateDbContext();
+        restaurants = context.Restaurant
+            .OrderBy(r => r.Name)
+            .ToList();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (context is not null)
+            await context.DisposeAsync();
+    }
+}

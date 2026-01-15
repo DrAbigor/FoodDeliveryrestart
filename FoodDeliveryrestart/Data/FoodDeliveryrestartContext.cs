@@ -37,6 +37,8 @@ namespace FoodDeliveryrestart.Data
             modelBuilder.ApplyConfiguration(new PaymentMethodSeed());
             modelBuilder.ApplyConfiguration(new Mallseed());
             modelBuilder.ApplyConfiguration(new RestaurantSeed());
+            modelBuilder.ApplyConfiguration(new MenuItemSeed());
+
 
             // FIX: multiple cascade paths (User -> GroupOrderMember)
             modelBuilder.Entity<GroupOrderMember>()

@@ -1,0 +1,88 @@
+@page "/restaurants/{RestaurantId:int}/menu/{MenuItemId:int}"
+@rendermode InteractiveServer
+
+@using Microsoft.EntityFrameworkCore
+@using FoodDeliveryrestart.Data
+@using FoodDeliveryrestart.Domain
+
+@implements IAsyncDisposable
+
+@inject IDbContextFactory<FoodDeliveryrestartContext> DbFactory
+@inject NavigationManager Nav
+
+<div class="food-details">
+    <button class="back" @onclick="Back"><i class="bi bi-arrow-left"></i> Back to Menu</button>
+
+    @if (item is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else
+    {
+        <h2>@item.ItemName</h2>
+        <p class="desc">@item.Description</p>
+        <div class="price">$@item.Price.ToString("0.00")</div>
+
+        <div class="card">
+    <h5>Nutrition Information</h5>
+
+    <div class="nutrition-grid">
+        <div>
+            <strong>Calories</strong>
+            <div>@item.Calories kcal</div>
+        </div>
+
+        <div>
+            <strong>Carbohydrates</strong>
+            <div>@item.CarbohydratesG g</div>
+        </div>
+
+        <div>
+            <strong>Protein</strong>
+            <div>@item.ProteinG g</div>
+        </div>
+
+        <div>
+            <strong>Fat</strong>
+            <div>@item.FatG g</div>
+        </div>
+    </div>
+
+    <div class="allergens">
+        <strong>Allergens</strong>
+        <div>@(string.IsNullOrWhiteSpace(item.Allergens) ? "None specified" : item.Allergens)</div>
+    </div>
+</div>
+
+
+        <button class="add" @onclick="AddToCart"><i class="bi bi-cart-plus"></i> Add to Cart</button>
+    }
+</div>
+
+@code {
+    [Parameter] public int RestaurantId { get; set; }
+    [Parameter] public int MenuItemId { get; set; }
+
+    private FoodDeliveryrestartContext? ctx;
+    private MenuItem? item;
+
+    protected override void OnInitialized()
+    {
+        ctx = DbFactory.CreateDbContext();
+        item = ctx.MenuItem.FirstOrDefault(m => m.Id == MenuItemId && m.RestaurantId == RestaurantId);
+    }
+
+    private void Back() => Nav.NavigateTo($"/restaurants/{RestaurantId}/menu");
+
+    private void AddToCart()
+    {
+        // Hook to your cart later.
+        Back();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (ctx is not null)
+            await ctx.DisposeAsync();
+    }
+}

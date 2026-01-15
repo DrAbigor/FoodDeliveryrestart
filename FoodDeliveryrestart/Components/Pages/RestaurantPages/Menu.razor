@@ -1,0 +1,238 @@
+@page "/restaurants/{RestaurantId:int}/menu"
+@rendermode InteractiveServer
+
+@using Microsoft.EntityFrameworkCore
+@using FoodDeliveryrestart.Data
+@using FoodDeliveryrestart.Domain
+
+@implements IAsyncDisposable
+
+@inject IDbContextFactory<FoodDeliveryrestartContext> DbFactory
+@inject NavigationManager Nav
+
+<div class="menu-page">
+    <div class="restaurant-header">
+        <div class="restaurant-title">
+            <h2>@(restaurant?.Name ?? "Restaurant")</h2>
+            <div class="header-meta">
+                <span class="meta">
+                    <i class="bi bi-star-fill"></i> @(restaurant?.Rating.ToString("0.0") ?? "0.0")
+                </span>
+                <span class="meta">
+                    <span class="busy-dot @BusyDotClass(restaurant?.BusyLevel ?? BusyLevel.Low)"></span>
+                    Busy Level: @(restaurant?.BusyLevel.ToString() ?? "Low")
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <h4 class="section-title">Menu</h4>
+
+    <!-- ===== Dietary Filters ===== -->
+    <div class="filter-bar">
+        <label>
+            <input type="checkbox" @bind="filterHalal" />
+            Halal
+        </label>
+        <label>
+            <input type="checkbox" @bind="filterVegan" />
+            Vegan
+        </label>
+        <label>
+            <input type="checkbox" @bind="filterNutFree" />
+            Nut-Free
+        </label>
+        <label>
+            <input type="checkbox" @bind="filterDairyFree" />
+            Dairy-Free
+        </label>
+    </div>
+
+    @if (menuItems is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else if (!FilteredMenuItems.Any())
+    {
+        <p>No items match the selected filters.</p>
+    }
+    else
+    {
+        <div class="menu-grid">
+            @foreach (var item in FilteredMenuItems)
+            {
+                <div class="menu-card">
+                    <div class="menu-thumb"></div>
+
+                    <div class="menu-info">
+                        <h5>@item.ItemName</h5>
+                        <p class="desc">@item.Description</p>
+                        <div class="price">$@item.Price.ToString("0.00")</div>
+
+                        <div class="dietary-badges">
+                            @if (item.IsHalal)
+                            {
+                                <span class="badge halal">Halal</span>
+                            }
+                            @if (item.IsVegan)
+                            {
+                                <span class="badge vegan">Vegan</span>
+                            }
+                            @if (item.IsNutFree)
+                            {
+                                <span class="badge nutfree">Nut-Free</span>
+                            }
+                            @if (item.IsDairyFree)
+                            {
+                                <span class="badge dairyfree">Dairy-Free</span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="menu-actions">
+                        <button class="btn-primary" @onclick="() => AddToCart(item.Id)">
+                            Add to Cart
+                        </button>
+                        <button class="btn-outline" @onclick="() => OpenNutrition(item)">
+                            View Nutrition
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@if (showNutritionModal && selectedItem != null)
+{
+    <div class="modal-backdrop" @onclick="CloseNutrition"></div>
+
+    <div class="nutrition-modal">
+        <div class="modal-header">
+            <h4>@selectedItem.ItemName</h4>
+            <button class="close-btn" @onclick="CloseNutrition">×</button>
+        </div>
+
+        <p class="modal-subtitle">Nutrition Information (per serving)</p>
+
+        <div class="nutrition-grid">
+            <div>
+                <strong>Calories</strong>
+                <div>@selectedItem.Calories kcal</div>
+            </div>
+            <div>
+                <strong>Protein</strong>
+                <div>@selectedItem.ProteinG g</div>
+            </div>
+            <div>
+                <strong>Carbohydrates</strong>
+                <div>@selectedItem.CarbohydratesG g</div>
+            </div>
+            <div>
+                <strong>Fat</strong>
+                <div>@selectedItem.FatG g</div>
+            </div>
+        </div>
+
+        <div class="allergens">
+            <strong>Allergens</strong>
+            <div>
+                @(string.IsNullOrWhiteSpace(selectedItem.Allergens)
+                    ? "None specified"
+                    : selectedItem.Allergens)
+            </div>
+        </div>
+
+        <div class="dietary-section">
+            <strong>Dietary Information</strong>
+            <div class="dietary-badges">
+                @if (selectedItem.IsHalal)
+                {
+                    <span class="badge halal">Halal</span>
+                }
+                @if (selectedItem.IsVegan)
+                {
+                    <span class="badge vegan">Vegan</span>
+                }
+                @if (selectedItem.IsNutFree)
+                {
+                    <span class="badge nutfree">Nut-Free</span>
+                }
+                @if (selectedItem.IsDairyFree)
+                {
+                    <span class="badge dairyfree">Dairy-Free</span>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int RestaurantId { get; set; }
+
+    private FoodDeliveryrestartContext? ctx;
+    private Restaurant? restaurant;
+    private List<MenuItem>? menuItems;
+
+    private MenuItem? selectedItem;
+    private bool showNutritionModal;
+
+    // Dietary filters
+    private bool filterHalal;
+    private bool filterVegan;
+    private bool filterNutFree;
+    private bool filterDairyFree;
+
+    private IEnumerable<MenuItem> FilteredMenuItems =>
+        menuItems == null
+            ? Enumerable.Empty<MenuItem>()
+            : menuItems.Where(item =>
+                (!filterHalal || item.IsHalal) &&
+                (!filterVegan || item.IsVegan) &&
+                (!filterNutFree || item.IsNutFree) &&
+                (!filterDairyFree || item.IsDairyFree)
+            );
+
+    protected override void OnInitialized()
+    {
+        ctx = DbFactory.CreateDbContext();
+
+        restaurant = ctx.Restaurant.FirstOrDefault(r => r.Id == RestaurantId);
+
+        menuItems = ctx.MenuItem
+            .Where(m => m.RestaurantId == RestaurantId)
+            .OrderBy(m => m.ItemName)
+            .ToList();
+    }
+
+    private void OpenNutrition(MenuItem item)
+    {
+        selectedItem = item;
+        showNutritionModal = true;
+    }
+
+    private void CloseNutrition()
+    {
+        showNutritionModal = false;
+        selectedItem = null;
+    }
+
+    private void AddToCart(int menuItemId)
+    {
+        // Cart logic later
+    }
+
+    private string BusyDotClass(BusyLevel level) => level switch
+    {
+        BusyLevel.Low => "low",
+        BusyLevel.Medium => "medium",
+        BusyLevel.High => "high",
+        _ => "low"
+    };
+
+    public async ValueTask DisposeAsync()
+    {
+        if (ctx is not null)
+            await ctx.DisposeAsync();
+    }
+}

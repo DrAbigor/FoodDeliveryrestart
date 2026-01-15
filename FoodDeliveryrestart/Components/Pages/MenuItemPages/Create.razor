@@ -29,12 +29,35 @@
                 <label for="description" class="form-label">Description:</label> 
                 <InputText id="description" @bind-Value="MenuItem.Description" class="form-control" /> 
                 <ValidationMessage For="() => MenuItem.Description" class="text-danger" /> 
-            </div>        
+            </div>
+
+            <!-- explicit nutrition fields -->
             <div class="mb-3">
-                <label for="nutritioninfo" class="form-label">NutritionInfo:</label> 
-                <InputText id="nutritioninfo" @bind-Value="MenuItem.NutritionInfo" class="form-control" /> 
-                <ValidationMessage For="() => MenuItem.NutritionInfo" class="text-danger" /> 
-            </div>        
+                <label for="calories" class="form-label">Calories (kcal):</label>
+                <InputNumber id="calories" @bind-Value="MenuItem.Calories" class="form-control" />
+                <ValidationMessage For="() => MenuItem.Calories" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="carbs" class="form-label">Carbohydrates (g):</label>
+                <InputNumber id="carbs" @bind-Value="MenuItem.CarbohydratesG" class="form-control" />
+                <ValidationMessage For="() => MenuItem.CarbohydratesG" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="protein" class="form-label">Protein (g):</label>
+                <InputNumber id="protein" @bind-Value="MenuItem.ProteinG" class="form-control" />
+                <ValidationMessage For="() => MenuItem.ProteinG" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="fat" class="form-label">Fat (g):</label>
+                <InputNumber id="fat" @bind-Value="MenuItem.FatG" class="form-control" />
+                <ValidationMessage For="() => MenuItem.FatG" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="allergens" class="form-label">Allergens:</label>
+                <InputText id="allergens" @bind-Value="MenuItem.Allergens" class="form-control" />
+                <ValidationMessage For="() => MenuItem.Allergens" class="text-danger" />
+            </div>
+
             <div class="mb-3">
                 <label for="restaurantid" class="form-label">RestaurantId:</label> 
                 <InputNumber id="restaurantid" @bind-Value="MenuItem.RestaurantId" class="form-control" /> 

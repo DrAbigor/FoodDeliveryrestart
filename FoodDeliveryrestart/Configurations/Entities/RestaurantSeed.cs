@@ -1,6 +1,8 @@
-﻿using FoodDeliveryrestart.Domain;
+﻿using System;
+using FoodDeliveryrestart.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
 
 namespace FoodDeliveryrestart.Configurations.Entities
 {
@@ -12,24 +14,28 @@ namespace FoodDeliveryrestart.Configurations.Entities
                 new Restaurant
                 {
                     Id = 1,
-                    Name = "Pasta Corner",
-                    CuisineType = "Western",
-                    OperatingHours = "24/7",
-                    LocationWithinMall = "1-67",
+                    Name = "A&W",
+                    CuisineType = "Fast Food",
+                    LocationWithinMall = "1-24",
+                    OperatingHours = "10am-10pm",
                     MallId = 1,
+                    Rating = 4.4m,
+                    BusyLevel = BusyLevel.Medium,
                     DateCreated = DateTime.Now,
                     DateUpdated = DateTime.Now,
-                    CreatedBy = "",
-                    UpdatedBy = ""
+                    CreatedBy = "Seed",
+                    UpdatedBy = "Seed"
                 },
                 new Restaurant
                 {
                     Id = 2,
-                    Name = "Pizza House",
-                    CuisineType = "Western Food",
-                    OperatingHours = "24/7",
-                    LocationWithinMall = "1-66",
+                    Name = "Burger Lab",
+                    CuisineType = "Western",
+                    LocationWithinMall = "1-68",
+                    OperatingHours = "10am-10pm",
                     MallId = 1,
+                    Rating = 4.6m,
+                    BusyLevel = BusyLevel.High,
                     DateCreated = DateTime.Now,
                     DateUpdated = DateTime.Now,
                     CreatedBy = "Seed",
@@ -38,10 +44,13 @@ namespace FoodDeliveryrestart.Configurations.Entities
                 new Restaurant
                 {
                     Id = 3,
-                    Name = "Burger Lab",
-                    CuisineType = "Western",
+                    Name = "Jollibee",
+                    CuisineType = "Fast Food",
+                    LocationWithinMall = "8-90",
                     OperatingHours = "10am-10pm",
                     MallId = 1,
+                    Rating = 4.7m,
+                    BusyLevel = BusyLevel.Medium,
                     DateCreated = DateTime.Now,
                     DateUpdated = DateTime.Now,
                     CreatedBy = "Seed",
@@ -50,24 +59,28 @@ namespace FoodDeliveryrestart.Configurations.Entities
                 new Restaurant
                 {
                     Id = 4,
-                    Name = "McDonald's",
+                    Name = "KFC",
                     CuisineType = "Fast Food",
+                    LocationWithinMall = "8-89",
                     OperatingHours = "24/7",
-                    LocationWithinMall = "8-88",
-                    MallId = 2,
+                    MallId = 1,
+                    Rating = 4.2m,
+                    BusyLevel = BusyLevel.High,
                     DateCreated = DateTime.Now,
                     DateUpdated = DateTime.Now,
-                    CreatedBy = "Datetime.now",
+                    CreatedBy = "Seed",
                     UpdatedBy = "Seed"
                 },
                 new Restaurant
                 {
                     Id = 5,
-                    Name = "KFC",
+                    Name = "McDonald's",
                     CuisineType = "Fast Food",
+                    LocationWithinMall = "8-88",
                     OperatingHours = "24/7",
-                    LocationWithinMall = "8-89",
-                    MallId = 2,
+                    MallId = 1,
+                    Rating = 4.3m,
+                    BusyLevel = BusyLevel.High,
                     DateCreated = DateTime.Now,
                     DateUpdated = DateTime.Now,
                     CreatedBy = "Seed",
@@ -76,11 +89,13 @@ namespace FoodDeliveryrestart.Configurations.Entities
                 new Restaurant
                 {
                     Id = 6,
-                    Name = "Jollibee",
-                    CuisineType = "Fast Food",
-                    OperatingHours = "10am-10pm",
-                    LocationWithinMall = "8-90",
-                    MallId = 2,
+                    Name = "Pasta Corner",
+                    CuisineType = "Western",
+                    LocationWithinMall = "1-67",
+                    OperatingHours = "24/7",
+                    MallId = 1,
+                    Rating = 4.1m,
+                    BusyLevel = BusyLevel.Low,
                     DateCreated = DateTime.Now,
                     DateUpdated = DateTime.Now,
                     CreatedBy = "Seed",
@@ -89,11 +104,13 @@ namespace FoodDeliveryrestart.Configurations.Entities
                 new Restaurant
                 {
                     Id = 7,
-                    Name = "Yochi",
-                    CuisineType = "Dessert",
-                    OperatingHours = "10am-10pm",
-                    LocationWithinMall = "1-23",
-                    MallId = 3,
+                    Name = "Pizza House",
+                    CuisineType = "Western Food",
+                    LocationWithinMall = "1-66",
+                    OperatingHours = "24/7",
+                    MallId = 1,
+                    Rating = 4.5m,
+                    BusyLevel = BusyLevel.Medium,
                     DateCreated = DateTime.Now,
                     DateUpdated = DateTime.Now,
                     CreatedBy = "Seed",
@@ -102,11 +119,13 @@ namespace FoodDeliveryrestart.Configurations.Entities
                 new Restaurant
                 {
                     Id = 8,
-                    Name = "A&W",
-                    CuisineType = "Fast Food",
+                    Name = "Sanook Kitchen",
+                    CuisineType = "Thai Food",
+                    LocationWithinMall = "1-25",
                     OperatingHours = "10am-10pm",
-                    LocationWithinMall = "1-24",
-                    MallId = 3,
+                    MallId = 1,
+                    Rating = 4.6m,
+                    BusyLevel = BusyLevel.Medium,
                     DateCreated = DateTime.Now,
                     DateUpdated = DateTime.Now,
                     CreatedBy = "Seed",
@@ -115,11 +134,13 @@ namespace FoodDeliveryrestart.Configurations.Entities
                 new Restaurant
                 {
                     Id = 9,
-                    Name = "Sanook Kitchen",
-                    CuisineType = "Thai Food",
+                    Name = "Yochi",
+                    CuisineType = "Dessert",
+                    LocationWithinMall = "1-23",
                     OperatingHours = "10am-10pm",
-                    LocationWithinMall = "1-25",
-                    MallId = 3,
+                    MallId = 1,
+                    Rating = 4.8m,
+                    BusyLevel = BusyLevel.Low,
                     DateCreated = DateTime.Now,
                     DateUpdated = DateTime.Now,
                     CreatedBy = "Seed",

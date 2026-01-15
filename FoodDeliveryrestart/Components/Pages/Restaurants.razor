@@ -1,10 +1,14 @@
 ﻿@page "/restaurants"
+@rendermode InteractiveServer
+
 @using System.Linq
 @using Microsoft.EntityFrameworkCore
 @using FoodDeliveryrestart.Domain
 @using FoodDeliveryrestart.Data
+
 @implements IAsyncDisposable
-@inject IDbContextFactory<FoodDeliveryrestart.Data.FoodDeliveryrestartContext> DbFactory
+
+@inject IDbContextFactory<FoodDeliveryrestartContext> DbFactory
 @inject NavigationManager NavigationManager
 
 <PageTitle>All Restaurants - Food Delivery</PageTitle>
@@ -49,6 +53,19 @@
                     <div class="card-header">
                         <h3>@restaurant.Name</h3>
                         <span class="cuisine-badge">@restaurant.CuisineType</span>
+                    </div>
+
+                    <!-- NEW: Rating + Busy Level -->
+                    <div class="meta-row">
+                        <div class="rating">
+                            <i class="bi bi-star-fill"></i>
+                            <span>@restaurant.Rating.ToString("0.0")</span>
+                        </div>
+
+                        <div class="busy">
+                            <span class="busy-dot @BusyDotClass(restaurant.BusyLevel)"></span>
+                            <span>Busy: @restaurant.BusyLevel</span>
+                        </div>
                     </div>
 
                     <div class="card-details">
@@ -112,6 +129,14 @@
             .OrderBy(r => r.Name)
             .ToList();
     }
+
+    private string BusyDotClass(BusyLevel level) => level switch
+    {
+        BusyLevel.Low => "low",
+        BusyLevel.Medium => "medium",
+        BusyLevel.High => "high",
+        _ => "low"
+    };
 
     public async ValueTask DisposeAsync()
     {

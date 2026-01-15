@@ -41,7 +41,6 @@ namespace FoodDeliveryrestart.Configurations.Entities
                     Name = "Burger Lab",
                     CuisineType = "Western",
                     OperatingHours = "10am-10pm",
-                    LocationWithinMall = "1-68",
                     MallId = 1,
                     DateCreated = DateTime.Now,
                     DateUpdated = DateTime.Now,

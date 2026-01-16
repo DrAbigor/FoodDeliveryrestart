@@ -1,0 +1,169 @@
+﻿@page "/checkout"
+@using Microsoft.EntityFrameworkCore
+@using FoodDeliveryrestart.Domain
+@inject FoodDeliveryrestart.Services.CartService CartSvc
+@inject IDbContextFactory<FoodDeliveryrestart.Data.FoodDeliveryrestartContext> DbFactory
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+<div class="checkout-page">
+    <div class="checkout-header">
+        <h2>Checkout</h2>
+        <p class="muted">Confirm payment and place your order.</p>
+    </div>
+
+    @if (!CartSvc.Items.Any())
+    {
+        <div class="cardish">
+            <p>Your cart is empty.</p>
+            <button class="btn btn-primary" @onclick="GoRestaurants">Back to restaurants</button>
+        </div>
+    }
+    else if (IsSaving)
+    {
+        <div class="cardish">
+            <p>Placing your order...</p>
+        </div>
+    }
+    else
+    {
+        <div class="cardish">
+            <div class="summary-row">
+                <span class="total-label">Total</span>
+                <span class="total-value">@CartSvc.Total().ToString("0.00")</span>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Payment Method</label>
+                <select class="form-select" @bind="SelectedPaymentMethodId">
+                    @foreach (var pm in PaymentMethods)
+                    {
+                        <option value="@pm.Id">
+                            @pm.CardType - @pm.CardHolderName (exp @pm.ExpiryMonth/@pm.ExpiryYear)
+                        </option>
+                    }
+                </select>
+            </div>
+
+            <div class="actions">
+                <button class="btn btn-success" @onclick="PlaceOrder">Pay &amp; Place Order</button>
+                <button class="btn btn-outline-secondary ms-2" @onclick="GoCart">Back to cart</button>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(Error))
+            {
+                <div class="alert alert-danger mt-3">@Error</div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<PaymentMethod> PaymentMethods = new();
+    private int SelectedPaymentMethodId;
+    private bool IsSaving;
+    private string? Error;
+
+    // TEMP until Identity → Domain.User mapping
+    private const int DomainUserId = 1;
+    private const int DefaultMallId = 1;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await using var db = await DbFactory.CreateDbContextAsync();
+
+        PaymentMethods = await db.PaymentMethod
+            .Where(pm => pm.UserId == DomainUserId)
+            .OrderBy(pm => pm.Id)
+            .ToListAsync();
+
+        SelectedPaymentMethodId = PaymentMethods.FirstOrDefault()?.Id ?? 0;
+    }
+
+    private void GoRestaurants() => Nav.NavigateTo("/restaurants");
+    private void GoCart() => Nav.NavigateTo("/cart");
+
+    private async Task PlaceOrder()
+    {
+        Error = null;
+
+        if (SelectedPaymentMethodId == 0)
+        {
+            Error = "No payment method found. Please add or seed a payment method.";
+            return;
+        }
+
+        IsSaving = true;
+
+        try
+        {
+            await using var db = await DbFactory.CreateDbContextAsync();
+
+            // 1️⃣ Create solo GroupOrder
+            var groupOrder = new GroupOrder
+            {
+                GroupCode = $"SOLO-{Guid.NewGuid():N}".Substring(0, 12),
+                CreatedTime = DateTime.UtcNow,
+                Status = "Solo",
+                MallId = DefaultMallId,
+                UserId = DomainUserId
+            };
+            db.GroupOrder.Add(groupOrder);
+            await db.SaveChangesAsync();
+
+            // 2️⃣ Create Order
+            var order = new Order
+            {
+                DateTime = DateTime.UtcNow,
+                Status = "Paid",
+                TotalAmount = CartSvc.Total(),
+                UserId = DomainUserId,
+                GroupOrderId = groupOrder.Id
+            };
+            db.Order.Add(order);
+            await db.SaveChangesAsync();
+
+            // 3️⃣ Create OrderItems
+            foreach (var ci in CartSvc.Items)
+            {
+                db.OrderItem.Add(new OrderItem
+                {
+                    OrderId = order.Id,
+                    ItemId = ci.MenuItemId,
+                    Quantity = ci.Quantity,
+                    ItemPrice = ci.Price,
+                    Subtotal = ci.Price * ci.Quantity
+                });
+            }
+
+            // 4️⃣ Create Payment
+            db.Payment.Add(new Payment
+            {
+                Name = "Card Payment",
+                PaymentDate = DateTime.UtcNow,
+                PaymentStatus = "Paid",
+                Amount = order.TotalAmount,
+                OrderId = order.Id,
+                PaymentMethodId = SelectedPaymentMethodId,
+                UserId = DomainUserId,
+                DateCreated = DateTime.UtcNow,
+                DateUpdated = DateTime.UtcNow,
+                CreatedBy = "System",
+                UpdatedBy = "System"
+            });
+
+            await db.SaveChangesAsync();
+
+            CartSvc.Clear();
+            Nav.NavigateTo($"/orders/{order.Id}");
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+}

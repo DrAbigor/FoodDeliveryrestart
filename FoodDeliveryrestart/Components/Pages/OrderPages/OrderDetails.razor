@@ -1,0 +1,190 @@
+﻿@page "/orders/{OrderId:int}"
+@using FoodDeliveryrestart.Domain
+@using Microsoft.EntityFrameworkCore
+@inject IDbContextFactory<FoodDeliveryrestart.Data.FoodDeliveryrestartContext> DbFactory
+@inject NavigationManager Nav
+
+<div class="order-page">
+    <div class="order-header">
+        <h2>Order Confirmed</h2>
+        <p class="muted">Thanks! Here are your order details.</p>
+    </div>
+
+    @if (IsLoading)
+    {
+        <div class="cardish">
+            <p>Loading order...</p>
+        </div>
+    }
+    else if (!string.IsNullOrWhiteSpace(Error))
+    {
+        <div class="alert alert-danger">@Error</div>
+        <button class="btn btn-outline-secondary" @onclick="GoRestaurants">Back to restaurants</button>
+    }
+    else if (Order is null)
+    {
+        <div class="cardish">
+            <p>Order not found.</p>
+            <button class="btn btn-outline-secondary" @onclick="GoRestaurants">Back to restaurants</button>
+        </div>
+    }
+    else
+    {
+        <div class="cardish mb-3">
+            <div class="order-top">
+                <div>
+                    <div><strong>Order ID:</strong> @Order.Id</div>
+                    <div><strong>Status:</strong> @Order.Status</div>
+                    <div><strong>Date:</strong> @Order.DateTime.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</div>
+                </div>
+
+                <div class="right">
+                    <div class="total-value">@Order.TotalAmount.ToString("0.00")</div>
+                    <div class="muted">Total paid</div>
+
+                    @if (Payment is not null)
+                    {
+                        <div class="mt-2"><strong>Payment:</strong> @Payment.PaymentStatus</div>
+                    }
+                    else
+                    {
+                        <div class="mt-2"><strong>Payment:</strong> Not recorded</div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="cardish">
+            <h4 class="mb-3">Items</h4>
+
+            @if (Items.Count == 0)
+            {
+                <p>No items found for this order.</p>
+            }
+            else
+            {
+                <div class="table-wrap">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th style="width:110px;">Qty</th>
+                                <th style="width:140px;">Price</th>
+                                <th style="width:140px;">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in Items)
+                            {
+                                <tr>
+                                    <td>@row.ItemName</td>
+                                    <td>@row.Quantity</td>
+                                    <td>@row.ItemPrice.ToString("0.00")</td>
+                                    <td>@row.Subtotal.ToString("0.00")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+
+        @if (PaymentMethod is not null)
+        {
+            <div class="cardish mt-3">
+                <h4 class="mb-2">Payment Method</h4>
+                <div><strong>Type:</strong> @PaymentMethod.CardType</div>
+                <div><strong>Name:</strong> @PaymentMethod.CardHolderName</div>
+                <div><strong>Expiry:</strong> @PaymentMethod.ExpiryMonth/@PaymentMethod.ExpiryYear</div>
+                <div class="muted">Card number is not stored for security reasons.</div>
+            </div>
+        }
+
+        <div class="mt-4">
+            <button class="btn btn-primary" @onclick="GoRestaurants">Order more</button>
+            <button class="btn btn-outline-secondary ms-2" @onclick="GoCart">Back to cart</button>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int OrderId { get; set; }
+
+    private bool IsLoading = true;
+    private string? Error;
+
+    private Order? Order;
+    private Payment? Payment;
+    private PaymentMethod? PaymentMethod;
+
+    private List<ItemRow> Items = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        IsLoading = true;
+        Error = null;
+        Order = null;
+        Payment = null;
+        PaymentMethod = null;
+        Items = new();
+
+        try
+        {
+            await using var db = await DbFactory.CreateDbContextAsync();
+
+            Order = await db.Order.FirstOrDefaultAsync(o => o.Id == OrderId);
+            if (Order is null)
+            {
+                return;
+            }
+
+            var orderItems = await db.OrderItem
+                .Where(oi => oi.OrderId == OrderId)
+                .ToListAsync();
+
+            var menuItemIds = orderItems.Select(x => x.ItemId).Distinct().ToList();
+
+            var menuItems = await db.MenuItem
+                .Where(mi => menuItemIds.Contains(mi.Id))
+                .Select(mi => new { mi.Id, mi.ItemName })
+                .ToListAsync();
+
+            var nameMap = menuItems.ToDictionary(x => x.Id, x => x.ItemName ?? "Item");
+
+            Items = orderItems.Select(oi => new ItemRow
+            {
+                ItemName = nameMap.TryGetValue(oi.ItemId, out var n) ? n : $"Item #{oi.ItemId}",
+                Quantity = oi.Quantity,
+                ItemPrice = oi.ItemPrice,
+                Subtotal = oi.Subtotal
+            }).ToList();
+
+            Payment = await db.Payment.FirstOrDefaultAsync(p => p.OrderId == OrderId);
+
+            if (Payment is not null)
+            {
+                PaymentMethod = await db.PaymentMethod
+                    .FirstOrDefaultAsync(pm => pm.Id == Payment.PaymentMethodId);
+            }
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private void GoRestaurants() => Nav.NavigateTo("/restaurants");
+    private void GoCart() => Nav.NavigateTo("/cart");
+
+    private class ItemRow
+    {
+        public string ItemName { get; set; } = "";
+        public int Quantity { get; set; }
+        public decimal ItemPrice { get; set; }
+        public decimal Subtotal { get; set; }
+    }
+}

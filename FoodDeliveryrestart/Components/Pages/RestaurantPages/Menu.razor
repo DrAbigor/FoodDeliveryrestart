@@ -9,6 +9,7 @@
 
 @inject IDbContextFactory<FoodDeliveryrestartContext> DbFactory
 @inject NavigationManager Nav
+@inject FoodDeliveryrestart.Services.CartService Cart
 
 <PageTitle>@(restaurant?.Name ?? "Menu") - Food Delivery</PageTitle>
 
@@ -94,6 +95,14 @@
             </div>
         </div>
 
+        @* ✅ warning if user tries to exceed 3 restaurants *@
+        @if (!string.IsNullOrWhiteSpace(cartError))
+        {
+            <div class="alert alert-warning" style="margin: 12px 0;">
+                @cartError
+            </div>
+        }
+
         @if (menuItems is null)
         {
             <div class="state">
@@ -143,7 +152,7 @@
                             </div>
 
                             <div class="actions">
-                                <button class="btn-primary" @onclick="() => AddToCart(item.Id)" type="button">
+                                <button class="btn-primary" @onclick="async () => await AddToCart(item.Id)" type="button">
                                     Add to Cart
                                 </button>
 
@@ -158,6 +167,16 @@
         }
     </div>
 </div>
+
+<!-- ✅ Center popup toast -->
+@if (showToast)
+{
+    <div class="toast-backdrop"></div>
+    <div class="toast-pop" role="status" aria-live="polite">
+        <div class="toast-title">@toastTitle</div>
+        <div class="toast-sub">@toastSub</div>
+    </div>
+}
 
 <!-- ===== Nutrition Modal ===== -->
 @if (showNutritionModal && selectedItem != null)
@@ -232,6 +251,13 @@
     private bool filterNutFree;
     private bool filterDairyFree;
 
+    private string? cartError;
+
+    // ✅ Toast state
+    private bool showToast;
+    private string toastTitle = "Added to cart";
+    private string toastSub = "";
+
     protected override void OnInitialized()
     {
         ctx = DbFactory.CreateDbContext();
@@ -274,9 +300,43 @@
         selectedItem = null;
     }
 
-    private void AddToCart(int menuItemId)
+    private async Task ShowToastAsync(string title, string sub, int ms = 900)
     {
-        // Hook up to Cart service later
+        toastTitle = title;
+        toastSub = sub;
+        showToast = true;
+
+        StateHasChanged();
+        await Task.Delay(ms);
+
+        showToast = false;
+        StateHasChanged();
+    }
+
+    private async Task AddToCart(int menuItemId)
+    {
+        var item = menuItems?.FirstOrDefault(m => m.Id == menuItemId);
+        if (item is null) return;
+
+        var ok = Cart.Add(
+            menuItemId: item.Id,
+            restaurantId: item.RestaurantId,
+            itemName: item.ItemName ?? "Item",
+            price: item.Price,
+            imageUrl: item.ImageUrl,
+            calories: item.Calories,
+            quantity: 1
+        );
+
+        if (!ok)
+        {
+            cartError = "You can only order from up to 3 restaurants per order.";
+            await ShowToastAsync("Not added", "Max 3 restaurants per order", 1100);
+            return;
+        }
+
+        cartError = null;
+        await ShowToastAsync("Added to cart", item.ItemName ?? "Item");
     }
 
     private void Back() => Nav.NavigateTo("/restaurants");

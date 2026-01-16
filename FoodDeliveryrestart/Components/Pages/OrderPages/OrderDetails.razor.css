@@ -1,0 +1,43 @@
+﻿us.order-page{
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 20px 16px;
+}
+
+.order-header h2{
+    margin: 0;
+    font-weight: 800;
+}
+
+.muted{
+    opacity: .75;
+    margin-top: 6px;
+}
+
+.cardish{
+    border-radius: 18px;
+    padding: 18px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.18);
+}
+
+.table-wrap{
+    overflow-x: auto;
+}
+
+.order-top{
+    display:flex;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.order-top .right{
+    text-align:right;
+}
+
+.total-value{
+    font-weight: 800;
+    font-size: 1.2rem;
+}

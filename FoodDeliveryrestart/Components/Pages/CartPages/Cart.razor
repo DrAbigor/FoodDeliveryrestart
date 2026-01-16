@@ -1,0 +1,182 @@
+﻿@page "/cart"
+@rendermode InteractiveServer
+
+@using System.Globalization
+@using System.Linq
+@inject FoodDeliveryrestart.Services.CartService CartSvc
+@inject NavigationManager Nav
+
+<div class="cart-wrap">
+
+    <div class="cart-title">
+        <div>
+            <h2>Your Cart</h2>
+            <div class="muted">@CartSvc.Count() item(s)</div>
+        </div>
+
+        @if (CartSvc.Items.Any())
+        {
+            <button type="button" class="clear-btn" @onclick="ClearCart">Clear cart</button>
+        }
+    </div>
+
+    @if (!CartSvc.Items.Any())
+    {
+        <div class="empty-card">
+            <div class="empty-emoji">🛒</div>
+            <p class="empty-title">Your cart is empty</p>
+            <p class="empty-sub">Add something tasty from Restaurants.</p>
+            <button class="btn btn-primary" @onclick="GoRestaurants">Browse restaurants</button>
+        </div>
+    }
+    else
+    {
+        <div class="cart-grid">
+
+            <!-- LEFT: Items -->
+            <div class="cart-left">
+
+                @foreach (var group in CartSvc.Items
+                   .GroupBy(x => x.RestaurantId)
+                   .OrderBy(g => g.Key))
+                {
+                    <div class="rest-group">
+                        <div class="rest-head">
+                            <div class="rest-pill">
+                                <i class="bi bi-shop"></i>
+                                Restaurant @group.Key
+                            </div>
+                            <div class="rest-sub muted">
+                                @group.Sum(x => x.Quantity) item(s)
+                            </div>
+                        </div>
+
+                        @foreach (var item in group)
+                        {
+                            <div class="cart-item-card">
+                                <div class="thumb">
+                                    @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                                    {
+                                        <img src="@item.ImageUrl" alt="@item.ItemName" />
+                                    }
+                                    else
+                                    {
+                                        <div class="thumb-ph">No Image</div>
+                                    }
+                                </div>
+
+                                <div class="mid">
+                                    <div class="name">@item.ItemName</div>
+                                    <div class="each-price">$@item.Price.ToString("0.00") each</div>
+
+                                    <div class="qty">
+                                        <button type="button" class="qty-btn" @onclick="() => Dec(item.MenuItemId)">−</button>
+                                        <span class="qty-num">@item.Quantity</span>
+                                        <button type="button" class="qty-btn" @onclick="() => Inc(item.MenuItemId)">+</button>
+                                    </div>
+                                </div>
+
+                                <div class="right">
+                                    <button type="button" class="trash" title="Remove" @onclick="() => Remove(item.MenuItemId)">
+                                        <i class="bi bi-trash3"></i>
+                                    </button>
+                                    <div class="line-total">$@((item.Price * item.Quantity).ToString("0.00"))</div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <!-- RIGHT: Summary (sticky) -->
+            <div class="cart-right">
+                <div class="summary-card">
+                    <h4>Order Summary</h4>
+
+                    <div class="row">
+                        <span>Subtotal</span>
+                        <span>$@Subtotal.ToString("0.00")</span>
+                    </div>
+
+                    <div class="row">
+                        <span>Delivery Fee</span>
+                        <span>$@DeliveryFee.ToString("0.00")</span>
+                    </div>
+
+                    <div class="row tip-row">
+                        <span>Tip</span>
+                        <input class="tip-input"
+                               inputmode="decimal"
+                               type="number"
+                               min="0"
+                               step="0.50"
+                               value="@Tip.ToString("0.00", CultureInfo.InvariantCulture)"
+                               @oninput="OnTipInput" />
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="row total">
+                        <span>Total</span>
+                        <span class="total-price">$@Total.ToString("0.00")</span>
+                    </div>
+                </div>
+
+                <div class="summary-card nutrition">
+                    <h4>Nutrition Summary</h4>
+                    <div class="nut-row">
+                        <span>Estimated Total Calories</span>
+                        <span class="kcal">@TotalCalories kcal</span>
+                    </div>
+
+                    @if (TotalCalories >= 2000)
+                    {
+                        <div class="nut-warn">This is a high calorie meal.</div>
+                    }
+                </div>
+
+                <button class="btn checkout-btn" @onclick="GoCheckout">Proceed to Checkout</button>
+                <button class="btn btn-outline-secondary w-100 mt-2" @onclick="GoRestaurants">Continue Shopping</button>
+            </div>
+
+        </div>
+    }
+</div>
+
+@code {
+    // ✅ Shared values from CartService (same as right-side dock)
+    private decimal DeliveryFee => CartSvc.DeliveryFee;
+    private decimal Tip => CartSvc.Tip;
+
+    private decimal Subtotal => CartSvc.Subtotal();
+    private decimal Total => CartSvc.Total();
+    private int TotalCalories => CartSvc.TotalCalories();
+
+    void GoRestaurants() => Nav.NavigateTo("/restaurants");
+    void GoCheckout() => Nav.NavigateTo("/checkout");
+
+    void ClearCart() => CartSvc.Clear();
+
+    void Inc(int id)
+    {
+        var item = CartSvc.Items.First(x => x.MenuItemId == id);
+        CartSvc.Add(item.MenuItemId, item.RestaurantId, item.ItemName, item.Price, item.ImageUrl, item.Calories, 1);
+    }
+
+    void Dec(int id)
+    {
+        var item = CartSvc.Items.First(x => x.MenuItemId == id);
+        CartSvc.SetQuantity(id, item.Quantity - 1);
+    }
+
+    void Remove(int id) => CartSvc.Remove(id);
+
+    private void OnTipInput(ChangeEventArgs e)
+    {
+        var s = e.Value?.ToString() ?? "0";
+        if (!decimal.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out var value))
+            value = 0m;
+
+        CartSvc.SetTip(value); // ✅ store globally
+    }
+}

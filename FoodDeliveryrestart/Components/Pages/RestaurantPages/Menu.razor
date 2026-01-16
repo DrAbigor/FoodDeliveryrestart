@@ -1,4 +1,4 @@
-@page "/restaurants/{RestaurantId:int}/menu"
+﻿@page "/restaurants/{RestaurantId:int}/menu"
 @rendermode InteractiveServer
 
 @using Microsoft.EntityFrameworkCore
@@ -10,157 +10,207 @@
 @inject IDbContextFactory<FoodDeliveryrestartContext> DbFactory
 @inject NavigationManager Nav
 
-<div class="menu-page">
-    <div class="restaurant-header">
-        <div class="restaurant-title">
-            <h2>@(restaurant?.Name ?? "Restaurant")</h2>
-            <div class="header-meta">
-                <span class="meta">
-                    <i class="bi bi-star-fill"></i> @(restaurant?.Rating.ToString("0.0") ?? "0.0")
-                </span>
-                <span class="meta">
-                    <span class="busy-dot @BusyDotClass(restaurant?.BusyLevel ?? BusyLevel.Low)"></span>
-                    Busy Level: @(restaurant?.BusyLevel.ToString() ?? "Low")
-                </span>
+<PageTitle>@(restaurant?.Name ?? "Menu") - Food Delivery</PageTitle>
+
+<div class="menu-shell">
+
+    <!-- ===== Banner ===== -->
+    <div class="banner"
+         style="@(string.IsNullOrWhiteSpace(restaurant?.ImageUrl)
+                    ? ""
+                    : $"background-image:url('{restaurant!.ImageUrl}');")">
+        <div class="banner-overlay"></div>
+
+        <div class="banner-card">
+            <div class="banner-top">
+                <div class="banner-title">
+                    <h2>@(restaurant?.Name ?? "Restaurant")</h2>
+
+                    <div class="banner-meta">
+                        <span class="meta">
+                            <i class="bi bi-star-fill"></i>
+                            @(restaurant?.Rating.ToString("0.0") ?? "0.0")
+                        </span>
+
+                        <span class="meta">
+                            <span class="busy-dot @BusyDotClass(restaurant?.BusyLevel ?? BusyLevel.Low)"></span>
+                            Busy: @(restaurant?.BusyLevel.ToString() ?? "Low")
+                        </span>
+                    </div>
+                </div>
+
+                <button class="back-btn" @onclick="Back" type="button">
+                    <i class="bi bi-arrow-left"></i>
+                    Back
+                </button>
             </div>
         </div>
     </div>
 
-    <h4 class="section-title">Menu</h4>
+    <!-- ===== Content ===== -->
+    <div class="content">
+        <div class="content-head">
+            <div class="title-row">
+                <h4>Menu</h4>
+                <div class="count">
+                    @if (menuItems is not null)
+                    {
+                        <span>@FilteredMenuItems.Count() items</span>
+                    }
+                </div>
+            </div>
 
-    <!-- ===== Dietary Filters ===== -->
-    <div class="filter-bar">
-        <label>
-            <input type="checkbox" @bind="filterHalal" />
-            Halal
-        </label>
-        <label>
-            <input type="checkbox" @bind="filterVegan" />
-            Vegan
-        </label>
-        <label>
-            <input type="checkbox" @bind="filterNutFree" />
-            Nut-Free
-        </label>
-        <label>
-            <input type="checkbox" @bind="filterDairyFree" />
-            Dairy-Free
-        </label>
-    </div>
+            <div class="filter-card">
+                <div class="filter-title">
+                    <i class="bi bi-funnel"></i>
+                    Dietary Filters
+                </div>
 
-    @if (menuItems is null)
-    {
-        <p><em>Loading...</em></p>
-    }
-    else if (!FilteredMenuItems.Any())
-    {
-        <p>No items match the selected filters.</p>
-    }
-    else
-    {
-        <div class="menu-grid">
-            @foreach (var item in FilteredMenuItems)
-            {
-                <div class="menu-card">
-                    <div class="menu-thumb"></div>
+                <div class="filters">
+                    <label class="chk">
+                        <input type="checkbox" @bind="filterHalal" />
+                        <span>Halal</span>
+                    </label>
 
-                    <div class="menu-info">
-                        <h5>@item.ItemName</h5>
-                        <p class="desc">@item.Description</p>
-                        <div class="price">$@item.Price.ToString("0.00")</div>
+                    <label class="chk">
+                        <input type="checkbox" @bind="filterVegan" />
+                        <span>Vegan</span>
+                    </label>
 
-                        <div class="dietary-badges">
-                            @if (item.IsHalal)
+                    <label class="chk">
+                        <input type="checkbox" @bind="filterNutFree" />
+                        <span>Nut-Free</span>
+                    </label>
+
+                    <label class="chk">
+                        <input type="checkbox" @bind="filterDairyFree" />
+                        <span>Dairy-Free</span>
+                    </label>
+
+                    <button class="clear-btn" @onclick="ClearFilters" type="button">
+                        Clear
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        @if (menuItems is null)
+        {
+            <div class="state">
+                <div class="spinner"></div>
+                <p>Loading menu…</p>
+            </div>
+        }
+        else if (!FilteredMenuItems.Any())
+        {
+            <div class="state">
+                <i class="bi bi-emoji-frown" style="font-size:34px;"></i>
+                <p>No items match your filters.</p>
+            </div>
+        }
+        else
+        {
+            <div class="menu-grid">
+                @foreach (var item in FilteredMenuItems)
+                {
+                    <div class="menu-card">
+                        <div class="thumb">
+                            @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
                             {
-                                <span class="badge halal">Halal</span>
+                                <img src="@item.ImageUrl"
+                                     alt="@item.ItemName"
+                                     loading="lazy"
+                                     onerror="this.style.display='none'; this.closest('.thumb').classList.add('noimg');" />
                             }
-                            @if (item.IsVegan)
-                            {
-                                <span class="badge vegan">Vegan</span>
-                            }
-                            @if (item.IsNutFree)
-                            {
-                                <span class="badge nutfree">Nut-Free</span>
-                            }
-                            @if (item.IsDairyFree)
-                            {
-                                <span class="badge dairyfree">Dairy-Free</span>
-                            }
+                            <div class="thumb-ph">
+                                <i class="bi bi-image"></i>
+                            </div>
+                        </div>
+
+                        <div class="info">
+                            <div class="top-row">
+                                <h5 title="@item.ItemName">@item.ItemName</h5>
+                                <div class="price">$@item.Price.ToString("0.00")</div>
+                            </div>
+
+                            <p class="desc">@item.Description</p>
+
+                            <div class="badges">
+                                @if (item.IsHalal) { <span class="badge halal">Halal</span> }
+                                @if (item.IsVegan) { <span class="badge vegan">Vegan</span> }
+                                @if (item.IsNutFree) { <span class="badge nutfree">Nut-free</span> }
+                                @if (item.IsDairyFree) { <span class="badge dairyfree">Dairy-free</span> }
+                            </div>
+
+                            <div class="actions">
+                                <button class="btn-primary" @onclick="() => AddToCart(item.Id)" type="button">
+                                    Add to Cart
+                                </button>
+
+                                <button class="btn-outline" @onclick="() => OpenNutrition(item)" type="button">
+                                    View Nutrition
+                                </button>
+                            </div>
                         </div>
                     </div>
-
-                    <div class="menu-actions">
-                        <button class="btn-primary" @onclick="() => AddToCart(item.Id)">
-                            Add to Cart
-                        </button>
-                        <button class="btn-outline" @onclick="() => OpenNutrition(item)">
-                            View Nutrition
-                        </button>
-                    </div>
-                </div>
-            }
-        </div>
-    }
+                }
+            </div>
+        }
+    </div>
 </div>
 
+<!-- ===== Nutrition Modal ===== -->
 @if (showNutritionModal && selectedItem != null)
 {
     <div class="modal-backdrop" @onclick="CloseNutrition"></div>
 
-    <div class="nutrition-modal">
+    <div class="nutrition-modal" role="dialog" aria-modal="true">
         <div class="modal-header">
-            <h4>@selectedItem.ItemName</h4>
-            <button class="close-btn" @onclick="CloseNutrition">�</button>
-        </div>
+            <div>
+                <div class="modal-title">@selectedItem.ItemName</div>
+                <div class="modal-subtitle">Nutrition information (per serving)</div>
+            </div>
 
-        <p class="modal-subtitle">Nutrition Information (per serving)</p>
+            <button class="close-btn" @onclick="CloseNutrition" aria-label="Close" type="button">×</button>
+        </div>
 
         <div class="nutrition-grid">
-            <div>
-                <strong>Calories</strong>
-                <div>@selectedItem.Calories kcal</div>
+            <div class="nut-box">
+                <div class="k">Calories</div>
+                <div class="v">@selectedItem.Calories kcal</div>
             </div>
-            <div>
-                <strong>Protein</strong>
-                <div>@selectedItem.ProteinG g</div>
+            <div class="nut-box">
+                <div class="k">Protein</div>
+                <div class="v">@selectedItem.ProteinG g</div>
             </div>
-            <div>
-                <strong>Carbohydrates</strong>
-                <div>@selectedItem.CarbohydratesG g</div>
+            <div class="nut-box">
+                <div class="k">Carbs</div>
+                <div class="v">@selectedItem.CarbohydratesG g</div>
             </div>
-            <div>
-                <strong>Fat</strong>
-                <div>@selectedItem.FatG g</div>
-            </div>
-        </div>
-
-        <div class="allergens">
-            <strong>Allergens</strong>
-            <div>
-                @(string.IsNullOrWhiteSpace(selectedItem.Allergens)
-                    ? "None specified"
-                    : selectedItem.Allergens)
+            <div class="nut-box">
+                <div class="k">Fat</div>
+                <div class="v">@selectedItem.FatG g</div>
             </div>
         </div>
 
-        <div class="dietary-section">
-            <strong>Dietary Information</strong>
-            <div class="dietary-badges">
-                @if (selectedItem.IsHalal)
+        <div class="modal-section">
+            <div class="sec-title">Allergens</div>
+            <div class="sec-body">
+                @(string.IsNullOrWhiteSpace(selectedItem.Allergens) ? "None specified" : selectedItem.Allergens)
+            </div>
+        </div>
+
+        <div class="modal-section">
+            <div class="sec-title">Dietary</div>
+            <div class="sec-body badges">
+                @if (selectedItem.IsHalal) { <span class="badge halal">Halal</span> }
+                @if (selectedItem.IsVegan) { <span class="badge vegan">Vegan</span> }
+                @if (selectedItem.IsNutFree) { <span class="badge nutfree">Nut-free</span> }
+                @if (selectedItem.IsDairyFree) { <span class="badge dairyfree">Dairy-free</span> }
+
+                @if (!selectedItem.IsHalal && !selectedItem.IsVegan && !selectedItem.IsNutFree && !selectedItem.IsDairyFree)
                 {
-                    <span class="badge halal">Halal</span>
-                }
-                @if (selectedItem.IsVegan)
-                {
-                    <span class="badge vegan">Vegan</span>
-                }
-                @if (selectedItem.IsNutFree)
-                {
-                    <span class="badge nutfree">Nut-Free</span>
-                }
-                @if (selectedItem.IsDairyFree)
-                {
-                    <span class="badge dairyfree">Dairy-Free</span>
+                    <span class="muted">No dietary tags</span>
                 }
             </div>
         </div>
@@ -177,21 +227,10 @@
     private MenuItem? selectedItem;
     private bool showNutritionModal;
 
-    // Dietary filters
     private bool filterHalal;
     private bool filterVegan;
     private bool filterNutFree;
     private bool filterDairyFree;
-
-    private IEnumerable<MenuItem> FilteredMenuItems =>
-        menuItems == null
-            ? Enumerable.Empty<MenuItem>()
-            : menuItems.Where(item =>
-                (!filterHalal || item.IsHalal) &&
-                (!filterVegan || item.IsVegan) &&
-                (!filterNutFree || item.IsNutFree) &&
-                (!filterDairyFree || item.IsDairyFree)
-            );
 
     protected override void OnInitialized()
     {
@@ -203,6 +242,24 @@
             .Where(m => m.RestaurantId == RestaurantId)
             .OrderBy(m => m.ItemName)
             .ToList();
+    }
+
+    private IEnumerable<MenuItem> FilteredMenuItems =>
+        menuItems == null
+            ? Enumerable.Empty<MenuItem>()
+            : menuItems.Where(item =>
+                (!filterHalal || item.IsHalal) &&
+                (!filterVegan || item.IsVegan) &&
+                (!filterNutFree || item.IsNutFree) &&
+                (!filterDairyFree || item.IsDairyFree)
+            );
+
+    private void ClearFilters()
+    {
+        filterHalal = false;
+        filterVegan = false;
+        filterNutFree = false;
+        filterDairyFree = false;
     }
 
     private void OpenNutrition(MenuItem item)
@@ -219,8 +276,10 @@
 
     private void AddToCart(int menuItemId)
     {
-        // Cart logic later
+        // Hook up to Cart service later
     }
+
+    private void Back() => Nav.NavigateTo("/restaurants");
 
     private string BusyDotClass(BusyLevel level) => level switch
     {

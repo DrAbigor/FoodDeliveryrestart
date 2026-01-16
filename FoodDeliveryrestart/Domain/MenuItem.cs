@@ -7,6 +7,7 @@ namespace FoodDeliveryrestart.Domain
         public string? ItemName { get; set; }
         public decimal Price { get; set; }
         public string? Description { get; set; }
+        public string? ImageUrl { get; set; }
 
         // ✅ NEW Nutrition Fields
         public int Calories { get; set; }                 // e.g. 650

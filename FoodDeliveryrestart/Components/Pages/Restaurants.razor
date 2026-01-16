@@ -32,62 +32,56 @@
 <div class="restaurants-container">
     @if (restaurants is null)
     {
-        <div class="loading-state">
-            <div class="spinner"></div>
-            <p>Loading restaurants...</p>
-        </div>
+        <p>Loading...</p>
     }
     else if (!FilteredRestaurants.Any())
     {
-        <div class="no-results">
-            <i class="bi bi-search" style="font-size: 48px; color: #d1d5db;"></i>
-            <p>No restaurants match your search.</p>
-        </div>
+        <p>No restaurants found.</p>
     }
     else
     {
         <div class="restaurant-grid">
             @foreach (var restaurant in FilteredRestaurants)
             {
-                <div class="restaurant-card">
-                    <div class="card-header">
+                var img = string.IsNullOrWhiteSpace(restaurant.ImageUrl) ? FallbackImage : restaurant.ImageUrl;
+                var isLogo = IsLogoImage(img);
+
+                <div class="restaurant-card" @onclick="() => ViewMenu(restaurant.Id)">
+
+                    <div class="image-wrapper @(isLogo ? "is-logo" : "is-photo")">
+                        <img src="@img"
+                             alt="@restaurant.Name"
+                             loading="lazy"
+                             referrerpolicy="no-referrer"
+                             onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1600&q=70';" />
+                    </div>
+
+                    <div class="card-body">
                         <h3>@restaurant.Name</h3>
+
                         <span class="cuisine-badge">@restaurant.CuisineType</span>
-                    </div>
 
-                    <!-- NEW: Rating + Busy Level -->
-                    <div class="meta-row">
-                        <div class="rating">
-                            <i class="bi bi-star-fill"></i>
-                            <span>@restaurant.Rating.ToString("0.0")</span>
+                        <div class="meta-row">
+                            <div class="rating">
+                                <i class="bi bi-star-fill"></i>
+                                <span>@restaurant.Rating.ToString("0.0")</span>
+                            </div>
+
+                            <div class="busy">
+                                <span class="busy-dot @BusyDotClass(restaurant.BusyLevel)"></span>
+                                <span>@restaurant.BusyLevel</span>
+                            </div>
                         </div>
 
-                        <div class="busy">
-                            <span class="busy-dot @BusyDotClass(restaurant.BusyLevel)"></span>
-                            <span>Busy: @restaurant.BusyLevel</span>
+                        <div class="details">
+                            <div><i class="bi bi-geo-alt"></i> @restaurant.LocationWithinMall</div>
+                            <div><i class="bi bi-clock"></i> @restaurant.OperatingHours</div>
                         </div>
-                    </div>
 
-                    <div class="card-details">
-                        @if (!string.IsNullOrEmpty(restaurant.LocationWithinMall))
-                        {
-                            <div class="detail-item">
-                                <i class="bi bi-geo-alt"></i>
-                                <span>@restaurant.LocationWithinMall</span>
-                            </div>
-                        }
-                        @if (!string.IsNullOrEmpty(restaurant.OperatingHours))
-                        {
-                            <div class="detail-item">
-                                <i class="bi bi-clock"></i>
-                                <span>@restaurant.OperatingHours</span>
-                            </div>
-                        }
+                        <button class="view-menu-btn" @onclick:stopPropagation="true" @onclick="() => ViewMenu(restaurant.Id)">
+                            View Menu
+                        </button>
                     </div>
-
-                    <button class="view-menu-btn" @onclick="() => ViewMenu(restaurant.Id)">
-                        View Menu
-                    </button>
                 </div>
             }
         </div>
@@ -95,39 +89,36 @@
 </div>
 
 @code {
+    private const string FallbackImage =
+        "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1600&q=70";
+
     private FoodDeliveryrestartContext? context;
     private List<Restaurant>? restaurants;
     private string searchText = "";
 
-    private IEnumerable<Restaurant> FilteredRestaurants
-    {
-        get
-        {
-            if (restaurants is null)
-                return Enumerable.Empty<Restaurant>();
-
-            if (string.IsNullOrWhiteSpace(searchText))
-                return restaurants;
-
-            var search = searchText.ToLowerInvariant();
-            return restaurants.Where(r =>
-                (r.Name ?? string.Empty).ToLowerInvariant().Contains(search) ||
-                (r.CuisineType ?? string.Empty).ToLowerInvariant().Contains(search)
-            );
-        }
-    }
-
-    private void ViewMenu(int restaurantId)
-    {
-        NavigationManager.NavigateTo($"/restaurants/{restaurantId}/menu");
-    }
+    private IEnumerable<Restaurant> FilteredRestaurants =>
+        string.IsNullOrWhiteSpace(searchText)
+            ? restaurants ?? Enumerable.Empty<Restaurant>()
+            : restaurants!.Where(r =>
+                (r.Name ?? "").Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
+                (r.CuisineType ?? "").Contains(searchText, StringComparison.OrdinalIgnoreCase));
 
     protected override void OnInitialized()
     {
         context = DbFactory.CreateDbContext();
-        restaurants = context.Restaurant
-            .OrderBy(r => r.Name)
-            .ToList();
+        restaurants = context.Restaurant.OrderBy(r => r.Name).ToList();
+    }
+
+    private void ViewMenu(int id)
+    {
+        NavigationManager.NavigateTo($"/restaurants/{id}/menu");
+    }
+
+    // ✅ Heuristic: Wikipedia / logos should use "contain"
+    private static bool IsLogoImage(string url)
+    {
+        url = url.ToLowerInvariant();
+        return url.Contains("upload.wikimedia.org") || url.Contains("logo");
     }
 
     private string BusyDotClass(BusyLevel level) => level switch
@@ -144,3 +135,45 @@
             await context.DisposeAsync();
     }
 }
+
+<style>
+/* ✅ image sizing fix */
+.image-wrapper{
+    height: 150px;
+    width: 100%;
+    overflow: hidden;
+    border-radius: 14px;
+    margin-bottom: 12px;
+    position: relative;
+    background: #f3f4f6;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+/* food photos */
+.image-wrapper.is-photo img{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* logos */
+.image-wrapper.is-logo{
+    background: #ffffff;
+}
+.image-wrapper.is-logo img{
+    width: 85%;
+    height: 85%;
+    object-fit: contain;
+}
+
+/* optional: small hover polish */
+.restaurant-card{
+    cursor:pointer;
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+.restaurant-card:hover{
+    transform: translateY(-2px);
+}
+</style>

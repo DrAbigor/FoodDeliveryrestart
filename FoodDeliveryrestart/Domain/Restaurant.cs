@@ -16,6 +16,8 @@ namespace FoodDeliveryrestart.Domain
 
         [StringLength(50)]
         public string? LocationWithinMall { get; set; }
+        public string? ImageUrl { get; set; }
+
 
         // NEW
         [Range(0, 5)]

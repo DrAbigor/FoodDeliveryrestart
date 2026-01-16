@@ -3,7 +3,6 @@ using FoodDeliveryrestart.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-
 namespace FoodDeliveryrestart.Configurations.Entities
 {
     public class RestaurantSeed : IEntityTypeConfiguration<Restaurant>
@@ -21,6 +20,8 @@ namespace FoodDeliveryrestart.Configurations.Entities
                     MallId = 1,
                     Rating = 4.4m,
                     BusyLevel = BusyLevel.Medium,
+                    // ✅ PNG (works reliably)
+                    ImageUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/All_American_Food_Logo.svg/1024px-All_American_Food_Logo.svg.png",
                     DateCreated = DateTime.Now,
                     DateUpdated = DateTime.Now,
                     CreatedBy = "Seed",
@@ -36,6 +37,7 @@ namespace FoodDeliveryrestart.Configurations.Entities
                     MallId = 1,
                     Rating = 4.6m,
                     BusyLevel = BusyLevel.High,
+                    ImageUrl = "https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1600&q=70",
                     DateCreated = DateTime.Now,
                     DateUpdated = DateTime.Now,
                     CreatedBy = "Seed",
@@ -51,6 +53,8 @@ namespace FoodDeliveryrestart.Configurations.Entities
                     MallId = 1,
                     Rating = 4.7m,
                     BusyLevel = BusyLevel.Medium,
+                    // ✅ PNG (works reliably)
+                    ImageUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Jollibee_Foods_Corporation_logo.png/1024px-Jollibee_Foods_Corporation_logo.png",
                     DateCreated = DateTime.Now,
                     DateUpdated = DateTime.Now,
                     CreatedBy = "Seed",
@@ -66,6 +70,8 @@ namespace FoodDeliveryrestart.Configurations.Entities
                     MallId = 1,
                     Rating = 4.2m,
                     BusyLevel = BusyLevel.High,
+                    // ✅ PNG instead of SVG
+                    ImageUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/KFC_logo.svg/1024px-KFC_logo.svg.png",
                     DateCreated = DateTime.Now,
                     DateUpdated = DateTime.Now,
                     CreatedBy = "Seed",
@@ -81,6 +87,8 @@ namespace FoodDeliveryrestart.Configurations.Entities
                     MallId = 1,
                     Rating = 4.3m,
                     BusyLevel = BusyLevel.High,
+                    // ✅ PNG instead of SVG
+                    ImageUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/McDonald%27s_logo.svg/1024px-McDonald%27s_logo.svg.png",
                     DateCreated = DateTime.Now,
                     DateUpdated = DateTime.Now,
                     CreatedBy = "Seed",
@@ -96,6 +104,7 @@ namespace FoodDeliveryrestart.Configurations.Entities
                     MallId = 1,
                     Rating = 4.1m,
                     BusyLevel = BusyLevel.Low,
+                    ImageUrl = "https://images.unsplash.com/photo-1521389508051-d7ffb5dc8f6f?auto=format&fit=crop&w=1600&q=70",
                     DateCreated = DateTime.Now,
                     DateUpdated = DateTime.Now,
                     CreatedBy = "Seed",
@@ -111,6 +120,7 @@ namespace FoodDeliveryrestart.Configurations.Entities
                     MallId = 1,
                     Rating = 4.5m,
                     BusyLevel = BusyLevel.Medium,
+                    ImageUrl = "https://images.unsplash.com/photo-1548365328-8b849e6a1e05?auto=format&fit=crop&w=1600&q=70",
                     DateCreated = DateTime.Now,
                     DateUpdated = DateTime.Now,
                     CreatedBy = "Seed",
@@ -126,6 +136,7 @@ namespace FoodDeliveryrestart.Configurations.Entities
                     MallId = 1,
                     Rating = 4.6m,
                     BusyLevel = BusyLevel.Medium,
+                    ImageUrl = "https://images.unsplash.com/photo-1559847844-5315695dadae?auto=format&fit=crop&w=1600&q=70",
                     DateCreated = DateTime.Now,
                     DateUpdated = DateTime.Now,
                     CreatedBy = "Seed",
@@ -141,6 +152,7 @@ namespace FoodDeliveryrestart.Configurations.Entities
                     MallId = 1,
                     Rating = 4.8m,
                     BusyLevel = BusyLevel.Low,
+                    ImageUrl = "https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&w=1600&q=70",
                     DateCreated = DateTime.Now,
                     DateUpdated = DateTime.Now,
                     CreatedBy = "Seed",
@@ -150,3 +162,4 @@ namespace FoodDeliveryrestart.Configurations.Entities
         }
     }
 }
+

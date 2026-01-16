@@ -1,10 +1,7 @@
 ﻿using System.Security.Claims;
 using System.Text.Json;
-using FoodDeliveryrestart.Components.Account.Pages;
-using FoodDeliveryrestart.Components.Account.Pages.Manage;
 using FoodDeliveryrestart.Data;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -14,22 +11,25 @@ namespace Microsoft.AspNetCore.Routing
 {
     internal static class IdentityComponentsEndpointRouteBuilderExtensions
     {
-        // These endpoints are required by the Identity Razor components defined in the /Components/Account/Pages directory of this project.
         public static IEndpointConventionBuilder MapAdditionalIdentityEndpoints(this IEndpointRouteBuilder endpoints)
         {
             ArgumentNullException.ThrowIfNull(endpoints);
 
             var accountGroup = endpoints.MapGroup("/Account");
 
+            // External login (challenge -> callback goes to the ExternalLogin component route)
             accountGroup.MapPost("/PerformExternalLogin", (
                 HttpContext context,
                 [FromServices] SignInManager<FoodDeliveryrestartUser> signInManager,
                 [FromForm] string provider,
                 [FromForm] string returnUrl) =>
             {
-                IEnumerable<KeyValuePair<string, StringValues>> query = [
+                // IMPORTANT: don't reference ExternalLogin constants (your project doesn't have them)
+                IEnumerable<KeyValuePair<string, StringValues>> query =
+                [
                     new("ReturnUrl", returnUrl),
-                    new("Action", ExternalLogin.LoginCallbackAction)];
+                    new("Action", "LoginCallback") // matches the default template string
+                ];
 
                 var redirectUrl = UriHelper.BuildRelative(
                     context.Request.PathBase,
@@ -37,7 +37,7 @@ namespace Microsoft.AspNetCore.Routing
                     QueryString.Create(query));
 
                 var properties = signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
-                return TypedResults.Challenge(properties, [provider]);
+                return TypedResults.Challenge(properties, new[] { provider });
             });
 
             accountGroup.MapPost("/Logout", async (
@@ -56,16 +56,19 @@ namespace Microsoft.AspNetCore.Routing
                 [FromServices] SignInManager<FoodDeliveryrestartUser> signInManager,
                 [FromForm] string provider) =>
             {
-                // Clear the existing external cookie to ensure a clean login process
                 await context.SignOutAsync(IdentityConstants.ExternalScheme);
 
                 var redirectUrl = UriHelper.BuildRelative(
                     context.Request.PathBase,
                     "/Account/Manage/ExternalLogins",
-                    QueryString.Create("Action", ExternalLogins.LinkLoginCallbackAction));
+                    QueryString.Create("Action", "LinkLoginCallback")); // template string
 
-                var properties = signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl, signInManager.UserManager.GetUserId(context.User));
-                return TypedResults.Challenge(properties, [provider]);
+                var properties = signInManager.ConfigureExternalAuthenticationProperties(
+                    provider,
+                    redirectUrl,
+                    signInManager.UserManager.GetUserId(context.User));
+
+                return TypedResults.Challenge(properties, new[] { provider });
             });
 
             var loggerFactory = endpoints.ServiceProvider.GetRequiredService<ILoggerFactory>();
@@ -73,8 +76,7 @@ namespace Microsoft.AspNetCore.Routing
 
             manageGroup.MapPost("/DownloadPersonalData", async (
                 HttpContext context,
-                [FromServices] UserManager<FoodDeliveryrestartUser> userManager,
-                [FromServices] AuthenticationStateProvider authenticationStateProvider) =>
+                [FromServices] UserManager<FoodDeliveryrestartUser> userManager) =>
             {
                 var user = await userManager.GetUserAsync(context.User);
                 if (user is null)
@@ -85,10 +87,10 @@ namespace Microsoft.AspNetCore.Routing
                 var userId = await userManager.GetUserIdAsync(user);
                 downloadLogger.LogInformation("User with ID '{UserId}' asked for their personal data.", userId);
 
-                // Only include personal data for download
                 var personalData = new Dictionary<string, string>();
-                var personalDataProps = typeof(FoodDeliveryrestartUser).GetProperties().Where(
-                    prop => Attribute.IsDefined(prop, typeof(PersonalDataAttribute)));
+                var personalDataProps = typeof(FoodDeliveryrestartUser).GetProperties()
+                    .Where(prop => Attribute.IsDefined(prop, typeof(PersonalDataAttribute)));
+
                 foreach (var p in personalDataProps)
                 {
                     personalData.Add(p.Name, p.GetValue(user)?.ToString() ?? "null");
@@ -101,6 +103,7 @@ namespace Microsoft.AspNetCore.Routing
                 }
 
                 personalData.Add("Authenticator Key", (await userManager.GetAuthenticatorKeyAsync(user))!);
+
                 var fileBytes = JsonSerializer.SerializeToUtf8Bytes(personalData);
 
                 context.Response.Headers.TryAdd("Content-Disposition", "attachment; filename=PersonalData.json");

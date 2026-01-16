@@ -47,13 +47,12 @@
                 var isLogo = IsLogoImage(img);
 
                 <div class="restaurant-card" @onclick="() => ViewMenu(restaurant.Id)">
-
                     <div class="image-wrapper @(isLogo ? "is-logo" : "is-photo")">
                         <img src="@img"
                              alt="@restaurant.Name"
                              loading="lazy"
                              referrerpolicy="no-referrer"
-                             onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1600&q=70';" />
+                             onerror="this.onerror=null;this.src='@FallbackImage';" />
                     </div>
 
                     <div class="card-body">
@@ -78,7 +77,9 @@
                             <div><i class="bi bi-clock"></i> @restaurant.OperatingHours</div>
                         </div>
 
-                        <button class="view-menu-btn" @onclick:stopPropagation="true" @onclick="() => ViewMenu(restaurant.Id)">
+                        <button class="view-menu-btn"
+                                @onclick:stopPropagation="true"
+                                @onclick="() => ViewMenu(restaurant.Id)">
                             View Menu
                         </button>
                     </div>
@@ -109,12 +110,8 @@
         restaurants = context.Restaurant.OrderBy(r => r.Name).ToList();
     }
 
-    private void ViewMenu(int id)
-    {
-        NavigationManager.NavigateTo($"/restaurants/{id}/menu");
-    }
+    private void ViewMenu(int id) => NavigationManager.NavigateTo($"/restaurants/{id}/menu");
 
-    // ✅ Heuristic: Wikipedia / logos should use "contain"
     private static bool IsLogoImage(string url)
     {
         url = url.ToLowerInvariant();
@@ -135,45 +132,3 @@
             await context.DisposeAsync();
     }
 }
-
-<style>
-/* ✅ image sizing fix */
-.image-wrapper{
-    height: 150px;
-    width: 100%;
-    overflow: hidden;
-    border-radius: 14px;
-    margin-bottom: 12px;
-    position: relative;
-    background: #f3f4f6;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-}
-
-/* food photos */
-.image-wrapper.is-photo img{
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-/* logos */
-.image-wrapper.is-logo{
-    background: #ffffff;
-}
-.image-wrapper.is-logo img{
-    width: 85%;
-    height: 85%;
-    object-fit: contain;
-}
-
-/* optional: small hover polish */
-.restaurant-card{
-    cursor:pointer;
-    transition: transform .15s ease, box-shadow .15s ease;
-}
-.restaurant-card:hover{
-    transform: translateY(-2px);
-}
-</style>

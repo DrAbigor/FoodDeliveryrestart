@@ -1,6 +1,4 @@
 ﻿using FoodDeliveryrestart.Components;
-using FoodDeliveryrestart;
-
 using FoodDeliveryrestart.Services;
 using Microsoft.EntityFrameworkCore;
 using FoodDeliveryrestart.Data;
@@ -35,7 +33,7 @@ builder.Services.AddAuthentication(options =>
     options.DefaultScheme = IdentityConstants.ApplicationScheme;
     options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
 })
-    .AddIdentityCookies();
+.AddIdentityCookies();
 
 builder.Services.AddIdentityCore<FoodDeliveryrestartUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<FoodDeliveryrestartContext>()
@@ -52,19 +50,22 @@ builder.Services.AddScoped<GroupOrderState>();
 
 var app = builder.Build();
 
-if (!app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment())
+{
+    app.UseMigrationsEndPoint();
+}
+else
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
     app.UseHsts();
-    app.UseMigrationsEndPoint();
 }
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseAntiforgery();
 
-app.MapRazorComponents<FoodDeliveryrestart.Components.App>()
-    .AddInteractiveServerRenderMode();
+app.MapRazorComponents<App>()
+   .AddInteractiveServerRenderMode();
 
 app.MapAdditionalIdentityEndpoints();
 

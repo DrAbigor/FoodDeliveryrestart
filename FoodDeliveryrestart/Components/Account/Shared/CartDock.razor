@@ -1,0 +1,142 @@
+﻿@rendermode InteractiveServer
+@implements IDisposable
+@using System.Globalization
+@inject FoodDeliveryrestart.Services.CartService CartSvc
+@inject NavigationManager Nav
+
+<div class="cart-dock">
+    <div class="dock-card">
+        <div class="dock-head">
+            <div class="dock-title">Cart</div>
+            <div class="dock-sub">@CartSvc.Count() item(s)</div>
+        </div>
+
+        @if (!CartSvc.Items.Any())
+        {
+            <div class="dock-empty">
+                <div class="dock-emoji">🛒</div>
+                <div class="dock-empty-title">Cart is empty</div>
+                <div class="dock-empty-sub">Add items to see them here.</div>
+                <button class="dock-btn dock-btn-primary" @onclick="GoRestaurants" type="button">
+                    Browse restaurants
+                </button>
+            </div>
+        }
+        else
+        {
+            <div class="dock-items">
+                @foreach (var item in CartSvc.Items.OrderBy(x => x.ItemName))
+                {
+                    <div class="dock-item">
+                        <div class="dock-thumb">
+                            @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                            {
+                                <img src="@item.ImageUrl" alt="@item.ItemName" loading="lazy" />
+                            }
+                            else
+                            {
+                                <div class="dock-thumb-ph">No image</div>
+                            }
+                        </div>
+
+                        <div class="dock-mid">
+                            <div class="dock-name" title="@item.ItemName">@item.ItemName</div>
+                            <div class="dock-meta">$@item.Price.ToString("0.00")</div>
+
+                            <div class="dock-qty">
+                                <button type="button" class="dock-qtybtn" @onclick="() => Dec(item.MenuItemId)">−</button>
+                                <span class="dock-qtynum">@item.Quantity</span>
+                                <button type="button" class="dock-qtybtn" @onclick="() => Inc(item.MenuItemId)">+</button>
+                            </div>
+                        </div>
+
+                        <div class="dock-right">
+                            <button type="button" class="dock-trash" title="Remove" @onclick="() => Remove(item.MenuItemId)">
+                                <i class="bi bi-trash3"></i>
+                            </button>
+                            <div class="dock-line">$@((item.Price * item.Quantity).ToString("0.00"))</div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="dock-summary">
+                <div class="dock-row">
+                    <span>Subtotal</span>
+                    <span>$@CartSvc.Subtotal().ToString("0.00")</span>
+                </div>
+
+                <div class="dock-row">
+                    <span>Delivery</span>
+                    <span>$@CartSvc.DeliveryFee.ToString("0.00")</span>
+                </div>
+
+                <div class="dock-row dock-tiprow">
+                    <span>Tip</span>
+                    <input class="dock-tip"
+                           inputmode="decimal"
+                           type="number"
+                           min="0"
+                           step="0.50"
+                           value="@CartSvc.Tip.ToString("0.00", CultureInfo.InvariantCulture)"
+                           @oninput="OnTipInput" />
+                </div>
+
+                <div class="dock-divider"></div>
+
+                <div class="dock-row dock-total">
+                    <span>Total</span>
+                    <span class="dock-totalval">$@CartSvc.Total().ToString("0.00")</span>
+                </div>
+
+                <div class="dock-actions">
+                    <button class="dock-btn dock-btn-primary" @onclick="GoCheckout" type="button">Checkout</button>
+                    <button class="dock-btn dock-btn-ghost" @onclick="GoCart" type="button">View cart</button>
+                    <button class="dock-btn dock-btn-ghost" @onclick="ClearCart" type="button">Clear</button>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        CartSvc.OnChange += HandleChanged;
+    }
+
+    private void HandleChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        CartSvc.OnChange -= HandleChanged;
+    }
+
+    private void GoRestaurants() => Nav.NavigateTo("/restaurants");
+    private void GoCheckout() => Nav.NavigateTo("/checkout");
+    private void GoCart() => Nav.NavigateTo("/cart");
+    private void ClearCart() => CartSvc.Clear();
+
+    private void Inc(int id)
+    {
+        var item = CartSvc.Items.First(x => x.MenuItemId == id);
+        CartSvc.Add(item.MenuItemId, item.RestaurantId, item.ItemName, item.Price, item.ImageUrl, item.Calories, 1);
+    }
+
+    private void Dec(int id)
+    {
+        var item = CartSvc.Items.First(x => x.MenuItemId == id);
+        CartSvc.SetQuantity(id, item.Quantity - 1);
+    }
+
+    private void Remove(int id) => CartSvc.Remove(id);
+
+    private void OnTipInput(ChangeEventArgs e)
+    {
+        var s = e.Value?.ToString() ?? "0";
+        if (!decimal.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out var value))
+            value = 0m;
+
+        CartSvc.SetTip(value);
+    }
+}

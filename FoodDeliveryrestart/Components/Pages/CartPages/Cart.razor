@@ -22,23 +22,35 @@
 
     @if (!CartSvc.Items.Any())
     {
-        <div class="empty-card">
-            <div class="empty-emoji">🛒</div>
-            <p class="empty-title">Your cart is empty</p>
-            <p class="empty-sub">Add something tasty from Restaurants.</p>
-            <button class="btn btn-primary" @onclick="GoRestaurants">Browse restaurants</button>
+        <div class="cart-empty-shell">
+            <div class="cart-empty-card">
+                <div class="cart-empty-icon">
+                    <i class="bi bi-cart3"></i>
+                </div>
+
+                <div class="cart-empty-text">
+                    <h3>Your cart is empty</h3>
+                    <p>Add something tasty from Restaurants to get started.</p>
+
+                    <div class="cart-empty-actions">
+                        <button class="cart-btn-primary" type="button" @onclick="GoRestaurants">
+                            Browse restaurants
+                        </button>
+
+                        <button class="cart-btn-ghost" type="button" @onclick="GoHome">
+                            Back to home
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     }
     else
     {
         <div class="cart-grid">
 
-            <!-- LEFT: Items -->
             <div class="cart-left">
-
-                @foreach (var group in CartSvc.Items
-                   .GroupBy(x => x.RestaurantId)
-                   .OrderBy(g => g.Key))
+                @foreach (var group in CartSvc.Items.GroupBy(x => x.RestaurantId).OrderBy(g => g.Key))
                 {
                     <div class="rest-group">
                         <div class="rest-head">
@@ -88,7 +100,6 @@
                 }
             </div>
 
-            <!-- RIGHT: Summary (sticky) -->
             <div class="cart-right">
                 <div class="summary-card">
                     <h4>Order Summary</h4>
@@ -144,7 +155,6 @@
 </div>
 
 @code {
-    // ✅ Shared values from CartService (same as right-side dock)
     private decimal DeliveryFee => CartSvc.DeliveryFee;
     private decimal Tip => CartSvc.Tip;
 
@@ -152,24 +162,25 @@
     private decimal Total => CartSvc.Total();
     private int TotalCalories => CartSvc.TotalCalories();
 
-    void GoRestaurants() => Nav.NavigateTo("/restaurants");
-    void GoCheckout() => Nav.NavigateTo("/checkout");
+    private void GoRestaurants() => Nav.NavigateTo("/restaurants");
+    private void GoCheckout() => Nav.NavigateTo("/checkout");
+    private void GoHome() => Nav.NavigateTo("/");
 
-    void ClearCart() => CartSvc.Clear();
+    private void ClearCart() => CartSvc.Clear();
 
-    void Inc(int id)
+    private void Inc(int id)
     {
         var item = CartSvc.Items.First(x => x.MenuItemId == id);
         CartSvc.Add(item.MenuItemId, item.RestaurantId, item.ItemName, item.Price, item.ImageUrl, item.Calories, 1);
     }
 
-    void Dec(int id)
+    private void Dec(int id)
     {
         var item = CartSvc.Items.First(x => x.MenuItemId == id);
         CartSvc.SetQuantity(id, item.Quantity - 1);
     }
 
-    void Remove(int id) => CartSvc.Remove(id);
+    private void Remove(int id) => CartSvc.Remove(id);
 
     private void OnTipInput(ChangeEventArgs e)
     {
@@ -177,6 +188,6 @@
         if (!decimal.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out var value))
             value = 0m;
 
-        CartSvc.SetTip(value); // ✅ store globally
+        CartSvc.SetTip(value);
     }
 }

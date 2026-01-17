@@ -73,7 +73,10 @@
                         </div>
 
                         <div class="details">
-                            <div><i class="bi bi-geo-alt"></i> @restaurant.LocationWithinMall</div>
+                            <div>
+                                <i class="bi bi-geo-alt"></i>
+                                @FormatLocation(restaurant)
+                            </div>
                             <div><i class="bi bi-clock"></i> @restaurant.OperatingHours</div>
                         </div>
 
@@ -107,10 +110,58 @@
     protected override void OnInitialized()
     {
         context = DbFactory.CreateDbContext();
-        restaurants = context.Restaurant.OrderBy(r => r.Name).ToList();
+
+        // ✅ IMPORTANT: load mall name too
+        restaurants = context.Restaurant
+            .Include(r => r.Mall)
+            .OrderBy(r => r.Name)
+            .ToList();
     }
 
     private void ViewMenu(int id) => NavigationManager.NavigateTo($"/restaurants/{id}/menu");
+
+    // ✅ Show: "Tampines Mall • #01-24"
+    private static string FormatLocation(Restaurant r)
+    {
+        var mallName = r.Mall?.MallName?.Trim();
+        var unit = FormatUnit(r.LocationWithinMall);
+
+        if (string.IsNullOrWhiteSpace(mallName))
+            return unit ?? (r.LocationWithinMall ?? "");
+
+        if (string.IsNullOrWhiteSpace(unit))
+            return mallName;
+
+        return $"{mallName} • {unit}";
+    }
+
+    // ✅ Formats: 1-24 -> #01-24, 8-9 -> #08-09, B2-3 -> #B2-03
+    private static string? FormatUnit(string? raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw))
+            return null;
+
+        raw = raw.Trim().TrimStart('#');
+
+        var parts = raw.Split('-', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length != 2)
+            return $"#{raw}"; // fallback for weird strings
+
+        var left = FormatLeftPart(parts[0]);
+        var right = parts[1].PadLeft(2, '0');
+
+        return $"#{left}-{right}";
+    }
+
+    private static string FormatLeftPart(string left)
+    {
+        left = left.Trim();
+
+        if (int.TryParse(left, out var n))
+            return n.ToString("00");
+
+        return left.ToUpper();
+    }
 
     private static bool IsLogoImage(string url)
     {

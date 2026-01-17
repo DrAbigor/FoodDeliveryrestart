@@ -1,24 +1,4 @@
-/* ===================== */
-/* PAGE SHELL (adds cart dock column) */
-/* ===================== */
-.page-shell{
-  width: min(1400px, 96%);
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: 1fr 360px;
-  gap: 18px;
-  align-items: start;
-  padding: 0 0 40px;
-}
-
-.page-body{ min-width: 0; }
-
-@media (max-width: 1100px){
-  .page-shell{ grid-template-columns: 1fr; }
-}
-
-
-/* ===================== */
+ï»¿/* ===================== */
 /* HERO */
 /* ===================== */
 .restaurants-hero {
@@ -45,12 +25,20 @@
     position: relative;
 }
 
+.search-icon{
+    position:absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: .7;
+}
+
 .search-input {
     width: 100%;
     height: 52px;
     border-radius: 14px;
     border: none;
-    padding: 0 16px;
+    padding: 0 16px 0 44px;
     font-size: 16px;
 }
 
@@ -73,6 +61,7 @@
 @media (max-width: 1024px) {
     .restaurant-grid { grid-template-columns: repeat(2, 1fr); }
 }
+
 @media (max-width: 640px) {
     .restaurant-grid { grid-template-columns: 1fr; }
 }
@@ -83,7 +72,7 @@
 .restaurant-card {
     background: white;
     border-radius: 18px;
-    overflow: hidden;              /* ?? IMPORTANT */
+    overflow: hidden;
     cursor: pointer;
     transition: transform .25s ease, box-shadow .25s ease;
     box-shadow: 0 10px 30px rgba(0,0,0,0.08);
@@ -95,11 +84,11 @@
 }
 
 /* ===================== */
-/* IMAGE – FINAL FIX */
+/* IMAGE */
 /* ===================== */
 .image-wrapper {
     width: 100%;
-    aspect-ratio: 16 / 9;          /* ?? THIS IS THE FIX */
+    aspect-ratio: 16 / 9;
     background: #f3f4f6;
     overflow: hidden;
     display: flex;
@@ -107,11 +96,23 @@
     justify-content: center;
 }
 
-.image-wrapper img {
+/* default = photo */
+.image-wrapper.is-photo img {
     width: 100%;
     height: 100%;
-    max-height: 100%;
-    object-fit: cover;             /* ?? FORCES CROPPING */
+    object-fit: cover;
+    display: block;
+}
+
+/* logo mode = show full logo nicely */
+.image-wrapper.is-logo {
+    background: #ffffff;
+}
+
+.image-wrapper.is-logo img {
+    width: 88%;
+    height: 88%;
+    object-fit: contain;
     display: block;
 }
 

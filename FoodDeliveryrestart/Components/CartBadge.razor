@@ -1,0 +1,30 @@
+﻿@namespace FoodDeliveryrestart.Components
+@rendermode InteractiveServer
+@implements IDisposable
+@inject FoodDeliveryrestart.Services.CartService CartSvc
+
+@if (count > 0)
+{
+    <span class="badge">@count</span>
+}
+
+@code {
+    private int count;
+
+    protected override void OnInitialized()
+    {
+        count = CartSvc.Count();
+        CartSvc.OnChange += HandleCartChanged;
+    }
+
+    private void HandleCartChanged()
+    {
+        count = CartSvc.Count();
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        CartSvc.OnChange -= HandleCartChanged;
+    }
+}

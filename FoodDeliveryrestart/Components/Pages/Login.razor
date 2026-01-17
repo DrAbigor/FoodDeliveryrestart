@@ -5,89 +5,75 @@
 @inject NavigationManager Nav
 @inject UserManager<FoodDeliveryrestartUser> UserManager
 @inject SignInManager<FoodDeliveryrestartUser> SignInManager
+@inject IJSRuntime JS
 @inject FoodDeliveryrestart.Services.CustomAuthenticationStateProvider AuthStateProvider
-
 <div class="auth-page">
     <div class="auth-card">
         <h2 class="auth-title">Login</h2>
         <p class="auth-sub">Welcome back! Please sign in.</p>
-
         <label class="auth-label">Email</label>
         <input class="auth-input" @bind="Email" placeholder="name@email.com" />
-
         <label class="auth-label">Password</label>
         <input class="auth-input" type="password" @bind="Password" placeholder="••••••••" />
-
         @if (!string.IsNullOrWhiteSpace(Error))
         {
             <div class="auth-error">@Error</div>
         }
-
         @if (!string.IsNullOrWhiteSpace(DebugInfo))
         {
             <div style="color: blue; margin: 10px 0;">@DebugInfo</div>
         }
-
         <button class="auth-btn" @onclick="DoLogin" disabled="@IsLoading">
             @(IsLoading ? "Logging in..." : "Login")
         </button>
-
         <div class="auth-footer">
             Don't have an account?
             <a class="auth-link" href="/register">Register</a>
         </div>
+<script src="/login-post.js"></script>
     </div>
 </div>
-
 @code {
     private string Email = "";
     private string Password = "";
     private string Error = "";
     private string DebugInfo = "";
     private bool IsLoading = false;
-
     private async Task DoLogin()
     {
         DebugInfo = $"Login clicked at {DateTime.Now:HH:mm:ss}";
         Error = "";
         IsLoading = true;
         StateHasChanged();
-
         try
         {
             await Task.Delay(100); // Small delay to ensure UI updates
-
             if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(Password))
             {
                 Error = "Please enter email and password.";
                 return;
             }
-
             DebugInfo = "Finding user...";
             StateHasChanged();
-
             var user = await UserManager.FindByEmailAsync(Email.Trim());
-
             if (user == null)
             {
                 Error = "Invalid email or password.";
                 DebugInfo = "User not found in database.";
                 return;
             }
-
             DebugInfo = "Checking password...";
             StateHasChanged();
-
             var result = await SignInManager.CheckPasswordSignInAsync(user, Password, false);
-
             if (result.Succeeded)
             {
                 var roles = await UserManager.GetRolesAsync(user);
-                AuthStateProvider.MarkUserAsAuthenticated(user.Email!, user.Id, roles);
-                DebugInfo = "Login successful! Redirecting...";
-                StateHasChanged();
-                await Task.Delay(500);
-                Nav.NavigateTo("/profile", forceLoad: true);
+
+                // Perform a full browser POST to the server /auth/login endpoint so the cookie
+                // is set as part of the HTTP response. This avoids the "Headers are read-only" error
+                // which happens when trying to set cookies after the Blazor response has started.
+                await JS.InvokeVoidAsync("submitLoginForm", Email, Password);
+                return; // browser will navigate after POST
             }
             else
             {

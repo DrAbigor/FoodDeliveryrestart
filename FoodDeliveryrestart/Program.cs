@@ -2,12 +2,12 @@
 using FoodDeliveryrestart.Services;
 using Microsoft.EntityFrameworkCore;
 using FoodDeliveryrestart.Data;
-using FoodDeliveryrestart.Components.Account;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Database
 builder.Services.AddDbContextFactory<FoodDeliveryrestartContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("FoodDeliveryrestartContext")
@@ -18,38 +18,49 @@ builder.Services.AddDbContextFactory<FoodDeliveryrestartContext>(options =>
 builder.Services.AddQuickGridEntityFrameworkAdapter();
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
+// Razor Components
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-builder.Services.AddSingleton<AuthState>();
+// ✅ Custom Authentication
+builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
+builder.Services.AddScoped<CustomAuthenticationStateProvider>(provider =>
+    (CustomAuthenticationStateProvider)provider.GetRequiredService<AuthenticationStateProvider>());
+// Provide access to HttpContext for auth helpers
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddCascadingAuthenticationState();
+builder.Services.AddAuthorization();
 
-builder.Services.AddScoped<IdentityUserAccessor>();
-builder.Services.AddScoped<IdentityRedirectManager>();
-builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
+// ✅ Identity - Minimal setup
+builder.Services.AddDbContext<FoodDeliveryrestartContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("FoodDeliveryrestartContext")));
 
-builder.Services.AddAuthentication(options =>
+builder.Services.AddIdentity<FoodDeliveryrestartUser, IdentityRole>(options =>
 {
-    options.DefaultScheme = IdentityConstants.ApplicationScheme;
-    options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
+    options.SignIn.RequireConfirmedAccount = false;
+    options.Password.RequireDigit = true;
+    options.Password.RequireLowercase = true;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequiredLength = 6;
 })
-.AddIdentityCookies();
-
-builder.Services.AddIdentityCore<FoodDeliveryrestartUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<FoodDeliveryrestartContext>()
+    .AddRoles<IdentityRole>()
     .AddSignInManager()
     .AddDefaultTokenProviders();
 
-builder.Services.AddSingleton<IEmailSender<FoodDeliveryrestartUser>, IdentityNoOpEmailSender>();
+// UserManager and SignInManager are registered by Identity; do not register them manually.
 
-// ✅ Cart state must be shared across pages
+// Email sender
+builder.Services.AddTransient<IEmailSender<FoodDeliveryrestartUser>, NoOpEmailSender>();
+
+// Application services
 builder.Services.AddScoped<CartService>();
-
-// State to hold selected restaurants for group orders during navigation
 builder.Services.AddScoped<GroupOrderState>();
 
 var app = builder.Build();
 
+// Configure pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseMigrationsEndPoint();
@@ -66,7 +77,5 @@ app.UseAntiforgery();
 
 app.MapRazorComponents<App>()
    .AddInteractiveServerRenderMode();
-
-app.MapAdditionalIdentityEndpoints();
 
 app.Run();

@@ -11,7 +11,6 @@ namespace FoodDeliveryrestart.Data
             : base(options)
         {
         }
-
         public DbSet<User> User { get; set; } = default!;
         public DbSet<Restaurant> Restaurant { get; set; } = default!;
         public DbSet<OrderItem> OrderItem { get; set; } = default!;

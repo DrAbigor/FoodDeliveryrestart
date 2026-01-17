@@ -1,35 +1,63 @@
 ﻿@page "/profile"
+@using Microsoft.AspNetCore.Identity
+@using FoodDeliveryrestart.Data
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@rendermode InteractiveServer
+@inject UserManager<FoodDeliveryrestartUser> UserManager
+@inject FoodDeliveryrestart.Services.CustomAuthenticationStateProvider AuthStateProvider
 @inject NavigationManager Nav
-@inject FoodDeliveryrestart.Services.AuthState Auth
 
-@if (!Auth.IsLoggedIn)
-{
-    <p style="padding:24px;">Redirecting to login...</p>
-}
-else
-{
-    <div style="padding:24px; max-width:900px; margin:0 auto;">
+<div style="padding:24px; max-width:900px; margin:0 auto;">
+    @if (CurrentUser != null)
+    {
         <h2 style="font-weight:900;">My Profile</h2>
-        <p>Logged in as: <b>@Auth.Email</b></p>
 
-        <button class="auth-btn" @onclick="Logout" style="max-width:220px;">
+        <div style="margin: 20px 0;">
+            <label style="font-weight: 600;">Name:</label>
+            <p>@CurrentUser.FirstName @CurrentUser.LastName</p>
+        </div>
+
+        <div style="margin: 20px 0;">
+            <label style="font-weight: 600;">Email:</label>
+            <p>@CurrentUser.Email</p>
+        </div>
+
+        <div style="margin: 20px 0;">
+            <label style="font-weight: 600;">Role:</label>
+            <p>@string.Join(", ", UserRoles)</p>
+        </div>
+
+        <button class="auth-btn" @onclick="Logout" style="max-width:220px; background-color: #dc3545;">
             Logout
         </button>
-    </div>
-}
+    }
+    else
+    {
+        <p>Loading profile...</p>
+    }
+</div>
 
 @code {
-    protected override void OnInitialized()
+    private FoodDeliveryrestartUser? CurrentUser;
+    private IList<string> UserRoles = new List<string>();
+
+    protected override async Task OnInitializedAsync()
     {
-        if (!Auth.IsLoggedIn)
+        var userId = await AuthStateProvider.GetUserId();
+
+        if (!string.IsNullOrEmpty(userId))
         {
-            Nav.NavigateTo("/login", true);
+            CurrentUser = await UserManager.FindByIdAsync(userId);
+            if (CurrentUser != null)
+            {
+                UserRoles = await UserManager.GetRolesAsync(CurrentUser);
+            }
         }
     }
 
     private void Logout()
     {
-        Auth.Logout();
-        Nav.NavigateTo("/");
+        AuthStateProvider.MarkUserAsLoggedOut();
+        Nav.NavigateTo("/", forceLoad: true);
     }
 }

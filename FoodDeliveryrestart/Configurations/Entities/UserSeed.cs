@@ -10,25 +10,19 @@ namespace FoodDeliveryrestart.Configurations.Entities
     {
         public void Configure(EntityTypeBuilder<FoodDeliveryrestartUser> builder)
         {
-            var hasher = new PasswordHasher<FoodDeliveryrestartUser>();
-
             var user = new FoodDeliveryrestartUser
             {
-                Id = "c1a2b3c4-d5e6-4789-8901-234567890abc",
+                Id = "3781efa7-66dc-47f0-860f-e506d04102e4",
                 Email = "admin@localhost.com",
                 NormalizedEmail = "ADMIN@LOCALHOST.COM",
                 FirstName = "Admin",
                 LastName = "User",
                 UserName = "admin@localhost.com",
                 NormalizedUserName = "ADMIN@LOCALHOST.COM",
-                EmailConfirmed = true,
-                LockoutEnabled = false,
-                PhoneNumberConfirmed = false,
-                SecurityStamp = Guid.NewGuid().ToString(),
-                ConcurrencyStamp = Guid.NewGuid().ToString()
+                EmailConfirmed = true // Set to true, otherwise you won't be able to login 
             };
 
-            // Pass the actual user instance to avoid nullability warning and produce a valid password hash
+            var hasher = new PasswordHasher<FoodDeliveryrestartUser>();
             user.PasswordHash = hasher.HashPassword(user, "P@ssword1");
 
             builder.HasData(user);

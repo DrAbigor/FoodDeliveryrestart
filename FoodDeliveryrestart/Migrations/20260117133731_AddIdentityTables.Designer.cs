@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FoodDeliveryrestart.Migrations
 {
     [DbContext(typeof(FoodDeliveryrestartContext))]
-    [Migration("20260115174305_AddMenuItemDietaryFlags")]
-    partial class AddMenuItemDietaryFlags
+    [Migration("20260117133731_AddIdentityTables")]
+    partial class AddIdentityTables
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -98,9 +98,9 @@ namespace FoodDeliveryrestart.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "c1a2b3c4-d5e6-4789-8901-234567890abc",
+                            Id = "3781efa7-66dc-47f0-860f-e506d04102e4",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "bd4a113e-1490-4827-8c1a-80d3bdff9b6a",
+                            ConcurrencyStamp = "3c8a7f5a-94cb-4da6-b2be-cf3fe7c69f6d",
                             Email = "admin@localhost.com",
                             EmailConfirmed = true,
                             FirstName = "Admin",
@@ -108,9 +108,9 @@ namespace FoodDeliveryrestart.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN@LOCALHOST.COM",
                             NormalizedUserName = "ADMIN@LOCALHOST.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGPIJdG0Yo9Ni8vu5J2OBbkJoTotzBTWFI3ISM/Fjp/tiDw0TbbiJCXqnWZpoz/ClA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKOcO5ZSpi+75W6s8qEgviLz4Of/zXKK0NozghhsZJSlSUUbjWlKSRpCVdaRc+Pe8A==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "0f87f318-a6f1-4fdb-b90e-4bb5bab77af7",
+                            SecurityStamp = "be01a0e4-1598-412f-8a0e-6eccc0f43c60",
                             TwoFactorEnabled = false,
                             UserName = "admin@localhost.com"
                         });
@@ -285,8 +285,8 @@ namespace FoodDeliveryrestart.Migrations
                             Id = 1,
                             Address = "4 Tampines Central 5, Singapore 529510",
                             CreatedBy = "System",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5255),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5262),
+                            DateCreated = new DateTime(2026, 1, 17, 21, 37, 31, 161, DateTimeKind.Local).AddTicks(5282),
+                            DateUpdated = new DateTime(2026, 1, 17, 21, 37, 31, 161, DateTimeKind.Local).AddTicks(5298),
                             MallName = "Tampines Mall",
                             UpdatedBy = "System"
                         },
@@ -295,8 +295,8 @@ namespace FoodDeliveryrestart.Migrations
                             Id = 2,
                             Address = "1 HarbourFront Walk, Singapore 098585",
                             CreatedBy = "System",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5264),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5264),
+                            DateCreated = new DateTime(2026, 1, 17, 21, 37, 31, 161, DateTimeKind.Local).AddTicks(5300),
+                            DateUpdated = new DateTime(2026, 1, 17, 21, 37, 31, 161, DateTimeKind.Local).AddTicks(5300),
                             MallName = "Vivo City",
                             UpdatedBy = "System"
                         },
@@ -305,8 +305,8 @@ namespace FoodDeliveryrestart.Migrations
                             Id = 3,
                             Address = "181 Orchard Rd, Singapore 238896",
                             CreatedBy = "System",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5266),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5266),
+                            DateCreated = new DateTime(2026, 1, 17, 21, 37, 31, 161, DateTimeKind.Local).AddTicks(5302),
+                            DateUpdated = new DateTime(2026, 1, 17, 21, 37, 31, 161, DateTimeKind.Local).AddTicks(5302),
                             MallName = "Orchard Central",
                             UpdatedBy = "System"
                         });
@@ -344,6 +344,9 @@ namespace FoodDeliveryrestart.Migrations
 
                     b.Property<int>("FatG")
                         .HasColumnType("int");
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsDairyFree")
                         .HasColumnType("bit");
@@ -386,13 +389,14 @@ namespace FoodDeliveryrestart.Migrations
                             Calories = 650,
                             CarbohydratesG = 45,
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5494),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5494),
+                            DateCreated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Signature burger topped with mozzarella and onions.",
                             FatG = 40,
+                            ImageUrl = "https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1200&q=80",
                             IsDairyFree = false,
-                            IsHalal = false,
-                            IsNutFree = false,
+                            IsHalal = true,
+                            IsNutFree = true,
                             IsVegan = false,
                             ItemName = "Mozza Burger",
                             Price = 9.40m,
@@ -407,13 +411,14 @@ namespace FoodDeliveryrestart.Migrations
                             Calories = 420,
                             CarbohydratesG = 30,
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5496),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5497),
+                            DateCreated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Hot dog topped with savory coney sauce.",
                             FatG = 25,
-                            IsDairyFree = false,
-                            IsHalal = false,
-                            IsNutFree = false,
+                            ImageUrl = "https://images.unsplash.com/photo-1613482084286-41f25b486fa2?auto=format&fit=crop&w=1200&q=80",
+                            IsDairyFree = true,
+                            IsHalal = true,
+                            IsNutFree = true,
                             IsVegan = false,
                             ItemName = "Coney Dog",
                             Price = 6.60m,
@@ -428,14 +433,15 @@ namespace FoodDeliveryrestart.Migrations
                             Calories = 360,
                             CarbohydratesG = 48,
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5499),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5500),
+                            DateCreated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Crispy curly fries, perfect for sharing.",
                             FatG = 16,
-                            IsDairyFree = false,
-                            IsHalal = false,
-                            IsNutFree = false,
-                            IsVegan = false,
+                            ImageUrl = "https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?auto=format&fit=crop&w=1200&q=80",
+                            IsDairyFree = true,
+                            IsHalal = true,
+                            IsNutFree = true,
+                            IsVegan = true,
                             ItemName = "Curly Fries",
                             Price = 3.60m,
                             ProteinG = 4,
@@ -449,13 +455,14 @@ namespace FoodDeliveryrestart.Migrations
                             Calories = 380,
                             CarbohydratesG = 52,
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5502),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5502),
+                            DateCreated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Classic root beer with vanilla ice cream.",
                             FatG = 12,
+                            ImageUrl = "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=1200&q=80",
                             IsDairyFree = false,
-                            IsHalal = false,
-                            IsNutFree = false,
+                            IsHalal = true,
+                            IsNutFree = true,
                             IsVegan = false,
                             ItemName = "Root Beer Float",
                             Price = 3.50m,
@@ -470,13 +477,14 @@ namespace FoodDeliveryrestart.Migrations
                             Calories = 750,
                             CarbohydratesG = 50,
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5504),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5505),
+                            DateCreated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Juicy beef patty with house sauce and fresh veg.",
                             FatG = 45,
-                            IsDairyFree = false,
-                            IsHalal = false,
-                            IsNutFree = false,
+                            ImageUrl = "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=1200&q=80",
+                            IsDairyFree = true,
+                            IsHalal = true,
+                            IsNutFree = true,
                             IsVegan = false,
                             ItemName = "Basic Burger",
                             Price = 20.50m,
@@ -491,13 +499,14 @@ namespace FoodDeliveryrestart.Migrations
                             Calories = 620,
                             CarbohydratesG = 48,
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5507),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5507),
+                            DateCreated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Crispy fish fillet with tartar sauce.",
                             FatG = 30,
-                            IsDairyFree = false,
-                            IsHalal = false,
-                            IsNutFree = false,
+                            ImageUrl = "https://images.unsplash.com/photo-1550317138-10000687a72b?auto=format&fit=crop&w=1200&q=80",
+                            IsDairyFree = true,
+                            IsHalal = true,
+                            IsNutFree = true,
                             IsVegan = false,
                             ItemName = "Fish Burger",
                             Price = 17.80m,
@@ -512,14 +521,15 @@ namespace FoodDeliveryrestart.Migrations
                             Calories = 410,
                             CarbohydratesG = 46,
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5510),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5510),
+                            DateCreated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Golden battered onion rings.",
                             FatG = 20,
-                            IsDairyFree = false,
-                            IsHalal = false,
-                            IsNutFree = false,
-                            IsVegan = false,
+                            ImageUrl = "https://images.unsplash.com/photo-1639024471283-03518883512d?auto=format&fit=crop&w=1200&q=80",
+                            IsDairyFree = true,
+                            IsHalal = true,
+                            IsNutFree = true,
+                            IsVegan = true,
                             ItemName = "Onion Rings",
                             Price = 6.80m,
                             ProteinG = 4,
@@ -533,14 +543,15 @@ namespace FoodDeliveryrestart.Migrations
                             Calories = 520,
                             CarbohydratesG = 55,
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5512),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5513),
+                            DateCreated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Fries tossed with truffle oil and seasoning.",
                             FatG = 28,
-                            IsDairyFree = false,
-                            IsHalal = false,
-                            IsNutFree = false,
-                            IsVegan = false,
+                            ImageUrl = "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&w=1200&q=80",
+                            IsDairyFree = true,
+                            IsHalal = true,
+                            IsNutFree = true,
+                            IsVegan = true,
                             ItemName = "Truffle Fries",
                             Price = 8.00m,
                             ProteinG = 6,
@@ -554,13 +565,14 @@ namespace FoodDeliveryrestart.Migrations
                             Calories = 480,
                             CarbohydratesG = 10,
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5515),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5515),
+                            DateCreated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Crispy fried chicken with gravy.",
                             FatG = 30,
-                            IsDairyFree = false,
-                            IsHalal = false,
-                            IsNutFree = false,
+                            ImageUrl = "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=1200&q=80",
+                            IsDairyFree = true,
+                            IsHalal = true,
+                            IsNutFree = true,
                             IsVegan = false,
                             ItemName = "Chickenjoy (1pc)",
                             Price = 5.70m,
@@ -575,13 +587,14 @@ namespace FoodDeliveryrestart.Migrations
                             Calories = 560,
                             CarbohydratesG = 80,
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5517),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5518),
+                            DateCreated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Sweet-style spaghetti with hotdog slices.",
                             FatG = 16,
-                            IsDairyFree = false,
-                            IsHalal = false,
-                            IsNutFree = false,
+                            ImageUrl = "https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?auto=format&fit=crop&w=1200&q=80",
+                            IsDairyFree = true,
+                            IsHalal = true,
+                            IsNutFree = true,
                             IsVegan = false,
                             ItemName = "Jolly Spaghetti",
                             Price = 6.50m,
@@ -596,13 +609,14 @@ namespace FoodDeliveryrestart.Migrations
                             Calories = 390,
                             CarbohydratesG = 35,
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5520),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5521),
+                            DateCreated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Classic burger with Jollibee signature dressing.",
                             FatG = 20,
-                            IsDairyFree = false,
-                            IsHalal = false,
-                            IsNutFree = false,
+                            ImageUrl = "https://images.unsplash.com/photo-1551782450-a2132b4ba21d?auto=format&fit=crop&w=1200&q=80",
+                            IsDairyFree = true,
+                            IsHalal = true,
+                            IsNutFree = true,
                             IsVegan = false,
                             ItemName = "Yumburger",
                             Price = 3.90m,
@@ -617,14 +631,15 @@ namespace FoodDeliveryrestart.Migrations
                             Calories = 260,
                             CarbohydratesG = 34,
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5523),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5523),
+                            DateCreated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Crispy pie filled with peach-mango goodness.",
                             FatG = 12,
-                            IsDairyFree = false,
-                            IsHalal = false,
-                            IsNutFree = false,
-                            IsVegan = false,
+                            ImageUrl = "https://images.unsplash.com/photo-1614373532018-92a74d68dfc3?auto=format&fit=crop&w=1200&q=80",
+                            IsDairyFree = true,
+                            IsHalal = true,
+                            IsNutFree = true,
+                            IsVegan = true,
                             ItemName = "Peach Mango Pie",
                             Price = 1.90m,
                             ProteinG = 2,
@@ -638,13 +653,14 @@ namespace FoodDeliveryrestart.Migrations
                             Calories = 320,
                             CarbohydratesG = 5,
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5525),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5526),
+                            DateCreated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "KFC signature chicken with 11 herbs & spices.",
                             FatG = 22,
-                            IsDairyFree = false,
-                            IsHalal = false,
-                            IsNutFree = false,
+                            ImageUrl = "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=1200&q=80",
+                            IsDairyFree = true,
+                            IsHalal = true,
+                            IsNutFree = true,
                             IsVegan = false,
                             ItemName = "Original Recipe Chicken (1pc)",
                             Price = 4.45m,
@@ -659,13 +675,14 @@ namespace FoodDeliveryrestart.Migrations
                             Calories = 550,
                             CarbohydratesG = 40,
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5528),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5529),
+                            DateCreated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Spicy chicken fillet burger with mayo.",
                             FatG = 30,
+                            ImageUrl = "https://images.unsplash.com/photo-1606755962773-d324e0a13086?auto=format&fit=crop&w=1200&q=80",
                             IsDairyFree = false,
-                            IsHalal = false,
-                            IsNutFree = false,
+                            IsHalal = true,
+                            IsNutFree = true,
                             IsVegan = false,
                             ItemName = "Zinger Burger",
                             Price = 7.50m,
@@ -680,13 +697,14 @@ namespace FoodDeliveryrestart.Migrations
                             Calories = 460,
                             CarbohydratesG = 50,
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5531),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5531),
+                            DateCreated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Fries topped with warm cheese sauce.",
                             FatG = 22,
+                            ImageUrl = "https://images.unsplash.com/photo-1586190848861-99aa4a171e90?auto=format&fit=crop&w=1200&q=80",
                             IsDairyFree = false,
-                            IsHalal = false,
-                            IsNutFree = false,
+                            IsHalal = true,
+                            IsNutFree = true,
                             IsVegan = false,
                             ItemName = "Cheese Fries",
                             Price = 4.50m,
@@ -701,13 +719,14 @@ namespace FoodDeliveryrestart.Migrations
                             Calories = 430,
                             CarbohydratesG = 18,
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5533),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5534),
+                            DateCreated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Bite-sized chicken chunks, crispy and juicy.",
                             FatG = 28,
-                            IsDairyFree = false,
-                            IsHalal = false,
-                            IsNutFree = false,
+                            ImageUrl = "https://images.unsplash.com/photo-1604908176997-125f25cc500f?auto=format&fit=crop&w=1200&q=80",
+                            IsDairyFree = true,
+                            IsHalal = true,
+                            IsNutFree = true,
                             IsVegan = false,
                             ItemName = "Popcorn Chicken",
                             Price = 5.50m,
@@ -722,13 +741,14 @@ namespace FoodDeliveryrestart.Migrations
                             Calories = 540,
                             CarbohydratesG = 47,
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5536),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5537),
+                            DateCreated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Two beef patties with special sauce and lettuce.",
                             FatG = 29,
+                            ImageUrl = "https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1200&q=80",
                             IsDairyFree = false,
-                            IsHalal = false,
-                            IsNutFree = false,
+                            IsHalal = true,
+                            IsNutFree = true,
                             IsVegan = false,
                             ItemName = "Big Mac",
                             Price = 7.60m,
@@ -743,13 +763,14 @@ namespace FoodDeliveryrestart.Migrations
                             Calories = 560,
                             CarbohydratesG = 44,
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5539),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5539),
+                            DateCreated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Spicy chicken burger with lettuce and mayo.",
                             FatG = 28,
-                            IsDairyFree = false,
-                            IsHalal = false,
-                            IsNutFree = false,
+                            ImageUrl = "https://images.unsplash.com/photo-1606755962773-d324e0a13086?auto=format&fit=crop&w=1200&q=80",
+                            IsDairyFree = true,
+                            IsHalal = true,
+                            IsNutFree = true,
                             IsVegan = false,
                             ItemName = "McSpicy",
                             Price = 7.50m,
@@ -764,13 +785,14 @@ namespace FoodDeliveryrestart.Migrations
                             Calories = 390,
                             CarbohydratesG = 38,
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5541),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5542),
+                            DateCreated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Fish patty with tartar sauce and cheese.",
                             FatG = 18,
+                            ImageUrl = "https://images.unsplash.com/photo-1550317138-10000687a72b?auto=format&fit=crop&w=1200&q=80",
                             IsDairyFree = false,
-                            IsHalal = false,
-                            IsNutFree = false,
+                            IsHalal = true,
+                            IsNutFree = true,
                             IsVegan = false,
                             ItemName = "Filet-O-Fish",
                             Price = 7.45m,
@@ -785,14 +807,15 @@ namespace FoodDeliveryrestart.Migrations
                             Calories = 240,
                             CarbohydratesG = 34,
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5544),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5544),
+                            DateCreated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Crispy pastry filled with warm apple cinnamon.",
                             FatG = 10,
-                            IsDairyFree = false,
-                            IsHalal = false,
-                            IsNutFree = false,
-                            IsVegan = false,
+                            ImageUrl = "https://images.unsplash.com/photo-1519869325930-281384150729?auto=format&fit=crop&w=1200&q=80",
+                            IsDairyFree = true,
+                            IsHalal = true,
+                            IsNutFree = true,
+                            IsVegan = true,
                             ItemName = "Apple Pie",
                             Price = 2.50m,
                             ProteinG = 2,
@@ -806,13 +829,14 @@ namespace FoodDeliveryrestart.Migrations
                             Calories = 720,
                             CarbohydratesG = 75,
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5547),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5547),
+                            DateCreated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Creamy pasta with bacon and parmesan.",
                             FatG = 36,
+                            ImageUrl = "https://images.unsplash.com/photo-1608756687911-aa1599ab3bd9?auto=format&fit=crop&w=1200&q=80",
                             IsDairyFree = false,
-                            IsHalal = false,
-                            IsNutFree = false,
+                            IsHalal = true,
+                            IsNutFree = true,
                             IsVegan = false,
                             ItemName = "Carbonara",
                             Price = 14.90m,
@@ -827,14 +851,15 @@ namespace FoodDeliveryrestart.Migrations
                             Calories = 620,
                             CarbohydratesG = 70,
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5549),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5550),
+                            DateCreated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Garlic, olive oil, chili flakes, and parsley.",
                             FatG = 28,
-                            IsDairyFree = false,
-                            IsHalal = false,
-                            IsNutFree = false,
-                            IsVegan = false,
+                            ImageUrl = "https://images.unsplash.com/photo-1523986371872-9d3ba2e2f642?auto=format&fit=crop&w=1200&q=80",
+                            IsDairyFree = true,
+                            IsHalal = true,
+                            IsNutFree = true,
+                            IsVegan = true,
                             ItemName = "Aglio Olio",
                             Price = 12.90m,
                             ProteinG = 14,
@@ -848,13 +873,14 @@ namespace FoodDeliveryrestart.Migrations
                             Calories = 740,
                             CarbohydratesG = 78,
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5552),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5552),
+                            DateCreated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Slow-cooked beef ragu with pasta.",
                             FatG = 34,
-                            IsDairyFree = false,
-                            IsHalal = false,
-                            IsNutFree = false,
+                            ImageUrl = "https://images.unsplash.com/photo-1604908812488-5f5f7e62a3b4?auto=format&fit=crop&w=1200&q=80",
+                            IsDairyFree = true,
+                            IsHalal = true,
+                            IsNutFree = true,
                             IsVegan = false,
                             ItemName = "Beef Bolognese",
                             Price = 16.90m,
@@ -869,13 +895,14 @@ namespace FoodDeliveryrestart.Migrations
                             Calories = 850,
                             CarbohydratesG = 80,
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5554),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5555),
+                            DateCreated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Layered pasta baked with meat sauce and cheese.",
                             FatG = 46,
+                            ImageUrl = "https://images.unsplash.com/photo-1604908177453-7462950a6a32?auto=format&fit=crop&w=1200&q=80",
                             IsDairyFree = false,
-                            IsHalal = false,
-                            IsNutFree = false,
+                            IsHalal = true,
+                            IsNutFree = true,
                             IsVegan = false,
                             ItemName = "Lasagna",
                             Price = 18.90m,
@@ -890,13 +917,14 @@ namespace FoodDeliveryrestart.Migrations
                             Calories = 780,
                             CarbohydratesG = 90,
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5587),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5588),
+                            DateCreated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Tomato sauce, mozzarella, basil.",
                             FatG = 32,
+                            ImageUrl = "https://images.unsplash.com/photo-1548365328-8b849e6a1e05?auto=format&fit=crop&w=1200&q=80",
                             IsDairyFree = false,
-                            IsHalal = false,
-                            IsNutFree = false,
+                            IsHalal = true,
+                            IsNutFree = true,
                             IsVegan = false,
                             ItemName = "Margherita Pizza",
                             Price = 12.90m,
@@ -911,13 +939,14 @@ namespace FoodDeliveryrestart.Migrations
                             Calories = 920,
                             CarbohydratesG = 95,
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5590),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5591),
+                            DateCreated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Pepperoni, mozzarella, tomato base.",
                             FatG = 48,
+                            ImageUrl = "https://images.unsplash.com/photo-1601924638867-3ec9c6f3a3c1?auto=format&fit=crop&w=1200&q=80",
                             IsDairyFree = false,
-                            IsHalal = false,
-                            IsNutFree = false,
+                            IsHalal = true,
+                            IsNutFree = true,
                             IsVegan = false,
                             ItemName = "Pepperoni Pizza",
                             Price = 14.90m,
@@ -932,13 +961,14 @@ namespace FoodDeliveryrestart.Migrations
                             Calories = 880,
                             CarbohydratesG = 92,
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5593),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5593),
+                            DateCreated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Ham and pineapple with mozzarella.",
                             FatG = 44,
+                            ImageUrl = "https://images.unsplash.com/photo-1594007654729-407eedc4be65?auto=format&fit=crop&w=1200&q=80",
                             IsDairyFree = false,
-                            IsHalal = false,
-                            IsNutFree = false,
+                            IsHalal = true,
+                            IsNutFree = true,
                             IsVegan = false,
                             ItemName = "Hawaiian Pizza",
                             Price = 14.50m,
@@ -953,13 +983,14 @@ namespace FoodDeliveryrestart.Migrations
                             Calories = 420,
                             CarbohydratesG = 48,
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5596),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5596),
+                            DateCreated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Toasted garlic bread slices.",
                             FatG = 18,
+                            ImageUrl = "https://images.unsplash.com/photo-1608198093002-ad4e005484ec?auto=format&fit=crop&w=1200&q=80",
                             IsDairyFree = false,
-                            IsHalal = false,
-                            IsNutFree = false,
+                            IsHalal = true,
+                            IsNutFree = true,
                             IsVegan = false,
                             ItemName = "Garlic Bread",
                             Price = 5.50m,
@@ -974,13 +1005,14 @@ namespace FoodDeliveryrestart.Migrations
                             Calories = 680,
                             CarbohydratesG = 85,
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5598),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5599),
+                            DateCreated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Thai-style fried rice with prawn and pineapple.",
                             FatG = 20,
-                            IsDairyFree = false,
-                            IsHalal = false,
-                            IsNutFree = false,
+                            ImageUrl = "https://images.unsplash.com/photo-1604909053191-8f3f0f6b1cf5?auto=format&fit=crop&w=1200&q=80",
+                            IsDairyFree = true,
+                            IsHalal = true,
+                            IsNutFree = true,
                             IsVegan = false,
                             ItemName = "Pineapple Fried Rice (Prawn)",
                             Price = 9.48m,
@@ -995,13 +1027,14 @@ namespace FoodDeliveryrestart.Migrations
                             Calories = 420,
                             CarbohydratesG = 18,
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5601),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5601),
+                            DateCreated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Creamy tom yum with seafood and herbs.",
                             FatG = 22,
+                            ImageUrl = "https://images.unsplash.com/photo-1548940740-204726a19be3?auto=format&fit=crop&w=1200&q=80",
                             IsDairyFree = false,
-                            IsHalal = false,
-                            IsNutFree = false,
+                            IsHalal = true,
+                            IsNutFree = true,
                             IsVegan = false,
                             ItemName = "Creamy Tom Yum Soup (Seafood)",
                             Price = 12.90m,
@@ -1016,12 +1049,13 @@ namespace FoodDeliveryrestart.Migrations
                             Calories = 700,
                             CarbohydratesG = 88,
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5604),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5604),
+                            DateCreated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Stir-fried Thai noodles with prawn.",
                             FatG = 24,
-                            IsDairyFree = false,
-                            IsHalal = false,
+                            ImageUrl = "https://images.unsplash.com/photo-1559314809-0b9c35b2f5f5?auto=format&fit=crop&w=1200&q=80",
+                            IsDairyFree = true,
+                            IsHalal = true,
                             IsNutFree = false,
                             IsVegan = false,
                             ItemName = "Pad Thai (Prawn)",
@@ -1037,13 +1071,14 @@ namespace FoodDeliveryrestart.Migrations
                             Calories = 640,
                             CarbohydratesG = 80,
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5606),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5607),
+                            DateCreated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Basil chicken served with fragrant rice.",
                             FatG = 18,
-                            IsDairyFree = false,
-                            IsHalal = false,
-                            IsNutFree = false,
+                            ImageUrl = "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&w=1200&q=80",
+                            IsDairyFree = true,
+                            IsHalal = true,
+                            IsNutFree = true,
                             IsVegan = false,
                             ItemName = "Thai Basil Chicken Rice",
                             Price = 9.40m,
@@ -1058,13 +1093,14 @@ namespace FoodDeliveryrestart.Migrations
                             Calories = 280,
                             CarbohydratesG = 40,
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5609),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5609),
+                            DateCreated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Classic tart froyo cup (choose toppings).",
                             FatG = 8,
+                            ImageUrl = "https://images.unsplash.com/photo-1541976844346-f18aeac57b06?auto=format&fit=crop&w=1200&q=80",
                             IsDairyFree = false,
-                            IsHalal = false,
-                            IsNutFree = false,
+                            IsHalal = true,
+                            IsNutFree = true,
                             IsVegan = false,
                             ItemName = "Signature Tart Frozen Yogurt Cup",
                             Price = 7.90m,
@@ -1079,13 +1115,14 @@ namespace FoodDeliveryrestart.Migrations
                             Calories = 320,
                             CarbohydratesG = 44,
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5611),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5612),
+                            DateCreated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Creamy froyo with cookies flavour.",
                             FatG = 10,
+                            ImageUrl = "https://images.unsplash.com/photo-1563805042-7684c019e1cb?auto=format&fit=crop&w=1200&q=80",
                             IsDairyFree = false,
-                            IsHalal = false,
-                            IsNutFree = false,
+                            IsHalal = true,
+                            IsNutFree = true,
                             IsVegan = false,
                             ItemName = "Cookies & Cream Frozen Yogurt Cup",
                             Price = 8.50m,
@@ -1100,14 +1137,15 @@ namespace FoodDeliveryrestart.Migrations
                             Calories = 90,
                             CarbohydratesG = 10,
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5614),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5615),
+                            DateCreated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Add Biscoff spread as topping.",
                             FatG = 5,
-                            IsDairyFree = false,
-                            IsHalal = false,
-                            IsNutFree = false,
-                            IsVegan = false,
+                            ImageUrl = "https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1200&q=80",
+                            IsDairyFree = true,
+                            IsHalal = true,
+                            IsNutFree = true,
+                            IsVegan = true,
                             ItemName = "Biscoff Spread Topping",
                             Price = 1.50m,
                             ProteinG = 0,
@@ -1121,13 +1159,14 @@ namespace FoodDeliveryrestart.Migrations
                             Calories = 140,
                             CarbohydratesG = 18,
                             CreatedBy = "Seed",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5617),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5617),
+                            DateCreated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Add chocolate brownie as topping.",
                             FatG = 7,
+                            ImageUrl = "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=1200&q=80",
                             IsDairyFree = false,
-                            IsHalal = false,
-                            IsNutFree = false,
+                            IsHalal = true,
+                            IsNutFree = true,
                             IsVegan = false,
                             ItemName = "Chocolate Fudge Brownie Topping",
                             Price = 1.80m,
@@ -1279,91 +1318,6 @@ namespace FoodDeliveryrestart.Migrations
                     b.ToTable("Payment");
                 });
 
-            modelBuilder.Entity("FoodDeliveryrestart.Domain.PaymentMethod", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("CardHolderName")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("CardType")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("DateCreated")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("DateUpdated")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("ExpiryMonth")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ExpiryYear")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("PaymentMethod");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            CardHolderName = "Seed User",
-                            CardType = "Visa",
-                            CreatedBy = "System",
-                            DateCreated = new DateTime(2026, 1, 15, 17, 43, 4, 908, DateTimeKind.Utc).AddTicks(5136),
-                            DateUpdated = new DateTime(2026, 1, 15, 17, 43, 4, 908, DateTimeKind.Utc).AddTicks(5137),
-                            ExpiryMonth = 12,
-                            ExpiryYear = 2026,
-                            UpdatedBy = "System",
-                            UserId = 1
-                        },
-                        new
-                        {
-                            Id = 2,
-                            CardHolderName = "Seed User",
-                            CardType = "MasterCard",
-                            CreatedBy = "System",
-                            DateCreated = new DateTime(2026, 1, 15, 17, 43, 4, 908, DateTimeKind.Utc).AddTicks(5138),
-                            DateUpdated = new DateTime(2026, 1, 15, 17, 43, 4, 908, DateTimeKind.Utc).AddTicks(5139),
-                            ExpiryMonth = 10,
-                            ExpiryYear = 2025,
-                            UpdatedBy = "System",
-                            UserId = 1
-                        },
-                        new
-                        {
-                            Id = 3,
-                            CardHolderName = "Seed User",
-                            CardType = "AMEX",
-                            CreatedBy = "System",
-                            DateCreated = new DateTime(2026, 1, 15, 17, 43, 4, 908, DateTimeKind.Utc).AddTicks(5141),
-                            DateUpdated = new DateTime(2026, 1, 15, 17, 43, 4, 908, DateTimeKind.Utc).AddTicks(5141),
-                            ExpiryMonth = 6,
-                            ExpiryYear = 2027,
-                            UpdatedBy = "System",
-                            UserId = 1
-                        });
-                });
-
             modelBuilder.Entity("FoodDeliveryrestart.Domain.Restaurant", b =>
                 {
                     b.Property<int>("Id")
@@ -1387,6 +1341,9 @@ namespace FoodDeliveryrestart.Migrations
 
                     b.Property<DateTime>("DateUpdated")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("LocationWithinMall")
                         .HasMaxLength(50)
@@ -1423,8 +1380,9 @@ namespace FoodDeliveryrestart.Migrations
                             BusyLevel = 1,
                             CreatedBy = "Seed",
                             CuisineType = "Fast Food",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5363),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5363),
+                            DateCreated = new DateTime(2026, 1, 17, 21, 37, 31, 161, DateTimeKind.Local).AddTicks(5428),
+                            DateUpdated = new DateTime(2026, 1, 17, 21, 37, 31, 161, DateTimeKind.Local).AddTicks(5428),
+                            ImageUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/All_American_Food_Logo.svg/1024px-All_American_Food_Logo.svg.png",
                             LocationWithinMall = "1-24",
                             MallId = 1,
                             Name = "A&W",
@@ -1438,8 +1396,9 @@ namespace FoodDeliveryrestart.Migrations
                             BusyLevel = 2,
                             CreatedBy = "Seed",
                             CuisineType = "Western",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5365),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5366),
+                            DateCreated = new DateTime(2026, 1, 17, 21, 37, 31, 161, DateTimeKind.Local).AddTicks(5431),
+                            DateUpdated = new DateTime(2026, 1, 17, 21, 37, 31, 161, DateTimeKind.Local).AddTicks(5432),
+                            ImageUrl = "https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1600&q=70",
                             LocationWithinMall = "1-68",
                             MallId = 1,
                             Name = "Burger Lab",
@@ -1453,8 +1412,9 @@ namespace FoodDeliveryrestart.Migrations
                             BusyLevel = 1,
                             CreatedBy = "Seed",
                             CuisineType = "Fast Food",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5368),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5368),
+                            DateCreated = new DateTime(2026, 1, 17, 21, 37, 31, 161, DateTimeKind.Local).AddTicks(5434),
+                            DateUpdated = new DateTime(2026, 1, 17, 21, 37, 31, 161, DateTimeKind.Local).AddTicks(5434),
+                            ImageUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Jollibee_Foods_Corporation_logo.png/1024px-Jollibee_Foods_Corporation_logo.png",
                             LocationWithinMall = "8-90",
                             MallId = 1,
                             Name = "Jollibee",
@@ -1468,8 +1428,9 @@ namespace FoodDeliveryrestart.Migrations
                             BusyLevel = 2,
                             CreatedBy = "Seed",
                             CuisineType = "Fast Food",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5370),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5371),
+                            DateCreated = new DateTime(2026, 1, 17, 21, 37, 31, 161, DateTimeKind.Local).AddTicks(5566),
+                            DateUpdated = new DateTime(2026, 1, 17, 21, 37, 31, 161, DateTimeKind.Local).AddTicks(5567),
+                            ImageUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/KFC_logo.svg/1024px-KFC_logo.svg.png",
                             LocationWithinMall = "8-89",
                             MallId = 1,
                             Name = "KFC",
@@ -1483,8 +1444,9 @@ namespace FoodDeliveryrestart.Migrations
                             BusyLevel = 2,
                             CreatedBy = "Seed",
                             CuisineType = "Fast Food",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5373),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5373),
+                            DateCreated = new DateTime(2026, 1, 17, 21, 37, 31, 161, DateTimeKind.Local).AddTicks(5569),
+                            DateUpdated = new DateTime(2026, 1, 17, 21, 37, 31, 161, DateTimeKind.Local).AddTicks(5570),
+                            ImageUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/McDonald%27s_logo.svg/1024px-McDonald%27s_logo.svg.png",
                             LocationWithinMall = "8-88",
                             MallId = 1,
                             Name = "McDonald's",
@@ -1498,8 +1460,9 @@ namespace FoodDeliveryrestart.Migrations
                             BusyLevel = 0,
                             CreatedBy = "Seed",
                             CuisineType = "Western",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5375),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5376),
+                            DateCreated = new DateTime(2026, 1, 17, 21, 37, 31, 161, DateTimeKind.Local).AddTicks(5572),
+                            DateUpdated = new DateTime(2026, 1, 17, 21, 37, 31, 161, DateTimeKind.Local).AddTicks(5572),
+                            ImageUrl = "https://images.unsplash.com/photo-1521389508051-d7ffb5dc8f6f?auto=format&fit=crop&w=1600&q=70",
                             LocationWithinMall = "1-67",
                             MallId = 1,
                             Name = "Pasta Corner",
@@ -1513,8 +1476,9 @@ namespace FoodDeliveryrestart.Migrations
                             BusyLevel = 1,
                             CreatedBy = "Seed",
                             CuisineType = "Western Food",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5378),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5378),
+                            DateCreated = new DateTime(2026, 1, 17, 21, 37, 31, 161, DateTimeKind.Local).AddTicks(5574),
+                            DateUpdated = new DateTime(2026, 1, 17, 21, 37, 31, 161, DateTimeKind.Local).AddTicks(5575),
+                            ImageUrl = "https://images.unsplash.com/photo-1548365328-8b849e6a1e05?auto=format&fit=crop&w=1600&q=70",
                             LocationWithinMall = "1-66",
                             MallId = 1,
                             Name = "Pizza House",
@@ -1528,8 +1492,9 @@ namespace FoodDeliveryrestart.Migrations
                             BusyLevel = 1,
                             CreatedBy = "Seed",
                             CuisineType = "Thai Food",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5380),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5381),
+                            DateCreated = new DateTime(2026, 1, 17, 21, 37, 31, 161, DateTimeKind.Local).AddTicks(5577),
+                            DateUpdated = new DateTime(2026, 1, 17, 21, 37, 31, 161, DateTimeKind.Local).AddTicks(5577),
+                            ImageUrl = "https://images.unsplash.com/photo-1559847844-5315695dadae?auto=format&fit=crop&w=1600&q=70",
                             LocationWithinMall = "1-25",
                             MallId = 1,
                             Name = "Sanook Kitchen",
@@ -1543,8 +1508,9 @@ namespace FoodDeliveryrestart.Migrations
                             BusyLevel = 0,
                             CreatedBy = "Seed",
                             CuisineType = "Dessert",
-                            DateCreated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5383),
-                            DateUpdated = new DateTime(2026, 1, 16, 1, 43, 4, 908, DateTimeKind.Local).AddTicks(5383),
+                            DateCreated = new DateTime(2026, 1, 17, 21, 37, 31, 161, DateTimeKind.Local).AddTicks(5579),
+                            DateUpdated = new DateTime(2026, 1, 17, 21, 37, 31, 161, DateTimeKind.Local).AddTicks(5580),
+                            ImageUrl = "https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&w=1600&q=70",
                             LocationWithinMall = "1-23",
                             MallId = 1,
                             Name = "Yochi",
@@ -1595,8 +1561,8 @@ namespace FoodDeliveryrestart.Migrations
                         {
                             Id = 1,
                             CreatedBy = "System",
-                            DateCreated = new DateTime(2026, 1, 15, 17, 43, 4, 908, DateTimeKind.Utc).AddTicks(3981),
-                            DateUpdated = new DateTime(2026, 1, 15, 17, 43, 4, 908, DateTimeKind.Utc).AddTicks(3984),
+                            DateCreated = new DateTime(2026, 1, 17, 13, 37, 31, 161, DateTimeKind.Utc).AddTicks(3716),
+                            DateUpdated = new DateTime(2026, 1, 17, 13, 37, 31, 161, DateTimeKind.Utc).AddTicks(3723),
                             Email = "system@local",
                             Name = "System",
                             Password = "changeme",
@@ -1751,6 +1717,91 @@ namespace FoodDeliveryrestart.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("PaymentMethod", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CardHolderName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("CardType")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ExpiryMonth")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ExpiryYear")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("PaymentMethod");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CardHolderName = "Seed User",
+                            CardType = "Visa",
+                            CreatedBy = "System",
+                            DateCreated = new DateTime(2026, 1, 17, 13, 37, 31, 161, DateTimeKind.Utc).AddTicks(5072),
+                            DateUpdated = new DateTime(2026, 1, 17, 13, 37, 31, 161, DateTimeKind.Utc).AddTicks(5073),
+                            ExpiryMonth = 12,
+                            ExpiryYear = 2026,
+                            UpdatedBy = "System",
+                            UserId = 1
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CardHolderName = "Seed User",
+                            CardType = "MasterCard",
+                            CreatedBy = "System",
+                            DateCreated = new DateTime(2026, 1, 17, 13, 37, 31, 161, DateTimeKind.Utc).AddTicks(5075),
+                            DateUpdated = new DateTime(2026, 1, 17, 13, 37, 31, 161, DateTimeKind.Utc).AddTicks(5076),
+                            ExpiryMonth = 10,
+                            ExpiryYear = 2025,
+                            UpdatedBy = "System",
+                            UserId = 1
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CardHolderName = "Seed User",
+                            CardType = "AMEX",
+                            CreatedBy = "System",
+                            DateCreated = new DateTime(2026, 1, 17, 13, 37, 31, 161, DateTimeKind.Utc).AddTicks(5078),
+                            DateUpdated = new DateTime(2026, 1, 17, 13, 37, 31, 161, DateTimeKind.Utc).AddTicks(5078),
+                            ExpiryMonth = 6,
+                            ExpiryYear = 2027,
+                            UpdatedBy = "System",
+                            UserId = 1
+                        });
+                });
+
             modelBuilder.Entity("FoodDeliveryrestart.Domain.Address", b =>
                 {
                     b.HasOne("FoodDeliveryrestart.Domain.User", "User")
@@ -1855,24 +1906,13 @@ namespace FoodDeliveryrestart.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("FoodDeliveryrestart.Domain.PaymentMethod", "PaymentMethod")
+                    b.HasOne("PaymentMethod", "PaymentMethod")
                         .WithMany("Payments")
                         .HasForeignKey("PaymentMethodId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("PaymentMethod");
-                });
-
-            modelBuilder.Entity("FoodDeliveryrestart.Domain.PaymentMethod", b =>
-                {
-                    b.HasOne("FoodDeliveryrestart.Domain.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("FoodDeliveryrestart.Domain.Restaurant", b =>
@@ -1937,6 +1977,17 @@ namespace FoodDeliveryrestart.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("PaymentMethod", b =>
+                {
+                    b.HasOne("FoodDeliveryrestart.Domain.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("FoodDeliveryrestart.Domain.GroupOrder", b =>
                 {
                     b.Navigation("GroupOrderMembers");
@@ -1958,11 +2009,6 @@ namespace FoodDeliveryrestart.Migrations
                     b.Navigation("Payment");
                 });
 
-            modelBuilder.Entity("FoodDeliveryrestart.Domain.PaymentMethod", b =>
-                {
-                    b.Navigation("Payments");
-                });
-
             modelBuilder.Entity("FoodDeliveryrestart.Domain.Restaurant", b =>
                 {
                     b.Navigation("MenuItems");
@@ -1977,6 +2023,11 @@ namespace FoodDeliveryrestart.Migrations
                     b.Navigation("GroupOrders");
 
                     b.Navigation("Orders");
+                });
+
+            modelBuilder.Entity("PaymentMethod", b =>
+                {
+                    b.Navigation("Payments");
                 });
 #pragma warning restore 612, 618
         }

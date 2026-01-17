@@ -1,6 +1,11 @@
 ﻿@page "/login"
+@using Microsoft.AspNetCore.Identity
+@using FoodDeliveryrestart.Data
+@rendermode InteractiveServer
 @inject NavigationManager Nav
-@inject FoodDeliveryrestart.Services.AuthState Auth
+@inject UserManager<FoodDeliveryrestartUser> UserManager
+@inject SignInManager<FoodDeliveryrestartUser> SignInManager
+@inject FoodDeliveryrestart.Services.CustomAuthenticationStateProvider AuthStateProvider
 
 <div class="auth-page">
     <div class="auth-card">
@@ -18,10 +23,17 @@
             <div class="auth-error">@Error</div>
         }
 
-        <button class="auth-btn" @onclick="DoLogin">Login</button>
+        @if (!string.IsNullOrWhiteSpace(DebugInfo))
+        {
+            <div style="color: blue; margin: 10px 0;">@DebugInfo</div>
+        }
+
+        <button class="auth-btn" @onclick="DoLogin" disabled="@IsLoading">
+            @(IsLoading ? "Logging in..." : "Login")
+        </button>
 
         <div class="auth-footer">
-            Don’t have an account?
+            Don't have an account?
             <a class="auth-link" href="/register">Register</a>
         </div>
     </div>
@@ -31,19 +43,67 @@
     private string Email = "";
     private string Password = "";
     private string Error = "";
+    private string DebugInfo = "";
+    private bool IsLoading = false;
 
-    private void DoLogin()
+    private async Task DoLogin()
     {
+        DebugInfo = $"Login clicked at {DateTime.Now:HH:mm:ss}";
         Error = "";
+        IsLoading = true;
+        StateHasChanged();
 
-        if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(Password))
+        try
         {
-            Error = "Please enter email and password.";
-            return;
-        }
+            await Task.Delay(100); // Small delay to ensure UI updates
 
-        // UI-only login (no DB)
-        Auth.Login(Email.Trim());
-        Nav.NavigateTo("/profile");
+            if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(Password))
+            {
+                Error = "Please enter email and password.";
+                return;
+            }
+
+            DebugInfo = "Finding user...";
+            StateHasChanged();
+
+            var user = await UserManager.FindByEmailAsync(Email.Trim());
+
+            if (user == null)
+            {
+                Error = "Invalid email or password.";
+                DebugInfo = "User not found in database.";
+                return;
+            }
+
+            DebugInfo = "Checking password...";
+            StateHasChanged();
+
+            var result = await SignInManager.CheckPasswordSignInAsync(user, Password, false);
+
+            if (result.Succeeded)
+            {
+                var roles = await UserManager.GetRolesAsync(user);
+                AuthStateProvider.MarkUserAsAuthenticated(user.Email!, user.Id, roles);
+                DebugInfo = "Login successful! Redirecting...";
+                StateHasChanged();
+                await Task.Delay(500);
+                Nav.NavigateTo("/profile", forceLoad: true);
+            }
+            else
+            {
+                Error = "Invalid email or password.";
+                DebugInfo = $"Login failed. Result: {result}";
+            }
+        }
+        catch (Exception ex)
+        {
+            Error = $"An error occurred: {ex.Message}";
+            DebugInfo = $"Exception: {ex.ToString()}";
+        }
+        finally
+        {
+            IsLoading = false;
+            StateHasChanged();
+        }
     }
 }

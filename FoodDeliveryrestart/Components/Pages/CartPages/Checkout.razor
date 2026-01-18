@@ -2,10 +2,14 @@
 @rendermode InteractiveServer
 
 @using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
 @using FoodDeliveryrestart.Domain
 @inject FoodDeliveryrestart.Services.CartService CartSvc
+@inject FoodDeliveryrestart.Services.GroupOrderState GroupOrderState
 @inject IDbContextFactory<FoodDeliveryrestart.Data.FoodDeliveryrestartContext> DbFactory
 @inject NavigationManager Nav
+@inject AuthenticationStateProvider Auth
 
 <PageTitle>Checkout</PageTitle>
 
@@ -15,6 +19,13 @@
         <div class="hero-content">
             <h1>Checkout</h1>
             <p class="muted">Confirm payment and place your order.</p>
+
+            @if (GroupOrderState.GroupOrderId > 0 && !string.IsNullOrWhiteSpace(GroupOrderState.GroupCode))
+            {
+                <div class="pill" style="margin-top:10px;">
+                    Group Code: <strong>@GroupOrderState.GroupCode</strong>
+                </div>
+            }
         </div>
     </div>
 
@@ -146,33 +157,15 @@
 </div>
 
 @code {
-    private List<PaymentMethod> PaymentMethods = new();
-    private int SelectedPaymentMethodId; // kept for internal use when reusing existing methods if needed
     private bool IsSaving;
     private string? Error;
+
     private string SelectedPaymentType = "Cash";
     private string? NewCardType;
     private string? NewCardNumber;
     private int NewExpiryMonth;
     private int NewExpiryYear;
     private string? NewCardHolderName;
-
-    // TEMP until Identity → Domain.User mapping
-    private const int DomainUserId = 1;
-    private const int DefaultMallId = 1;
-
-    protected override async Task OnInitializedAsync()
-    {
-        await using var db = await DbFactory.CreateDbContextAsync();
-
-        PaymentMethods = await db.PaymentMethod
-            .Where(pm => pm.UserId == DomainUserId)
-            .OrderBy(pm => pm.Id)
-            .ToListAsync();
-
-        // default to Cash
-        SelectedPaymentType = "Cash";
-    }
 
     private void GoRestaurants() => Nav.NavigateTo("/restaurants");
     private void GoCart() => Nav.NavigateTo("/cart");
@@ -181,17 +174,29 @@
     {
         Error = null;
 
-        // Validate if Card selected
+        // Must be logged in
+        var authState = await Auth.GetAuthenticationStateAsync();
+        var email = authState.User.FindFirst(ClaimTypes.Email)?.Value
+                    ?? authState.User.Identity?.Name;
+
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            Error = "You must be logged in to place an order.";
+            return;
+        }
+
         var useCard = SelectedPaymentType == "Card";
         if (useCard)
         {
-            if (string.IsNullOrWhiteSpace(NewCardType) || string.IsNullOrWhiteSpace(NewCardHolderName) || NewExpiryMonth < 1 || NewExpiryMonth > 12 || NewExpiryYear < DateTime.UtcNow.Year)
+            if (string.IsNullOrWhiteSpace(NewCardType) ||
+                string.IsNullOrWhiteSpace(NewCardHolderName) ||
+                NewExpiryMonth < 1 || NewExpiryMonth > 12 ||
+                NewExpiryYear < DateTime.UtcNow.Year)
             {
                 Error = "Please enter valid card details (type, name, expiry).";
                 return;
             }
 
-            // Basic card number validation (length 12-19 digits). Not stored.
             var digits = new string((NewCardNumber ?? string.Empty).Where(char.IsDigit).ToArray());
             if (string.IsNullOrWhiteSpace(digits) || digits.Length < 12 || digits.Length > 19)
             {
@@ -206,26 +211,80 @@
         {
             await using var db = await DbFactory.CreateDbContextAsync();
 
-            // Create solo GroupOrder
-            var groupOrder = new GroupOrder
+            // Map Identity email -> Domain.User
+            var domainUser = await db.User.FirstOrDefaultAsync(u => u.Email == email);
+            if (domainUser == null)
             {
-                GroupCode = $"SOLO-{Guid.NewGuid():N}".Substring(0, 12),
-                CreatedTime = DateTime.UtcNow,
-                Status = "Solo",
-                MallId = DefaultMallId,
-                UserId = DomainUserId
-            };
-            db.GroupOrder.Add(groupOrder);
-            await db.SaveChangesAsync();
+                domainUser = new User
+                {
+                    Name = email,
+                    Email = email,
+                    DateCreated = DateTime.UtcNow,
+                    DateUpdated = DateTime.UtcNow,
+                    CreatedBy = email,
+                    UpdatedBy = email
+                };
+                db.User.Add(domainUser);
+                await db.SaveChangesAsync();
+            }
 
-            // Create Order
+            // Decide which GroupOrderId to use:
+            int groupOrderId;
+            if (GroupOrderState.GroupOrderId > 0)
+            {
+                // Group order checkout
+                var g = await db.GroupOrder.FirstOrDefaultAsync(x => x.Id == GroupOrderState.GroupOrderId);
+                if (g == null)
+                {
+                    Error = "Group order not found. Please re-join the group.";
+                    return;
+                }
+
+                // If locked/completed/expired, block
+                var expired = g.ClosedTime.HasValue && DateTime.UtcNow > g.ClosedTime.Value.ToUniversalTime();
+                var status = (g.Status ?? "Active").Trim();
+
+                if (expired || !status.Equals("Active", StringComparison.OrdinalIgnoreCase))
+                {
+                    Error = "This group order is closed. You cannot checkout now.";
+                    return;
+                }
+
+                groupOrderId = g.Id;
+            }
+            else
+            {
+                // Solo checkout fallback (still works for normal ordering)
+                // Choose MallId from first restaurant in cart (best guess)
+                var firstRestaurantId = CartSvc.Items.First().RestaurantId;
+                var mallId = await db.Restaurant.Where(r => r.Id == firstRestaurantId).Select(r => r.MallId).FirstOrDefaultAsync();
+                if (mallId == 0) mallId = 1;
+
+                var solo = new GroupOrder
+                {
+                    GroupCode = $"SOLO-{Guid.NewGuid():N}".Substring(0, 12),
+                    CreatedTime = DateTime.UtcNow,
+                    Status = "Solo",
+                    MallId = mallId,
+                    UserId = domainUser.Id,
+                    DateCreated = DateTime.UtcNow,
+                    DateUpdated = DateTime.UtcNow,
+                    CreatedBy = email,
+                    UpdatedBy = email
+                };
+                db.GroupOrder.Add(solo);
+                await db.SaveChangesAsync();
+                groupOrderId = solo.Id;
+            }
+
+            // Create Order (per account, linked to same GroupOrderId)
             var order = new Order
             {
                 DateTime = DateTime.UtcNow,
                 Status = "Paid",
                 TotalAmount = CartSvc.Total(),
-                UserId = DomainUserId,
-                GroupOrderId = groupOrder.Id
+                UserId = domainUser.Id,
+                GroupOrderId = groupOrderId
             };
             db.Order.Add(order);
             await db.SaveChangesAsync();
@@ -243,12 +302,11 @@
                 });
             }
 
-            // Use existing or create new PaymentMethod from entered details
+            // PaymentMethod
             int paymentMethodId;
             if (!useCard)
             {
-                // Ensure a "Cash" payment method exists for this user
-                var cashPm = await db.PaymentMethod.FirstOrDefaultAsync(x => x.UserId == DomainUserId && x.CardType == "Cash");
+                var cashPm = await db.PaymentMethod.FirstOrDefaultAsync(x => x.UserId == domainUser.Id && x.CardType == "Cash");
                 if (cashPm is null)
                 {
                     cashPm = new PaymentMethod
@@ -257,11 +315,11 @@
                         ExpiryMonth = 0,
                         ExpiryYear = 0,
                         CardHolderName = "Cash",
-                        UserId = DomainUserId,
+                        UserId = domainUser.Id,
                         DateCreated = DateTime.UtcNow,
                         DateUpdated = DateTime.UtcNow,
-                        CreatedBy = "System",
-                        UpdatedBy = "System"
+                        CreatedBy = email,
+                        UpdatedBy = email
                     };
                     db.PaymentMethod.Add(cashPm);
                     await db.SaveChangesAsync();
@@ -276,11 +334,11 @@
                     ExpiryMonth = NewExpiryMonth,
                     ExpiryYear = NewExpiryYear,
                     CardHolderName = NewCardHolderName,
-                    UserId = DomainUserId,
+                    UserId = domainUser.Id,
                     DateCreated = DateTime.UtcNow,
                     DateUpdated = DateTime.UtcNow,
-                    CreatedBy = "System",
-                    UpdatedBy = "System"
+                    CreatedBy = email,
+                    UpdatedBy = email
                 };
                 db.PaymentMethod.Add(pm);
                 await db.SaveChangesAsync();
@@ -296,21 +354,23 @@
                 Amount = order.TotalAmount,
                 OrderId = order.Id,
                 PaymentMethodId = paymentMethodId,
-                UserId = DomainUserId,
+                UserId = domainUser.Id,
                 DateCreated = DateTime.UtcNow,
                 DateUpdated = DateTime.UtcNow,
-                CreatedBy = "System",
-                UpdatedBy = "System"
+                CreatedBy = email,
+                UpdatedBy = email
             });
 
             await db.SaveChangesAsync();
 
             CartSvc.Clear();
+
+            // After payment, still show order confirmation
             Nav.NavigateTo($"/orders/{order.Id}");
         }
         catch (Exception ex)
         {
-            Error = ex.Message;
+            Error = ex.InnerException?.Message ?? ex.Message;
         }
         finally
         {

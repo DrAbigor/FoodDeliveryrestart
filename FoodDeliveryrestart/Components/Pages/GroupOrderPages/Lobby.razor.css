@@ -298,3 +298,48 @@
 .w-40{ width: 40%; }
 .w-55{ width: 55%; }
 .w-70{ width: 70%; }
+.timer-text{
+    font-weight: 900;
+    font-size: 1.05rem;
+}
+
+.alert-error{
+    margin-top: 10px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: rgba(239,68,68,0.10);
+    border: 1px solid rgba(239,68,68,0.25);
+    color: #b91c1c;
+    font-weight: 800;
+}
+
+.host-actions{
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(0,0,0,0.08);
+}
+
+.host-btn-row{
+    display:flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.btn-danger{
+    border: none;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-weight: 800;
+    cursor: pointer;
+    background: rgba(239,68,68,0.92);
+    color: #fff;
+    box-shadow: 0 10px 18px rgba(239, 68, 68, 0.18);
+}
+
+.btn-danger:hover{ filter: brightness(0.98); }
+.btn-danger:active{ transform: translateY(1px); }
+
+.status-expired{
+    background: rgba(239,68,68,0.12);
+}

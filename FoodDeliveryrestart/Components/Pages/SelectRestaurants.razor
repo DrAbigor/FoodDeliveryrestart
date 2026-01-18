@@ -181,7 +181,6 @@
 
         try
         {
-            // 1) Get logged-in user email
             var authState = await Auth.GetAuthenticationStateAsync();
             var email = authState.User.FindFirst(ClaimTypes.Email)?.Value
                         ?? authState.User.Identity?.Name;
@@ -194,7 +193,6 @@
 
             await using var ctx = await DbFactory.CreateDbContextAsync();
 
-            // 2) Map Identity email -> Domain.User
             var domainUser = await ctx.User.FirstOrDefaultAsync(u => u.Email == email);
             if (domainUser == null)
             {
@@ -212,7 +210,6 @@
                 await ctx.SaveChangesAsync();
             }
 
-            // 3) Create GroupOrder (unique code + cutoff time)
             var code = await GenerateUniqueCodeAsync(ctx);
 
             var now = DateTime.UtcNow;
@@ -221,7 +218,10 @@
                 GroupCode = code,
                 CreatedTime = now,
                 Status = "Active",
-                ClosedTime = now.AddMinutes(60), // ✅ 60-min cutoff (change if you want)
+
+                // ✅ 15 minutes expiry
+                ClosedTime = now.AddMinutes(15),
+
                 MallId = MallId,
                 UserId = domainUser.Id,
                 DateCreated = now,
@@ -233,7 +233,6 @@
             ctx.GroupOrder.Add(groupOrder);
             await ctx.SaveChangesAsync();
 
-            // 4) Add creator as member (Host)
             ctx.GroupOrderMember.Add(new GroupOrderMember
             {
                 GroupOrderId = groupOrder.Id,
@@ -246,7 +245,6 @@
                 UpdatedBy = email
             });
 
-            // 5) Add selected restaurants
             var restaurantIds = selected.Distinct().ToList();
             foreach (var rid in restaurantIds)
             {
@@ -259,14 +257,12 @@
 
             await ctx.SaveChangesAsync();
 
-            // 6) Store state (optional)
             GroupOrderState.Clear();
             GroupOrderState.GroupOrderId = groupOrder.Id;
             GroupOrderState.GroupCode = groupOrder.GroupCode;
             GroupOrderState.MallId = groupOrder.MallId;
             GroupOrderState.SelectedRestaurantIds = restaurantIds;
 
-            // 7) Navigate to Lobby
             Nav.NavigateTo($"/grouporders/lobby/{code}");
         }
         catch (Exception ex)
@@ -291,7 +287,6 @@
             if (!exists) return code;
         }
 
-        // Extremely unlikely fallback
         return Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
     }
 }

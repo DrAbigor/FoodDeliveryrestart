@@ -13,105 +13,185 @@
 @inject NavigationManager Nav
 @inject FoodDeliveryrestart.Services.GroupOrderState GroupOrderState
 
-<h2>Join Group Order</h2>
+<PageTitle>Join Group Order</PageTitle>
 
-<div class="card p-3" style="max-width:480px;">
-    <label class="form-label">Enter group code</label>
-    <input class="form-control" @bind="code" placeholder="e.g. G8K2P7" />
+<div class="join-page">
+    <div class="join-hero">
+        <h1>Join Group Order</h1>
+        <p class="muted">Enter a group code to join your friends and order together.</p>
+    </div>
 
-    @if (!string.IsNullOrWhiteSpace(error))
-    {
-        <div class="text-danger mt-2">@error</div>
-    }
+    <div class="cardish join-card">
+        <div class="field">
+            <label class="label">Group code</label>
 
-    <button class="btn btn-primary mt-3" @onclick="JoinGroup">Join</button>
+            <input class="code-input"
+                   value="@CodeInput"
+                   @oninput="OnCodeInput"
+                   placeholder="e.g. G8K2P7"
+                   maxlength="8"
+                   autocomplete="off" />
+
+            <div class="help muted">
+                Tip: Codes are not case-sensitive. We’ll auto-format it for you.
+            </div>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(Error))
+        {
+            <div class="alert-error">@Error</div>
+        }
+
+        <div class="actions">
+            <a class="btn-outline" href="/grouporders/selectmall">Back</a>
+
+            <button class="btn-primary"
+                    disabled="@IsBusy"
+                    @onclick="JoinGroup">
+                @(IsBusy ? "Joining..." : "Join")
+            </button>
+        </div>
+    </div>
 </div>
 
-@code {
-    [Parameter] public string? Code { get; set; }          // route parameter (not used here)
-    [SupplyParameterFromQuery] public string? code { get; set; }  // ✅ supports ?code=XXXX
+@code
+{
+    // supports: /grouporders/join?code=XXXX
+    [SupplyParameterFromQuery(Name = "code")]
+    public string? CodeQuery { get; set; }
 
-    private string error = "";
+    private string CodeInput = "";
+    private string? Error;
+    private bool IsBusy;
 
-    // ✅ renamed from Join() to JoinGroup() to avoid CS0542
+    protected override void OnParametersSet()
+    {
+        if (!string.IsNullOrWhiteSpace(CodeQuery))
+        {
+            CodeInput = Normalize(CodeQuery);
+        }
+    }
+
+    private void OnCodeInput(ChangeEventArgs e)
+    {
+        var raw = e.Value?.ToString() ?? "";
+        CodeInput = Normalize(raw);
+    }
+
+    private static string Normalize(string raw)
+        => (raw ?? "")
+            .Trim()
+            .Replace(" ", "")
+            .ToUpperInvariant();
+
     private async Task JoinGroup()
     {
-        error = "";
-        var trimmed = (code ?? "").Trim().ToUpperInvariant();
+        if (IsBusy) return;
+
+        Error = null;
+        var trimmed = Normalize(CodeInput);
 
         if (string.IsNullOrWhiteSpace(trimmed))
         {
-            error = "Please enter a code.";
+            Error = "Please enter a group code.";
             return;
         }
 
-        await using var ctx = await DbFactory.CreateDbContextAsync();
+        IsBusy = true;
 
-        var groupOrder = await ctx.GroupOrder
-            .FirstOrDefaultAsync(g => g.GroupCode == trimmed);
-
-        if (groupOrder == null)
+        try
         {
-            error = "Invalid code. Please check and try again.";
-            return;
-        }
+            await using var ctx = await DbFactory.CreateDbContextAsync();
 
-        // Get current logged-in user email
-        var authState = await Auth.GetAuthenticationStateAsync();
-        var email = authState.User.FindFirst(ClaimTypes.Email)?.Value
-                    ?? authState.User.Identity?.Name;
+            var groupOrder = await ctx.GroupOrder
+                .FirstOrDefaultAsync(g => g.GroupCode == trimmed);
 
-        if (string.IsNullOrWhiteSpace(email))
-        {
-            error = "You must be logged in to join a group order.";
-            return;
-        }
-
-        // Map Identity email -> Domain User
-        var domainUser = await ctx.User.FirstOrDefaultAsync(u => u.Email == email);
-        if (domainUser == null)
-        {
-            domainUser = new User
+            if (groupOrder == null)
             {
-                Name = email,
-                Email = email,
-                DateCreated = DateTime.UtcNow,
-                DateUpdated = DateTime.UtcNow,
-                CreatedBy = email,
-                UpdatedBy = email
-            };
+                Error = "Invalid code. Please check and try again.";
+                return;
+            }
 
-            ctx.User.Add(domainUser);
-            await ctx.SaveChangesAsync();
-        }
-
-        // Prevent duplicate join
-        var alreadyMember = await ctx.GroupOrderMember.AnyAsync(m =>
-            m.GroupOrderId == groupOrder.Id && m.UserId == domainUser.Id);
-
-        if (!alreadyMember)
-        {
-            ctx.GroupOrderMember.Add(new GroupOrderMember
+            // Block join if not Active
+            var status = (groupOrder.Status ?? "").Trim();
+            if (!status.Equals("Active", StringComparison.OrdinalIgnoreCase))
             {
-                GroupOrderId = groupOrder.Id,
-                UserId = domainUser.Id,
-                JoinTime = DateTime.UtcNow,
-                Status = "Member",
-                DateCreated = DateTime.UtcNow,
-                DateUpdated = DateTime.UtcNow,
-                CreatedBy = email,
-                UpdatedBy = email
-            });
+                Error = $"This group is {status}. You can’t join right now.";
+                return;
+            }
 
-            await ctx.SaveChangesAsync();
+            // OPTIONAL cutoff check (only if your GroupOrder has ClosedTime)
+            // If you get a compile error here, tell me and I'll remove this block.
+            if (groupOrder.ClosedTime != default && DateTime.UtcNow > groupOrder.ClosedTime)
+            {
+                Error = "This group order has expired. Ask the host to create a new one.";
+                return;
+            }
+
+            // Get current logged-in user email
+            var authState = await Auth.GetAuthenticationStateAsync();
+            var email = authState.User.FindFirst(ClaimTypes.Email)?.Value
+                        ?? authState.User.Identity?.Name;
+
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                Error = "You must be logged in to join a group order.";
+                return;
+            }
+
+            // Map Identity email -> Domain User
+            var domainUser = await ctx.User.FirstOrDefaultAsync(u => u.Email == email);
+            if (domainUser == null)
+            {
+                domainUser = new User
+                {
+                    Name = email,
+                    Email = email,
+                    DateCreated = DateTime.UtcNow,
+                    DateUpdated = DateTime.UtcNow,
+                    CreatedBy = email,
+                    UpdatedBy = email
+                };
+
+                ctx.User.Add(domainUser);
+                await ctx.SaveChangesAsync();
+            }
+
+            // Prevent duplicate join
+            var alreadyMember = await ctx.GroupOrderMember.AnyAsync(m =>
+                m.GroupOrderId == groupOrder.Id && m.UserId == domainUser.Id);
+
+            if (!alreadyMember)
+            {
+                ctx.GroupOrderMember.Add(new GroupOrderMember
+                {
+                    GroupOrderId = groupOrder.Id,
+                    UserId = domainUser.Id,
+                    JoinTime = DateTime.UtcNow,
+                    Status = "Member",
+                    DateCreated = DateTime.UtcNow,
+                    DateUpdated = DateTime.UtcNow,
+                    CreatedBy = email,
+                    UpdatedBy = email
+                });
+
+                await ctx.SaveChangesAsync();
+            }
+
+            // Store active group order in state
+            GroupOrderState.GroupOrderId = groupOrder.Id;
+            GroupOrderState.GroupCode = groupOrder.GroupCode;
+            GroupOrderState.MallId = groupOrder.MallId;
+
+            Nav.NavigateTo($"/grouporders/lobby/{trimmed}");
         }
-
-        // ✅ IMPORTANT: store active group order in state
-        GroupOrderState.GroupOrderId = groupOrder.Id;
-        GroupOrderState.GroupCode = groupOrder.GroupCode;
-        GroupOrderState.MallId = groupOrder.MallId;
-
-        Nav.NavigateTo($"/grouporders/lobby/{trimmed}");
+        catch (Exception ex)
+        {
+            Error = ex.InnerException?.Message ?? ex.Message;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
     }
 }
-

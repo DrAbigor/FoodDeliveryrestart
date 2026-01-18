@@ -1,49 +1,322 @@
 ﻿@page "/grouporders/restaurants/{RestaurantId:int}/menuitems"
+@rendermode InteractiveServer
 
 @using Microsoft.EntityFrameworkCore
-@using Microsoft.AspNetCore.Components.QuickGrid
-@using FoodDeliveryrestart.Domain
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
 @using FoodDeliveryrestart.Data
+@using FoodDeliveryrestart.Domain
+
 @implements IAsyncDisposable
-@inject IDbContextFactory<FoodDeliveryrestart.Data.FoodDeliveryrestartContext> DbFactory
 
-<PageTitle>Index</PageTitle>
+@inject IDbContextFactory<FoodDeliveryrestartContext> DbFactory
+@inject NavigationManager Nav
+@inject FoodDeliveryrestart.Services.CartService Cart
+@inject FoodDeliveryrestart.Services.GroupOrderState GroupOrderState
+@inject AuthenticationStateProvider Auth
 
-<h1>Index</h1>
+<PageTitle>@(restaurant?.Name ?? "Menu") - Group Order</PageTitle>
 
-<p>
-    <a href="menuitems/create">Create New</a>
-</p>
+<div class="go-shell">
+    @if (loading)
+    {
+        <div class="go-card">
+            <div class="go-skel w-40"></div>
+            <div class="go-skel w-70"></div>
+            <div class="go-skel w-55"></div>
+        </div>
+    }
+    else if (!string.IsNullOrWhiteSpace(error))
+    {
+        <div class="go-card">
+            <h3 class="go-title">Oops</h3>
+            <p class="go-muted">@error</p>
+            <button class="go-btn" @onclick="BackToLobby">Back to lobby</button>
+        </div>
+    }
+    else
+    {
+        <div class="go-header">
+            <div class="go-header-left">
+                <div class="go-kicker">Group Order</div>
+                <h1 class="go-title">@restaurant!.Name</h1>
+                <div class="go-meta">
+                    <span class="go-pill">Code: <b>@GroupOrderState.GroupCode</b></span>
+                    <span class="go-pill">@restaurant!.CuisineType</span>
+                    @if (!string.IsNullOrWhiteSpace(restaurant!.LocationWithinMall))
+                    {
+                        <span class="go-pill">Unit @restaurant!.LocationWithinMall</span>
+                    }
+                </div>
+            </div>
 
-<QuickGrid Class="table" Items="context.MenuItem">
-    <PropertyColumn Property="menuitem => menuitem.ItemName" />
-    <PropertyColumn Property="menuitem => menuitem.Price" />
-    <PropertyColumn Property="menuitem => menuitem.Description" />
-    <PropertyColumn Property="menuitem => menuitem.Calories" Title="Calories (kcal)" />
-    <PropertyColumn Property="menuitem => menuitem.CarbohydratesG" Title="Carbs (g)" />
-    <PropertyColumn Property="menuitem => menuitem.ProteinG" Title="Protein (g)" />
-    <PropertyColumn Property="menuitem => menuitem.FatG" Title="Fat (g)" />
-    <PropertyColumn Property="menuitem => menuitem.Allergens" Title="Allergens" />
-    <PropertyColumn Property="menuitem => menuitem.RestaurantId" />
-    <PropertyColumn Property="menuitem => menuitem.DateCreated" />
-    <PropertyColumn Property="menuitem => menuitem.DateUpdated" />
-    <PropertyColumn Property="menuitem => menuitem.CreatedBy" />
-    <PropertyColumn Property="menuitem => menuitem.UpdatedBy" />
+            <div class="go-header-actions">
+                <button class="go-btn-ghost" @onclick="BackToLobby" type="button">← Back</button>
+                <button class="go-btn" @onclick="GoCart" type="button">
+                    Cart (@Cart.Count())
+                </button>
+            </div>
+        </div>
 
-    <TemplateColumn Context="menuitem">
-        <a href="@($"menuitems/edit?id={menuitem.Id}")">Edit</a> |
-        <a href="@($"menuitems/details?id={menuitem.Id}")">Details</a> |
-        <a href="@($"menuitems/delete?id={menuitem.Id}")">Delete</a>
-    </TemplateColumn>
-</QuickGrid>
+        @if (!canOrder)
+        {
+            <div class="go-alert">
+                Ordering is currently closed for this group order (Locked / Completed / Expired).
+            </div>
+        }
+
+        <div class="go-filters">
+            <div class="go-filter-title">Dietary Filters</div>
+
+            <label class="go-chk">
+                <input type="checkbox" @bind="filterHalal" />
+                <span>Halal</span>
+            </label>
+
+            <label class="go-chk">
+                <input type="checkbox" @bind="filterVegan" />
+                <span>Vegan</span>
+            </label>
+
+            <label class="go-chk">
+                <input type="checkbox" @bind="filterNutFree" />
+                <span>Nut-Free</span>
+            </label>
+
+            <label class="go-chk">
+                <input type="checkbox" @bind="filterDairyFree" />
+                <span>Dairy-Free</span>
+            </label>
+
+            <button class="go-clear" @onclick="ClearFilters" type="button">Clear</button>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(cartError))
+        {
+            <div class="go-alert warn">
+                @cartError
+            </div>
+        }
+
+        @if (menuItems.Count == 0)
+        {
+            <div class="go-card">
+                <p class="go-muted">No menu items found for this restaurant.</p>
+            </div>
+        }
+        else if (!FilteredItems.Any())
+        {
+            <div class="go-card">
+                <p class="go-muted">No items match your filters.</p>
+            </div>
+        }
+        else
+        {
+            <div class="go-grid">
+                @foreach (var item in FilteredItems)
+                {
+                    <div class="go-item">
+                        <div class="go-thumb">
+                            @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                            {
+                                <img src="@item.ImageUrl"
+                                     alt="@item.ItemName"
+                                     loading="lazy"
+                                     onerror="this.style.display='none'; this.closest('.go-thumb').classList.add('noimg');" />
+                            }
+                            <div class="go-thumb-ph">
+                                <span>🍔</span>
+                            </div>
+                        </div>
+
+                        <div class="go-info">
+                            <div class="go-toprow">
+                                <h3 title="@item.ItemName">@item.ItemName</h3>
+                                <div class="go-price">$@item.Price.ToString("0.00")</div>
+                            </div>
+
+                            <p class="go-desc">@item.Description</p>
+
+                            <div class="go-badges">
+                                @if (item.IsHalal) { <span class="go-badge">Halal</span> }
+                                @if (item.IsVegan) { <span class="go-badge">Vegan</span> }
+                                @if (item.IsNutFree) { <span class="go-badge">Nut-free</span> }
+                                @if (item.IsDairyFree) { <span class="go-badge">Dairy-free</span> }
+                            </div>
+
+                            <div class="go-actions">
+                                <button class="go-btn"
+                                        disabled="@(!canOrder)"
+                                        @onclick="() => AddToCart(item)">
+                                    Add to Cart
+                                </button>
+
+                                <div class="go-mini">
+                                    @item.Calories kcal
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        @if (showToast)
+        {
+            <div class="go-toast">@toastText</div>
+        }
+    }
+</div>
 
 @code {
-    private FoodDeliveryrestartContext context = default!;
+    [Parameter] public int RestaurantId { get; set; }
 
-    protected override void OnInitialized()
+    private FoodDeliveryrestartContext context = default!;
+    private bool loading = true;
+    private string? error;
+
+    private GroupOrder? groupOrder;
+    private Restaurant? restaurant;
+    private List<MenuItem> menuItems = new();
+
+    private bool canOrder = true;
+
+    // filters
+    private bool filterHalal;
+    private bool filterVegan;
+    private bool filterNutFree;
+    private bool filterDairyFree;
+
+    private string? cartError;
+
+    // toast
+    private bool showToast;
+    private string toastText = "";
+
+    private IEnumerable<MenuItem> FilteredItems =>
+        menuItems.Where(i =>
+            (!filterHalal || i.IsHalal) &&
+            (!filterVegan || i.IsVegan) &&
+            (!filterNutFree || i.IsNutFree) &&
+            (!filterDairyFree || i.IsDairyFree)
+        );
+
+    protected override async Task OnInitializedAsync()
     {
-        context = DbFactory.CreateDbContext();
+        context = await DbFactory.CreateDbContextAsync();
+
+        try
+        {
+            // Must have active group order in state
+            if (GroupOrderState.GroupOrderId <= 0 || string.IsNullOrWhiteSpace(GroupOrderState.GroupCode))
+            {
+                error = "No active group order found. Please join/create a group order first.";
+                return;
+            }
+
+            // Load group order (to check status + expiry)
+            groupOrder = await context.GroupOrder.FirstOrDefaultAsync(g => g.Id == GroupOrderState.GroupOrderId);
+            if (groupOrder == null)
+            {
+                error = "Group order not found. Please re-join with the group code.";
+                return;
+            }
+
+            // Check if restaurant is part of this group order selection (DB truth)
+            var allowedRestaurant = await context.GroupOrderRestaurant.AnyAsync(gr =>
+                gr.GroupOrderId == groupOrder.Id && gr.RestaurantId == RestaurantId);
+
+            if (!allowedRestaurant)
+            {
+                error = "This restaurant is not selected for this group order.";
+                return;
+            }
+
+            // Determine canOrder
+            var expired = groupOrder.ClosedTime.HasValue && DateTime.UtcNow > groupOrder.ClosedTime.Value.ToUniversalTime();
+            var status = (groupOrder.Status ?? "Active").Trim();
+            canOrder = !expired && status.Equals("Active", StringComparison.OrdinalIgnoreCase);
+
+            restaurant = await context.Restaurant.FirstOrDefaultAsync(r => r.Id == RestaurantId);
+            if (restaurant == null)
+            {
+                error = "Restaurant not found.";
+                return;
+            }
+
+            menuItems = await context.MenuItem
+                .Where(m => m.RestaurantId == RestaurantId)
+                .OrderBy(m => m.ItemName)
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            error = ex.InnerException?.Message ?? ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
     }
 
-    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+    private void ClearFilters()
+    {
+        filterHalal = false;
+        filterVegan = false;
+        filterNutFree = false;
+        filterDairyFree = false;
+    }
+
+    private void AddToCart(MenuItem item)
+    {
+        cartError = null;
+
+        if (!canOrder)
+        {
+            cartError = "Ordering is closed right now.";
+            return;
+        }
+
+        var ok = Cart.Add(
+            menuItemId: item.Id,
+            restaurantId: RestaurantId,
+            itemName: item.ItemName ?? "Item",
+            price: item.Price,
+            imageUrl: item.ImageUrl,
+            calories: item.Calories,
+            quantity: 1
+        );
+
+        if (!ok)
+        {
+            cartError = "You can only order from up to 3 restaurants in one cart (group limit).";
+            return;
+        }
+
+        toastText = $"Added: {item.ItemName}";
+        showToast = true;
+
+        _ = Task.Run(async () =>
+        {
+            await Task.Delay(1100);
+            showToast = false;
+            await InvokeAsync(StateHasChanged);
+        });
+    }
+
+    private void GoCart() => Nav.NavigateTo("/cart");
+
+    private void BackToLobby()
+    {
+        if (!string.IsNullOrWhiteSpace(GroupOrderState.GroupCode))
+            Nav.NavigateTo($"/grouporders/lobby/{GroupOrderState.GroupCode}");
+        else
+            Nav.NavigateTo("/grouporders/join");
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (context != null)
+            await context.DisposeAsync();
+    }
 }

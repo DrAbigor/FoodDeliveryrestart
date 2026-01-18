@@ -4,10 +4,14 @@
 @using Microsoft.EntityFrameworkCore
 @using FoodDeliveryrestart.Data
 @using FoodDeliveryrestart.Domain
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@implements IDisposable
 
 @inject IDbContextFactory<FoodDeliveryrestartContext> DbFactory
 @inject NavigationManager Nav
 @inject IJSRuntime JS
+@inject AuthenticationStateProvider Auth
 
 <div class="lobby-page">
     <div class="lobby-header">
@@ -17,6 +21,7 @@
         </div>
 
         <div class="lobby-actions">
+            <button class="btn-outline" @onclick="Reload" disabled="@IsBusy">Refresh</button>
             <a class="btn-outline" href="/grouporders/join">Join another group</a>
         </div>
     </div>
@@ -31,6 +36,9 @@
     }
     else
     {
+        var statusText = DisplayStatus(groupOrder);
+        var isOrderOpen = IsOrderOpen(groupOrder);
+
         <div class="summary-grid">
             <div class="cardish summary-card">
                 <div class="summary-top">
@@ -45,14 +53,57 @@
 
                     <div class="status-block">
                         <div class="label">Status</div>
-                        <span class="status-pill @StatusClass(groupOrder.Status)">
-                            @groupOrder.Status
+                        <span class="status-pill @StatusClass(statusText)">
+                            @statusText
                         </span>
 
                         <div class="label mt-10">Mall</div>
                         <div class="mall-name">@groupOrder.Mall?.MallName</div>
+
+                        <div class="label mt-10">Time left</div>
+                        <div class="timer-text">@TimeLeftText</div>
+
+                        <div class="muted small">
+                            Default is 15 minutes. If expired, host can re-open for 5 minutes.
+                        </div>
                     </div>
                 </div>
+
+                @if (!string.IsNullOrWhiteSpace(Error))
+                {
+                    <div class="alert-error mt-10">@Error</div>
+                }
+
+                @if (IsHost)
+                {
+                    <div class="host-actions">
+                        <div class="label">Host controls</div>
+
+                        <div class="host-btn-row">
+                            <button class="btn-outline"
+                                    disabled="@IsBusy"
+                                    @onclick="LockOrder">
+                                Lock order
+                            </button>
+
+                            <button class="btn-outline"
+                                    disabled="@IsBusy"
+                                    @onclick="ReopenOrder">
+                                Re-open (+5 mins if expired)
+                            </button>
+
+                            <button class="btn-danger"
+                                    disabled="@IsBusy"
+                                    @onclick="CompleteOrder">
+                                Complete
+                            </button>
+                        </div>
+
+                        <div class="muted small mt-10">
+                            Lock = members can’t add items. Re-open gives 5 minutes only if already expired.
+                        </div>
+                    </div>
+                }
             </div>
 
             <div class="cardish">
@@ -72,6 +123,7 @@
                         {
                             <button class="pill"
                                     title="Open menu"
+                                    disabled="@(!isOrderOpen)"
                                     @onclick="() => GoMenu(r.Id)">
                                 @r.Name
                                 <span class="pill-arrow">→</span>
@@ -79,9 +131,18 @@
                         }
                     </div>
 
-                    <div class="muted small mt-10">
-                        Tip: Click a restaurant to open its menu.
-                    </div>
+                    @if (!isOrderOpen)
+                    {
+                        <div class="muted small mt-10">
+                            Ordering is closed (Locked / Completed / Expired). Host can re-open if needed.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="muted small mt-10">
+                            Tip: Click a restaurant to open its menu.
+                        </div>
+                    }
                 }
             </div>
 
@@ -135,26 +196,194 @@
     private List<Restaurant> restaurants = new();
     private List<GroupOrderMember> members = new();
 
+    private string? Error;
+    private bool IsBusy;
+    private bool IsHost;
+
+    private System.Timers.Timer? _timer;
+    private string TimeLeftText = "-";
+
     protected override async Task OnInitializedAsync()
     {
-        await using var ctx = await DbFactory.CreateDbContextAsync();
+        StartTimer();
+        await Reload();
+    }
 
-        groupOrder = await ctx.GroupOrder
-            .Include(g => g.Mall)
-            .FirstOrDefaultAsync(g => g.GroupCode == Code);
+    public void Dispose()
+    {
+        try
+        {
+            _timer?.Stop();
+            _timer?.Dispose();
+        }
+        catch { }
+    }
 
+    private void StartTimer()
+    {
+        _timer = new System.Timers.Timer(1000);
+        _timer.Elapsed += (_, __) =>
+        {
+            UpdateTimeLeftText();
+            InvokeAsync(StateHasChanged);
+        };
+        _timer.AutoReset = true;
+        _timer.Start();
+    }
+
+    private async Task Reload()
+    {
+        if (IsBusy) return;
+
+        Error = null;
+        IsBusy = true;
+
+        try
+        {
+            var authState = await Auth.GetAuthenticationStateAsync();
+            var email = authState.User.FindFirst(ClaimTypes.Email)?.Value
+                        ?? authState.User.Identity?.Name;
+
+            await using var ctx = await DbFactory.CreateDbContextAsync();
+
+            groupOrder = await ctx.GroupOrder
+                .Include(g => g.Mall)
+                .FirstOrDefaultAsync(g => g.GroupCode == Code);
+
+            if (groupOrder == null)
+            {
+                Error = "Group order not found.";
+                return;
+            }
+
+            restaurants = await ctx.GroupOrderRestaurant
+                .Where(x => x.GroupOrderId == groupOrder.Id)
+                .Select(x => x.Restaurant!)
+                .ToListAsync();
+
+            members = await ctx.GroupOrderMember
+                .Where(m => m.GroupOrderId == groupOrder.Id)
+                .Include(m => m.User)
+                .OrderBy(m => m.JoinTime)
+                .ToListAsync();
+
+            IsHost = false;
+            if (!string.IsNullOrWhiteSpace(email))
+            {
+                var me = await ctx.User.FirstOrDefaultAsync(u => u.Email == email);
+                if (me != null)
+                {
+                    IsHost = await ctx.GroupOrderMember.AnyAsync(m =>
+                        m.GroupOrderId == groupOrder.Id &&
+                        m.UserId == me.Id &&
+                        (m.Status ?? "") == "Host");
+                }
+            }
+
+            UpdateTimeLeftText();
+        }
+        catch (Exception ex)
+        {
+            Error = ex.InnerException?.Message ?? ex.Message;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private void UpdateTimeLeftText()
+    {
+        if (groupOrder?.ClosedTime is null)
+        {
+            TimeLeftText = "-";
+            return;
+        }
+
+        var remaining = groupOrder.ClosedTime.Value.ToUniversalTime() - DateTime.UtcNow;
+
+        if (remaining <= TimeSpan.Zero)
+        {
+            TimeLeftText = "Expired";
+            return;
+        }
+
+        // mm:ss display (15:00 etc)
+        var totalMinutes = (int)Math.Floor(remaining.TotalMinutes);
+        TimeLeftText = $"{totalMinutes:00}:{remaining.Seconds:00} left";
+    }
+
+    private bool IsExpired(GroupOrder g)
+        => g.ClosedTime.HasValue && DateTime.UtcNow > g.ClosedTime.Value.ToUniversalTime();
+
+    private bool IsOrderOpen(GroupOrder g)
+        => !IsExpired(g) && (g.Status ?? "").Trim().Equals("Active", StringComparison.OrdinalIgnoreCase);
+
+    private string DisplayStatus(GroupOrder g)
+    {
+        if (IsExpired(g)) return "Expired";
+        return string.IsNullOrWhiteSpace(g.Status) ? "Active" : g.Status!;
+    }
+
+    private async Task LockOrder() => await SetStatus("Locked");
+    private async Task ReopenOrder() => await SetStatus("Active");
+    private async Task CompleteOrder() => await SetStatus("Completed");
+
+    private async Task SetStatus(string newStatus)
+    {
         if (groupOrder == null) return;
+        if (!IsHost)
+        {
+            Error = "Only the host can change the group status.";
+            return;
+        }
 
-        restaurants = await ctx.GroupOrderRestaurant
-            .Where(x => x.GroupOrderId == groupOrder.Id)
-            .Select(x => x.Restaurant!)
-            .ToListAsync();
+        IsBusy = true;
+        Error = null;
 
-        members = await ctx.GroupOrderMember
-            .Where(m => m.GroupOrderId == groupOrder.Id)
-            .Include(m => m.User)
-            .OrderBy(m => m.JoinTime)
-            .ToListAsync();
+        try
+        {
+            await using var ctx = await DbFactory.CreateDbContextAsync();
+
+            var g = await ctx.GroupOrder.FirstOrDefaultAsync(x => x.Id == groupOrder.Id);
+            if (g == null) return;
+
+            var now = DateTime.UtcNow;
+
+            // ✅ Re-open rules:
+            // - If already expired, give +5 minutes from NOW.
+            // - If not expired (just locked), keep existing ClosedTime (don’t reset timer).
+            if (newStatus.Equals("Active", StringComparison.OrdinalIgnoreCase))
+            {
+                var expired = g.ClosedTime.HasValue && now > g.ClosedTime.Value.ToUniversalTime();
+                if (expired)
+                {
+                    g.ClosedTime = now.AddMinutes(5);
+                }
+            }
+
+            // If completing, close immediately
+            if (newStatus.Equals("Completed", StringComparison.OrdinalIgnoreCase))
+            {
+                g.ClosedTime = now;
+            }
+
+            g.Status = newStatus;
+            g.DateUpdated = now;
+            g.UpdatedBy = "Host";
+
+            await ctx.SaveChangesAsync();
+
+            await Reload();
+        }
+        catch (Exception ex)
+        {
+            Error = ex.InnerException?.Message ?? ex.Message;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
     }
 
     private void GoMenu(int restaurantId)
@@ -166,12 +395,10 @@
 
         try
         {
-            // Uses browser clipboard API
             await JS.InvokeVoidAsync("navigator.clipboard.writeText", groupOrder.GroupCode);
         }
         catch
         {
-            // If clipboard blocked, at least show an alert
             await JS.InvokeVoidAsync("alert", $"Copy this code: {groupOrder.GroupCode}");
         }
     }
@@ -186,6 +413,7 @@
             "active" => "status-active",
             "locked" => "status-locked",
             "completed" => "status-completed",
+            "expired" => "status-expired",
             _ => "status-default"
         };
     }

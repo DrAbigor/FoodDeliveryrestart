@@ -1,61 +1,120 @@
 ﻿@page "/checkout"
+@rendermode InteractiveServer
+
 @using Microsoft.EntityFrameworkCore
 @using FoodDeliveryrestart.Domain
 @inject FoodDeliveryrestart.Services.CartService CartSvc
 @inject IDbContextFactory<FoodDeliveryrestart.Data.FoodDeliveryrestartContext> DbFactory
 @inject NavigationManager Nav
-@rendermode InteractiveServer
 
-<div class="checkout-page">
-    <div class="checkout-header">
-        <h2>Checkout</h2>
-        <p class="muted">Confirm payment and place your order.</p>
+<PageTitle>Checkout</PageTitle>
+
+<div class="checkout-wrap">
+
+    <div class="checkout-hero">
+        <div class="hero-content">
+            <h1>Checkout</h1>
+            <p class="muted">Confirm payment and place your order.</p>
+        </div>
     </div>
 
-    @if (!CartSvc.Items.Any())
-    {
-        <div class="cardish">
-            <p>Your cart is empty.</p>
-            <button class="btn btn-primary" @onclick="GoRestaurants">Back to restaurants</button>
-        </div>
-    }
-    else if (IsSaving)
-    {
-        <div class="cardish">
-            <p>Placing your order...</p>
-        </div>
-    }
-    else
-    {
-        <div class="cardish">
-            <div class="summary-row">
-                <span class="total-label">Total</span>
-                <span class="total-value">@CartSvc.Total().ToString("0.00")</span>
-            </div>
+    <div class="checkout-container">
 
-            <div class="mb-3">
-                <label class="form-label">Payment Method</label>
-                <select class="form-select" @bind="SelectedPaymentMethodId">
-                    @foreach (var pm in PaymentMethods)
+        @if (!CartSvc.Items.Any())
+        {
+            <div class="empty-card">
+                <h3>Your cart is empty</h3>
+                <p class="muted">Add items from Restaurants to proceed.</p>
+                <button class="btn-primary" @onclick="GoRestaurants">Back to restaurants</button>
+            </div>
+        }
+        else if (IsSaving)
+        {
+            <div class="empty-card">
+                <h3>Placing your order…</h3>
+                <p class="muted">Please wait.</p>
+            </div>
+        }
+        else
+        {
+            <div class="checkout-grid">
+
+                <!-- LEFT: Payment -->
+                <div class="panel">
+                    <div class="panel-head">
+                        <h3>Payment</h3>
+                        <div class="pill">Secure</div>
+                    </div>
+
+                    <label class="label">Payment Method</label>
+                    <select class="select" @bind="SelectedPaymentMethodId">
+                        @foreach (var pm in PaymentMethods)
+                        {
+                            <option value="@pm.Id">
+                                @pm.CardType - @pm.CardHolderName (exp @pm.ExpiryMonth/@pm.ExpiryYear)
+                            </option>
+                        }
+                    </select>
+
+                    <div class="actions">
+                        <button class="btn-primary" @onclick="PlaceOrder">Pay &amp; Place Order</button>
+                        <button class="btn-ghost" @onclick="GoCart">Back to cart</button>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(Error))
                     {
-                        <option value="@pm.Id">
-                            @pm.CardType - @pm.CardHolderName (exp @pm.ExpiryMonth/@pm.ExpiryYear)
-                        </option>
+                        <div class="error">@Error</div>
                     }
-                </select>
-            </div>
+                </div>
 
-            <div class="actions">
-                <button class="btn btn-success" @onclick="PlaceOrder">Pay &amp; Place Order</button>
-                <button class="btn btn-outline-secondary ms-2" @onclick="GoCart">Back to cart</button>
-            </div>
+                <!-- RIGHT: Summary -->
+                <div class="panel">
+                    <div class="panel-head">
+                        <h3>Order Summary</h3>
+                        <div class="pill">@CartSvc.Count() item(s)</div>
+                    </div>
 
-            @if (!string.IsNullOrWhiteSpace(Error))
-            {
-                <div class="alert alert-danger mt-3">@Error</div>
-            }
-        </div>
-    }
+                    <div class="rows">
+                        <div class="row">
+                            <span>Subtotal</span>
+                            <span>$@CartSvc.Subtotal().ToString("0.00")</span>
+                        </div>
+
+                        <div class="row">
+                            <span>Delivery Fee</span>
+                            <span>$@CartSvc.DeliveryFee.ToString("0.00")</span>
+                        </div>
+
+                        <div class="row">
+                            <span>Tip</span>
+                            <span>$@CartSvc.Tip.ToString("0.00")</span>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="row total">
+                            <span>Total</span>
+                            <span>$@CartSvc.Total().ToString("0.00")</span>
+                        </div>
+                    </div>
+
+                    <div class="mini">
+                        <div class="mini-title">Items</div>
+                        @foreach (var item in CartSvc.Items)
+                        {
+                            <div class="mini-item">
+                                <div class="mini-name">@item.ItemName</div>
+                                <div class="mini-meta">@item.Quantity × $@item.Price.ToString("0.00")</div>
+                                <div class="mini-total">$@((item.Quantity * item.Price).ToString("0.00"))</div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+            </div>
+        }
+
+    </div>
 </div>
 
 @code {
@@ -99,7 +158,7 @@
         {
             await using var db = await DbFactory.CreateDbContextAsync();
 
-            // 1️⃣ Create solo GroupOrder
+            // Create solo GroupOrder
             var groupOrder = new GroupOrder
             {
                 GroupCode = $"SOLO-{Guid.NewGuid():N}".Substring(0, 12),
@@ -111,7 +170,7 @@
             db.GroupOrder.Add(groupOrder);
             await db.SaveChangesAsync();
 
-            // 2️⃣ Create Order
+            // Create Order
             var order = new Order
             {
                 DateTime = DateTime.UtcNow,
@@ -123,7 +182,7 @@
             db.Order.Add(order);
             await db.SaveChangesAsync();
 
-            // 3️⃣ Create OrderItems
+            // OrderItems
             foreach (var ci in CartSvc.Items)
             {
                 db.OrderItem.Add(new OrderItem
@@ -136,7 +195,7 @@
                 });
             }
 
-            // 4️⃣ Create Payment
+            // Payment
             db.Payment.Add(new Payment
             {
                 Name = "Card Payment",

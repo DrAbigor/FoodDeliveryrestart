@@ -1,0 +1,213 @@
+﻿@page "/grouporders/{Code}"
+@rendermode InteractiveServer
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles="Customer,Administrator")]
+
+@using Microsoft.EntityFrameworkCore
+@using FoodDeliveryrestart.Data
+@using FoodDeliveryrestart.Domain
+
+@inject IDbContextFactory<FoodDeliveryrestartContext> DbFactory
+@inject NavigationManager Nav
+
+<h2 class="mb-1">Group Orders</h2>
+<p class="text-muted">Create, join, and manage group food orders with friends and colleagues</p>
+
+<div class="d-flex gap-2 mb-4">
+    <button class="btn btn-warning text-white" @onclick="GoCreate">
+        + Create New Group Order
+    </button>
+    <button class="btn btn-outline-secondary" @onclick="GoJoin">
+        Join Group Order
+    </button>
+</div>
+
+@if (loading)
+{
+    <div class="card p-3">Loading...</div>
+}
+else if (groupOrder is null)
+{
+    <div class="card p-3">
+        <div class="text-danger">Group order not found.</div>
+        <button class="btn btn-outline-secondary mt-2" @onclick="GoCreate">Back</button>
+    </div>
+}
+else
+{
+    <div class="card p-4">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <div class="fw-semibold">Active Group Order</div>
+                <div class="text-muted small">
+                    Code: <span class="fw-semibold">@groupOrder.GroupCode</span>
+                    • Mall: <span class="fw-semibold">@groupOrder.Mall?.MallName</span>
+                </div>
+            </div>
+
+            <span class="badge bg-primary">@groupOrder.Status</span>
+        </div>
+
+        <hr />
+
+        <div class="d-flex gap-3 mb-3">
+            <button class="btn btn-sm @(tab == "overview" ? "btn-dark" : "btn-outline-dark")"
+                    @onclick="TabOverview">
+                Overview
+            </button>
+
+            <button class="btn btn-sm @(tab == "activity" ? "btn-dark" : "btn-outline-dark")"
+                    @onclick="TabActivity">
+                Activity
+            </button>
+
+            <button class="btn btn-sm @(tab == "payments" ? "btn-dark" : "btn-outline-dark")"
+                    @onclick="TabPayments">
+                Payments
+            </button>
+        </div>
+
+        @if (tab == "overview")
+        {
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="border rounded p-3">
+                        <div class="text-muted small">Created by</div>
+                        <div class="fw-semibold">@hostName</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="border rounded p-3">
+                        <div class="text-muted small">Members</div>
+                        <div class="fw-semibold">@members.Count</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="border rounded p-3">
+                        <div class="text-muted small">Payments</div>
+                        <div class="fw-semibold">@paidCount / @members.Count paid</div>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="my-4" />
+
+            <h5 class="mb-2">Group Members</h5>
+            @if (members.Count == 0)
+            {
+                <div class="text-muted">No members yet.</div>
+            }
+            else
+            {
+                <div class="d-flex flex-wrap gap-2 mb-4">
+                    @foreach (var m in members)
+                    {
+                        <span class="badge rounded-pill bg-light text-dark border">
+                            @(m.User?.Email ?? $"User #{m.UserId}")
+                        </span>
+                    }
+                </div>
+            }
+
+            <h5 class="mb-2">Selected Restaurants</h5>
+            @if (restaurants.Count == 0)
+            {
+                <div class="text-muted">No restaurants selected.</div>
+            }
+            else
+            {
+                <div class="list-group">
+                    @foreach (var r in restaurants)
+                    {
+                        <button class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                                @onclick="() => GoMenu(r.Id)">
+                            <div>
+                                <div class="fw-semibold">@r.Name</div>
+                                <div class="text-muted small">@r.CuisineType</div>
+                            </div>
+                            <span class="text-muted small">View Menu →</span>
+                        </button>
+                    }
+                </div>
+            }
+        }
+        else if (tab == "activity")
+        {
+            <div class="text-muted">
+                (Optional next) Show live activity: member joined, items added, order placed (SignalR later).
+            </div>
+        }
+        else if (tab == "payments")
+        {
+            <div class="text-muted">
+                (Optional next) Show paid/unpaid members and payment amounts.
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public string Code { get; set; } = "";
+
+    private bool loading = true;
+
+    private GroupOrder? groupOrder;
+    private List<GroupOrderMember> members = new();
+    private List<Restaurant> restaurants = new();
+
+    private string tab = "overview";
+    private string hostName = "Host";
+    private int paidCount = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await using var ctx = await DbFactory.CreateDbContextAsync();
+
+        groupOrder = await ctx.GroupOrder
+            .Include(g => g.Mall)
+            .FirstOrDefaultAsync(g => g.GroupCode == Code);
+
+        if (groupOrder is null)
+        {
+            loading = false;
+            return;
+        }
+
+        members = await ctx.GroupOrderMember
+            .Where(m => m.GroupOrderId == groupOrder.Id)
+            .Include(m => m.User)
+            .OrderBy(m => m.JoinTime)
+            .ToListAsync();
+
+        hostName = members.FirstOrDefault(m => m.Status == "Host")?.User?.Email ?? "Host";
+
+        restaurants = await ctx.GroupOrderRestaurant
+            .Where(x => x.GroupOrderId == groupOrder.Id)
+            .Include(x => x.Restaurant)
+            .Select(x => x.Restaurant!)
+            .ToListAsync();
+
+        paidCount = 0;
+
+        loading = false;
+    }
+
+    // ✅ safest tab methods (no quotes/no lambda issues)
+    private void TabOverview() => tab = "overview";
+    private void TabActivity() => tab = "activity";
+    private void TabPayments() => tab = "payments";
+
+    private void GoMenu(int restaurantId)
+    {
+        Nav.NavigateTo($"/grouporders/restaurants/{restaurantId}/menuitems");
+    }
+
+    private void GoCreate()
+    {
+        Nav.NavigateTo("/grouporders/selectmall");
+    }
+
+    private void GoJoin()
+    {
+        Nav.NavigateTo("/grouporders/join");
+    }
+}

@@ -1,6 +1,5 @@
-﻿@page "/grouporders"
+﻿@page "/grouporders/malls/{MallId:int}/restaurants"
 @rendermode InteractiveServer
-@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles="Customer,Administrator")]
 
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Components.Authorization
@@ -24,7 +23,7 @@
         }
     </div>
 </div>
-F
+
 <div class="group-order-container">
     @if (restaurants is null)
     {
@@ -49,8 +48,20 @@ F
                 @foreach (var restaurant in restaurants)
                 {
                     var isSelected = selected.Contains(restaurant.Id);
+
                     <div class="restaurant-select-card @(isSelected ? "selected" : "")"
                          @onclick="() => Toggle(restaurant.Id)">
+                        <div class="select-checkbox">
+                            @if (isSelected)
+                            {
+                                <i class="bi bi-check-circle-fill"></i>
+                            }
+                            else
+                            {
+                                <i class="bi bi-circle"></i>
+                            }
+                        </div>
+
                         <div class="restaurant-select-info">
                             <h3>@restaurant.Name</h3>
                             <div class="restaurant-meta">
@@ -71,12 +82,14 @@ F
             }
 
             <div class="action-buttons">
-                <button class="btn-cancel" @onclick="GoBack">Back</button>
+                <button class="btn-cancel" @onclick="GoBack" disabled="@isSaving">Back</button>
 
                 <button class="btn-continue"
                         disabled="@(!selected.Any() || isSaving)"
                         @onclick="Finish">
-                    @(isSaving ? "Creating..." : $"Continue with {selected.Count} Restaurant{(selected.Count != 1 ? "s" : "")}")
+                    @(isSaving
+                        ? "Creating..."
+                        : $"Continue with {selected.Count} Restaurant{(selected.Count != 1 ? "s" : "")}")
                 </button>
             </div>
         </div>
@@ -93,12 +106,6 @@ F
     private bool isSaving;
     private string? error;
 
-    private void Toggle(int id)
-    {
-        if (!selected.Add(id))
-            selected.Remove(id);
-    }
-
     protected override async Task OnInitializedAsync()
     {
         await using var ctx = await DbFactory.CreateDbContextAsync();
@@ -111,10 +118,19 @@ F
             .ToListAsync();
     }
 
+    private void Toggle(int id)
+    {
+        if (!selected.Add(id))
+            selected.Remove(id);
+    }
+
     private void GoBack() => Nav.NavigateTo("/grouporders/selectmall");
 
     private async Task Finish()
     {
+        // ✅ prevents double-click duplicate insert
+        if (isSaving) return;
+
         error = null;
 
         if (!selected.Any())
@@ -124,6 +140,7 @@ F
 
         try
         {
+            // 1) Get logged-in user email
             var authState = await Auth.GetAuthenticationStateAsync();
             var email = authState.User.FindFirst(ClaimTypes.Email)?.Value
                         ?? authState.User.Identity?.Name;
@@ -136,7 +153,7 @@ F
 
             await using var ctx = await DbFactory.CreateDbContextAsync();
 
-            // Identity -> Domain.User
+            // 2) Map Identity email -> Domain.User
             var domainUser = await ctx.User.FirstOrDefaultAsync(u => u.Email == email);
             if (domainUser == null)
             {
@@ -149,11 +166,12 @@ F
                     CreatedBy = email,
                     UpdatedBy = email
                 };
+
                 ctx.User.Add(domainUser);
                 await ctx.SaveChangesAsync();
             }
 
-            // Create GroupOrder
+            // 3) Create GroupOrder
             var code = GenerateCode();
 
             var groupOrder = new GroupOrder
@@ -172,7 +190,7 @@ F
             ctx.GroupOrder.Add(groupOrder);
             await ctx.SaveChangesAsync();
 
-            // Host membership
+            // 4) Add creator as member (Host)
             ctx.GroupOrderMember.Add(new GroupOrderMember
             {
                 GroupOrderId = groupOrder.Id,
@@ -185,8 +203,10 @@ F
                 UpdatedBy = email
             });
 
-            // Selected restaurants
-            foreach (var rid in selected)
+            // 5) Add selected restaurants (distinct)
+            var restaurantIds = selected.Distinct().ToList();
+
+            foreach (var rid in restaurantIds)
             {
                 ctx.GroupOrderRestaurant.Add(new GroupOrderRestaurant
                 {
@@ -197,18 +217,20 @@ F
 
             await ctx.SaveChangesAsync();
 
-            // Save state
+            // 6) Store state (optional but useful)
+            GroupOrderState.Clear();
             GroupOrderState.GroupOrderId = groupOrder.Id;
             GroupOrderState.GroupCode = groupOrder.GroupCode;
             GroupOrderState.MallId = groupOrder.MallId;
-            GroupOrderState.SelectedRestaurantIds = selected.ToList();
+            GroupOrderState.SelectedRestaurantIds = restaurantIds;
 
-            // ✅ GO TO THE NEW DASHBOARD PAGE (the one like your screenshot)
-            Nav.NavigateTo($"/grouporders/{groupOrder.GroupCode}");
+            // 7) Navigate to Lobby
+            Nav.NavigateTo($"/grouporders/lobby/{code}");
         }
         catch (Exception ex)
         {
-            error = ex.Message;
+            // ✅ show real DB reason
+            error = ex.InnerException?.Message ?? ex.Message;
         }
         finally
         {
@@ -217,7 +239,5 @@ F
     }
 
     private static string GenerateCode()
-    {
-        return Guid.NewGuid().ToString("N")[..6].ToUpperInvariant();
-    }
+        => Guid.NewGuid().ToString("N")[..6].ToUpperInvariant();
 }

@@ -1,173 +1,121 @@
 ﻿@page "/profile"
-@using Microsoft.AspNetCore.Identity
-@using FoodDeliveryrestart.Data
-@attribute [Microsoft.AspNetCore.Authorization.Authorize]
 @rendermode InteractiveServer
-@inject UserManager<FoodDeliveryrestartUser> UserManager
-@inject FoodDeliveryrestart.Services.CustomAuthenticationStateProvider AuthStateProvider
-@inject SignInManager<FoodDeliveryrestartUser> SignInManager
+
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+
+@inject AuthenticationStateProvider Auth
 @inject NavigationManager Nav
 
-<PageTitle>Profile - Food Delivery</PageTitle>
+<PageTitle>Profile</PageTitle>
 
-<div class="profile-page">
-    @if (CurrentUser != null)
+<div class="profile-hero">
+    <div class="hero-content">
+        <h1>My Profile</h1>
+        <p class="subtitle">Manage your account & access your orders.</p>
+    </div>
+</div>
+
+<div class="profile-container">
+    @if (loading)
     {
-        <div class="profile-container">
-            <!-- Profile Header Card -->
-            <div class="profile-header-card @(IsAdmin ? "admin-theme" : "")">
-                <div class="profile-avatar">
-                    @GetInitials()
-                </div>
-                <div class="profile-info">
-                    <h1 class="profile-name">@CurrentUser.FirstName @CurrentUser.LastName</h1>
-                    <p class="profile-email">@CurrentUser.Email</p>
-                    @if (IsAdmin)
-                    {
-                        <div class="role-badge admin-badge">
-                            <i class="bi bi-shield-fill-check"></i>
-                            Administrator
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="role-badge user-badge">
-                            <i class="bi bi-person-fill"></i>
-                            User
-                        </div>
-                    }
-                </div>
-            </div>
-
-            <!-- Account Details Card -->
-            <div class="detail-card">
-                <h2 class="card-title">Account Information</h2>
-                <div class="info-grid">
-                    <div class="info-item">
-                        <span class="info-label">First Name</span>
-                        <span class="info-value">@CurrentUser.FirstName</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Last Name</span>
-                        <span class="info-value">@CurrentUser.LastName</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Email Address</span>
-                        <span class="info-value">@CurrentUser.Email</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Account Role</span>
-                        <span class="info-value">@string.Join(", ", UserRoles)</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Quick Actions Card -->
-            @if (IsAdmin)
-            {
-                <div class="detail-card admin-actions-card">
-                    <h2 class="card-title">
-                        <i class="bi bi-lightning-fill"></i>
-                        Admin Quick Actions
-                    </h2>
-                    <div class="actions-grid">
-                        <button class="action-button" @onclick='() => Nav.NavigateTo("/restaurants")'>
-                            <div class="action-icon">🍽️</div>
-                            <div class="action-text">
-                                <div class="action-title">Manage Restaurants</div>
-                                <div class="action-desc">View and edit restaurants</div>
-                            </div>
-                        </button>
-                        <button class="action-button" @onclick='() => Nav.NavigateTo("/")'>
-                            <div class="action-icon">🏠</div>
-                            <div class="action-text">
-                                <div class="action-title">Dashboard</div>
-                                <div class="action-desc">View main dashboard</div>
-                            </div>
-                        </button>
-                        <button class="action-button" @onclick='() => Nav.NavigateTo("/group-orders")'>
-                            <div class="action-icon">👥</div>
-                            <div class="action-text">
-                                <div class="action-title">Group Orders</div>
-                                <div class="action-desc">Manage group orders</div>
-                            </div>
-                        </button>
-                    </div>
-                </div>
-            }
-            else
-            {
-                <div class="detail-card">
-                    <h2 class="card-title">Quick Actions</h2>
-                    <div class="actions-grid">
-                        <button class="action-button" @onclick='() => Nav.NavigateTo("/restaurants")'>
-                            <div class="action-icon">🍽️</div>
-                            <div class="action-text">
-                                <div class="action-title">Browse Restaurants</div>
-                                <div class="action-desc">Discover amazing food</div>
-                            </div>
-                        </button>
-                        <button class="action-button" @onclick='() => Nav.NavigateTo("/group-orders")'>
-                            <div class="action-icon">👥</div>
-                            <div class="action-text">
-                                <div class="action-title">My Group Orders</div>
-                                <div class="action-desc">View your orders</div>
-                            </div>
-                        </button>
-                    </div>
-                </div>
-            }
-
-            <!-- Logout Button -->
-            <div class="logout-section">
-                <button class="logout-button" @onclick="HandleLogout">
-                    <i class="bi bi-box-arrow-right"></i>
-                    Logout
-                </button>
-            </div>
-        </div>
+        <div class="cardish">Loading…</div>
+    }
+    else if (!string.IsNullOrWhiteSpace(error))
+    {
+        <div class="error">@error</div>
     }
     else
     {
-        <div class="loading-state">
-            <div class="spinner"></div>
-            <p>Loading your profile...</p>
+        <div class="profile-grid">
+            <div class="cardish">
+                <h3>Account Information</h3>
+
+                <div class="info-row">
+                    <span class="label">Name</span>
+                    <span class="value">@name</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Email</span>
+                    <span class="value">@email</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Role</span>
+                    <span class="value">@role</span>
+                </div>
+            </div>
+
+            <div class="cardish">
+                <h3>Quick Actions</h3>
+
+                <div class="actions">
+                    <button class="btn-primary" @onclick="GoRestaurants">
+                        Browse Restaurants
+                    </button>
+
+                    <button class="btn-ghost" @onclick="GoMyGroupOrders">
+                        My Group Orders
+                    </button>
+
+                    <button class="btn-ghost" @onclick="GoJoinGroup">
+                        Join Group by Code
+                    </button>
+
+                    <button class="btn-danger" @onclick="Logout">
+                        Logout
+                    </button>
+                </div>
+            </div>
         </div>
     }
 </div>
 
 @code {
-    private FoodDeliveryrestartUser? CurrentUser;
-    private IList<string> UserRoles = new List<string>();
-    private bool IsAdmin = false;
+    private bool loading = true;
+    private string? error;
+
+    private string name = "-";
+    private string email = "-";
+    private string role = "User";
 
     protected override async Task OnInitializedAsync()
     {
-        var userId = await AuthStateProvider.GetUserId();
-        if (!string.IsNullOrEmpty(userId))
+        try
         {
-            CurrentUser = await UserManager.FindByIdAsync(userId);
-            if (CurrentUser != null)
+            var state = await Auth.GetAuthenticationStateAsync();
+            var user = state.User;
+
+            if (user?.Identity?.IsAuthenticated != true)
             {
-                UserRoles = await UserManager.GetRolesAsync(CurrentUser);
-                IsAdmin = UserRoles.Contains("Administrator");
+                error = "You are not logged in.";
+                return;
             }
+
+            email = user.FindFirst(ClaimTypes.Email)?.Value ?? user.Identity?.Name ?? "-";
+            name = user.FindFirst("given_name")?.Value
+                   ?? user.Identity?.Name
+                   ?? "User";
+
+            // Try to show 1 role if exists
+            var roles = user.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+            if (roles.Count > 0)
+                role = roles[0];
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            loading = false;
         }
     }
 
-    private string GetInitials()
-    {
-        if (CurrentUser == null) return "?";
+    private void GoRestaurants() => Nav.NavigateTo("/restaurants");
+    private void GoMyGroupOrders() => Nav.NavigateTo("/grouporders/my");
+    private void GoJoinGroup() => Nav.NavigateTo("/grouporders/join");
 
-        var first = !string.IsNullOrEmpty(CurrentUser.FirstName) ? CurrentUser.FirstName[0].ToString() : "";
-        var last = !string.IsNullOrEmpty(CurrentUser.LastName) ? CurrentUser.LastName[0].ToString() : "";
-        return (first + last).ToUpper();
-    }
+    // Identity default logout endpoint (works if Identity is set up normally)
+    private void Logout() => Nav.NavigateTo("/auth/logout", forceLoad: true);
 
-    private async Task HandleLogout()
-    {
-        // Mark Blazor auth state as logged out and perform a full server logout
-        AuthStateProvider.MarkUserAsLoggedOut();
-        Nav.NavigateTo("/auth/logout", forceLoad: true);
-    }
 }

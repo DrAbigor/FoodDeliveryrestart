@@ -1,0 +1,101 @@
+﻿@page "/grouporders/lobby/{Code}"
+@rendermode InteractiveServer
+
+@using Microsoft.EntityFrameworkCore
+@using FoodDeliveryrestart.Data
+@using FoodDeliveryrestart.Domain
+
+@inject IDbContextFactory<FoodDeliveryrestartContext> DbFactory
+@inject NavigationManager Nav
+
+<h2>Group Order Lobby</h2>
+
+@if (groupOrder == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div class="card p-3 mb-3">
+        <h4>
+            Code: <span class="badge bg-dark">@groupOrder.GroupCode</span>
+        </h4>
+        <p>Status: <strong>@groupOrder.Status</strong></p>
+        <p>Mall: <strong>@groupOrder.Mall?.MallName</strong></p>
+    </div>
+
+    <h4>Selected Restaurants</h4>
+    @if (restaurants.Count == 0)
+    {
+        <p>No restaurants selected yet.</p>
+    }
+    else
+    {
+        <ul>
+            @foreach (var r in restaurants)
+            {
+                <li>
+                    <button class="btn btn-link p-0" @onclick="() => GoMenu(r.Id)">
+                        @r.Name
+                    </button>
+                </li>
+            }
+        </ul>
+    }
+
+    <h4 class="mt-4">Members</h4>
+    @if (members.Count == 0)
+    {
+        <p>No members yet.</p>
+    }
+    else
+    {
+        <ul>
+            @foreach (var m in members)
+            {
+                <li>
+                    @(m.User?.Email ?? $"User #{m.UserId}") — @m.Status
+                </li>
+            }
+        </ul>
+    }
+
+    <div class="mt-4">
+        <a class="btn btn-outline-primary" href="/grouporders/join">Join another group</a>
+    </div>
+}
+
+@code {
+    [Parameter] public string Code { get; set; } = "";
+
+    private GroupOrder? groupOrder;
+    private List<Restaurant> restaurants = new();
+    private List<GroupOrderMember> members = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await using var ctx = await DbFactory.CreateDbContextAsync();
+
+        groupOrder = await ctx.GroupOrder
+            .Include(g => g.Mall)
+            .FirstOrDefaultAsync(g => g.GroupCode == Code);
+
+        if (groupOrder == null) return;
+
+        restaurants = await ctx.GroupOrderRestaurant
+            .Where(x => x.GroupOrderId == groupOrder.Id)
+            .Select(x => x.Restaurant!)
+            .ToListAsync();
+
+        members = await ctx.GroupOrderMember
+            .Where(m => m.GroupOrderId == groupOrder.Id)
+            .Include(m => m.User)
+            .OrderBy(m => m.JoinTime)
+            .ToListAsync();
+    }
+
+    private void GoMenu(int restaurantId)
+    {
+        Nav.NavigateTo($"/grouporders/restaurants/{restaurantId}/menuitems");
+    }
+}

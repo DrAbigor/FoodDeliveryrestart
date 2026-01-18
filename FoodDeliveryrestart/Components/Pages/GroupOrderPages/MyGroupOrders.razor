@@ -1,0 +1,148 @@
+﻿@page "/grouporders/my"
+@rendermode InteractiveServer
+
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.EntityFrameworkCore
+@using System.Security.Claims
+@using FoodDeliveryrestart.Data
+@using FoodDeliveryrestart.Domain
+
+@inject IDbContextFactory<FoodDeliveryrestartContext> DbFactory
+@inject AuthenticationStateProvider Auth
+@inject NavigationManager Nav
+
+<PageTitle>My Group Orders</PageTitle>
+
+<div class="mygo-wrap">
+    <div class="mygo-hero">
+        <div class="hero-content">
+            <h1>My Group Orders</h1>
+            <p class="muted">Your active and past group orders.</p>
+        </div>
+    </div>
+
+    <div class="mygo-container">
+        @if (loading)
+        {
+            <div class="cardish">Loading…</div>
+        }
+        else if (!string.IsNullOrWhiteSpace(error))
+        {
+            <div class="error">@error</div>
+        }
+        else if (orders.Count == 0)
+        {
+            <div class="cardish">
+                <h3>No group orders yet</h3>
+                <p class="muted">Start one, or join a friend’s group code.</p>
+
+                <div class="actions">
+                    <a class="btn-primary" href="/grouporders/selectmall">Start group order</a>
+                    <a class="btn-ghost" href="/grouporders/join">Join with code</a>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="list">
+                @foreach (var go in orders)
+                {
+                    var code = (go.GroupCode ?? "").Trim();
+
+                    <div class="go-card @(string.IsNullOrWhiteSpace(code) ? "disabled" : "")"
+                         @onclick="() => GoLobby(code)">
+                        <div class="top">
+                            <div class="code">@(!string.IsNullOrWhiteSpace(code) ? code : "(No Code)")</div>
+                            <span class="badge">@go.Status</span>
+                        </div>
+                        <div class="meta">
+                            <span>MallId: @go.MallId</span>
+                            <span>Created: @go.CreatedTime.ToLocalTime()</span>
+                        </div>
+
+                        @if (string.IsNullOrWhiteSpace(code))
+                        {
+                            <div class="text-danger small mt-2">
+                                This group order has no code saved. Please re-create it.
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private bool loading = true;
+    private string? error;
+    private List<GroupOrder> orders = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var authState = await Auth.GetAuthenticationStateAsync();
+            var email =
+                authState.User.FindFirst(ClaimTypes.Email)?.Value
+                ?? authState.User.Identity?.Name;
+
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                error = "You must be logged in.";
+                return;
+            }
+
+            await using var ctx = await DbFactory.CreateDbContextAsync();
+
+            // Identity email -> Domain.User
+            var domainUser = await ctx.User.FirstOrDefaultAsync(u => u.Email == email);
+
+            if (domainUser == null)
+            {
+                orders = new();
+                return;
+            }
+
+            // Joined groups (member)
+            var joined = await ctx.GroupOrderMember
+                .Where(m => m.UserId == domainUser.Id)
+                .Select(m => m.GroupOrder!)
+                .Distinct()
+                .ToListAsync();
+
+            // Hosted groups (creator)
+            var hosted = await ctx.GroupOrder
+                .Where(g => g.UserId == domainUser.Id)
+                .ToListAsync();
+
+            // Merge
+            orders = joined;
+            foreach (var h in hosted)
+            {
+                if (!orders.Any(x => x.Id == h.Id))
+                    orders.Add(h);
+            }
+
+            orders = orders
+                .OrderByDescending(g => g.CreatedTime)
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private void GoLobby(string code)
+    {
+        if (string.IsNullOrWhiteSpace(code))
+            return;
+
+        Nav.NavigateTo($"/grouporders/lobby/{code}");
+    }
+}

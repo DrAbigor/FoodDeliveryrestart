@@ -1,14 +1,24 @@
 ﻿using FoodDeliveryrestart.Components;
 using FoodDeliveryrestart.Services;
-using Microsoft.EntityFrameworkCore;
 using FoodDeliveryrestart.Data;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// =======================
 // Database
+// =======================
 builder.Services.AddDbContextFactory<FoodDeliveryrestartContext>(options =>
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("FoodDeliveryrestartContext")
+        ?? throw new InvalidOperationException("Connection string 'FoodDeliveryrestartContext' not found.")
+    )
+);
+
+// Identity needs scoped DbContext (not factory)
+builder.Services.AddDbContext<FoodDeliveryrestartContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("FoodDeliveryrestartContext")
         ?? throw new InvalidOperationException("Connection string 'FoodDeliveryrestartContext' not found.")
@@ -18,24 +28,26 @@ builder.Services.AddDbContextFactory<FoodDeliveryrestartContext>(options =>
 builder.Services.AddQuickGridEntityFrameworkAdapter();
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
+// =======================
 // Razor Components
+// =======================
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-// ✅ Custom Authentication
+// =======================
+// Custom Authentication State Provider
+// =======================
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
 builder.Services.AddScoped<CustomAuthenticationStateProvider>(provider =>
     (CustomAuthenticationStateProvider)provider.GetRequiredService<AuthenticationStateProvider>());
 
-// Provide access to HttpContext for auth helpers
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddAuthorization();
 
-// ✅ Identity - Minimal setup
-builder.Services.AddDbContext<FoodDeliveryrestartContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("FoodDeliveryrestartContext")));
-
+// =======================
+// Identity
+// =======================
 builder.Services.AddIdentity<FoodDeliveryrestartUser, IdentityRole>(options =>
 {
     options.SignIn.RequireConfirmedAccount = false;
@@ -45,38 +57,75 @@ builder.Services.AddIdentity<FoodDeliveryrestartUser, IdentityRole>(options =>
     options.Password.RequireNonAlphanumeric = false;
     options.Password.RequiredLength = 6;
 })
-    .AddEntityFrameworkStores<FoodDeliveryrestartContext>()
-    .AddRoles<IdentityRole>()
-    .AddSignInManager()
-    .AddDefaultTokenProviders();
+.AddEntityFrameworkStores<FoodDeliveryrestartContext>()
+.AddRoles<IdentityRole>()
+.AddSignInManager()
+.AddDefaultTokenProviders();
 
-// ✅ Configure Identity Cookie Paths - ADD THIS
+// ✅ Cookie Paths (custom pages)
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/login";
-    options.LogoutPath = "/logout";
+    options.LogoutPath = "/auth/logout";
     options.AccessDeniedPath = "/access-denied";
 });
-
-// UserManager and SignInManager are registered by Identity; do not register them manually.
 
 // Email sender
 builder.Services.AddTransient<IEmailSender<FoodDeliveryrestartUser>, NoOpEmailSender>();
 
-// Application services
+// App services
 builder.Services.AddScoped<CartService>();
 builder.Services.AddScoped<GroupOrderState>();
 
 var app = builder.Build();
 
-// Logout endpoint (GET) - signs out and redirects to home
+// =======================
+// Custom Auth Endpoints
+// =======================
+
+// ✅ Logout endpoint (GET) -> go to login page
 app.MapGet("/auth/logout", async (SignInManager<FoodDeliveryrestartUser> signInManager) =>
 {
     await signInManager.SignOutAsync();
-    return Results.Redirect("/");
+    return Results.Redirect("/login");
 });
 
-// Configure pipeline
+// Optional safety
+app.MapGet("/logout", () => Results.Redirect("/auth/logout"));
+
+// ✅ Login endpoint (POST) -> sets identity cookie
+app.MapPost("/auth/login", async (
+    HttpContext http,
+    UserManager<FoodDeliveryrestartUser> userManager,
+    SignInManager<FoodDeliveryrestartUser> signInManager) =>
+{
+    var form = await http.Request.ReadFormAsync();
+    var email = form["Email"].ToString();
+    var password = form["Password"].ToString();
+
+    if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+        return Results.Redirect("/login?error=missing");
+
+    var user = await userManager.FindByEmailAsync(email.Trim());
+    if (user == null)
+        return Results.Redirect("/login?error=invalid");
+
+    var result = await signInManager.CheckPasswordSignInAsync(user, password, false);
+    if (!result.Succeeded)
+        return Results.Redirect("/login?error=invalid");
+
+    await signInManager.SignInAsync(user, isPersistent: false);
+
+    var roles = await userManager.GetRolesAsync(user);
+    if (roles.Contains("Administrator"))
+        return Results.Redirect("/admin");
+
+    return Results.Redirect("/profile");
+});
+
+// =======================
+// Pipeline
+// =======================
 if (app.Environment.IsDevelopment())
 {
     app.UseMigrationsEndPoint();
@@ -91,42 +140,8 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseAntiforgery();
 
-// ✅ Add Authentication & Authorization Middleware - ADD THIS
 app.UseAuthentication();
 app.UseAuthorization();
-
-// Server endpoint to accept login POST from the client script and set Identity cookie
-app.MapPost("/auth/login", async (HttpContext http, UserManager<FoodDeliveryrestartUser> userManager, SignInManager<FoodDeliveryrestartUser> signInManager) =>
-{
-    var form = await http.Request.ReadFormAsync();
-    var email = form["Email"].ToString();
-    var password = form["Password"].ToString();
-
-    if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
-    {
-        return Results.Redirect("/login?error=missing");
-    }
-
-    var user = await userManager.FindByEmailAsync(email.Trim());
-    if (user == null)
-    {
-        return Results.Redirect("/login?error=invalid");
-    }
-
-    var result = await signInManager.CheckPasswordSignInAsync(user, password, false);
-    if (!result.Succeeded)
-    {
-        return Results.Redirect("/login?error=invalid");
-    }
-
-    await signInManager.SignInAsync(user, isPersistent: false);
-
-    var roles = await userManager.GetRolesAsync(user);
-    if (roles.Contains("Administrator"))
-        return Results.Redirect("/admin");
-
-    return Results.Redirect("/profile");
-});
 
 app.MapRazorComponents<App>()
    .AddInteractiveServerRenderMode();

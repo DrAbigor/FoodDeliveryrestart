@@ -13,9 +13,9 @@
 
 <PageTitle>@(restaurant?.Name ?? "Menu") - Food Delivery</PageTitle>
 
-<!-- ✅ 2-column shell: left content + right CartDock -->
-<div class="page-shell">
-    <div class="page-body">
+<!-- ✅ Page shell -->
+<div class="layout-shell">
+    <div class="layout-body">
 
         <div class="menu-shell">
 
@@ -241,9 +241,6 @@
         }
 
     </div>
-
-    <!-- ✅ Right-side dock ONLY on this page -->
-    <CartDock />
 </div>
 
 @code {

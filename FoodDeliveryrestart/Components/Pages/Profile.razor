@@ -2,10 +2,13 @@
 @rendermode InteractiveServer
 
 @using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Identity
+@using FoodDeliveryrestart.Data
 @using System.Security.Claims
 
 @inject AuthenticationStateProvider Auth
 @inject NavigationManager Nav
+@inject UserManager<FoodDeliveryrestartUser> UserManager
 
 <PageTitle>Profile</PageTitle>
 
@@ -31,13 +34,58 @@
             <div class="cardish">
                 <h3>Account Information</h3>
 
+                @if (!string.IsNullOrWhiteSpace(successMessage))
+                {
+                    <div class="success-message">@successMessage</div>
+                }
+
                 <div class="info-row">
                     <span class="label">Name</span>
-                    <span class="value">@name</span>
+                    @if (editingName)
+                    {
+                        <div class="edit-field">
+                            <input class="edit-input" @bind="editName" placeholder="Enter name" />
+                            <button class="btn-save" @onclick="SaveName" disabled="@saving">
+                                <i class="bi bi-check-lg"></i>
+                            </button>
+                            <button class="btn-cancel" @onclick="CancelEditName">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                    }
+                    else
+                    {
+                        <span class="value">
+                            @name
+                            <button class="btn-edit" @onclick="StartEditName" title="Edit Name">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                        </span>
+                    }
                 </div>
                 <div class="info-row">
                     <span class="label">Email</span>
-                    <span class="value">@email</span>
+                    @if (editingEmail)
+                    {
+                        <div class="edit-field">
+                            <input class="edit-input" type="email" @bind="editEmail" placeholder="Enter email" />
+                            <button class="btn-save" @onclick="SaveEmail" disabled="@saving">
+                                <i class="bi bi-check-lg"></i>
+                            </button>
+                            <button class="btn-cancel" @onclick="CancelEditEmail">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                    }
+                    else
+                    {
+                        <span class="value">
+                            @email
+                            <button class="btn-edit" @onclick="StartEditEmail" title="Edit Email">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                        </span>
+                    }
                 </div>
                 <div class="info-row">
                     <span class="label">Role</span>
@@ -49,7 +97,7 @@
                 <h3>Quick Actions</h3>
 
                 <div class="actions">
-                    <button class="btn-primary" @onclick="GoRestaurants">
+                    <button class="btn-ghost" @onclick="GoRestaurants">
                         Browse Restaurants
                     </button>
 
@@ -80,11 +128,20 @@
 @code {
     private bool loading = true;
     private string? error;
+    private string? successMessage;
 
     private string name = "-";
     private string email = "-";
     private string role = "User";
     private bool isAdmin;
+    private string? userId;
+
+    // Edit state
+    private bool editingName = false;
+    private bool editingEmail = false;
+    private string editName = "";
+    private string editEmail = "";
+    private bool saving = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -99,10 +156,23 @@
                 return;
             }
 
+            userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             email = user.FindFirst(ClaimTypes.Email)?.Value ?? user.Identity?.Name ?? "-";
             name = user.FindFirst("given_name")?.Value
                    ?? user.Identity?.Name
                    ?? "User";
+
+            // Load actual user data from database
+            if (!string.IsNullOrEmpty(userId))
+            {
+                var dbUser = await UserManager.FindByIdAsync(userId);
+                if (dbUser != null)
+                {
+                    name = $"{dbUser.FirstName} {dbUser.LastName}".Trim();
+                    if (string.IsNullOrWhiteSpace(name)) name = dbUser.UserName ?? "-";
+                    email = dbUser.Email ?? "-";
+                }
+            }
 
             // Try to show roles from common claim types (ClaimTypes.Role and "role") and detect admin (case-insensitive)
             var roles = user.FindAll(ClaimTypes.Role).Select(r => r.Value)
@@ -124,6 +194,119 @@
         finally
         {
             loading = false;
+        }
+    }
+
+    private void StartEditName()
+    {
+        editName = name;
+        editingName = true;
+        successMessage = null;
+    }
+
+    private void CancelEditName()
+    {
+        editingName = false;
+        editName = "";
+    }
+
+    private async Task SaveName()
+    {
+        if (string.IsNullOrWhiteSpace(editName) || string.IsNullOrEmpty(userId))
+            return;
+
+        saving = true;
+        try
+        {
+            var user = await UserManager.FindByIdAsync(userId);
+            if (user != null)
+            {
+                var nameParts = editName.Trim().Split(' ', 2);
+                user.FirstName = nameParts[0];
+                user.LastName = nameParts.Length > 1 ? nameParts[1] : "";
+
+                var result = await UserManager.UpdateAsync(user);
+                if (result.Succeeded)
+                {
+                    name = editName.Trim();
+                    editingName = false;
+                    successMessage = "Name updated successfully!";
+                }
+                else
+                {
+                    error = string.Join(" ", result.Errors.Select(e => e.Description));
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    private void StartEditEmail()
+    {
+        editEmail = email;
+        editingEmail = true;
+        successMessage = null;
+    }
+
+    private void CancelEditEmail()
+    {
+        editingEmail = false;
+        editEmail = "";
+    }
+
+    private async Task SaveEmail()
+    {
+        if (string.IsNullOrWhiteSpace(editEmail) || string.IsNullOrEmpty(userId))
+            return;
+
+        saving = true;
+        try
+        {
+            var user = await UserManager.FindByIdAsync(userId);
+            if (user != null)
+            {
+                var newEmail = editEmail.Trim();
+                
+                // Check if email is already taken
+                var existingUser = await UserManager.FindByEmailAsync(newEmail);
+                if (existingUser != null && existingUser.Id != userId)
+                {
+                    error = "This email is already in use.";
+                    return;
+                }
+
+                user.Email = newEmail;
+                user.UserName = newEmail;
+                user.NormalizedEmail = newEmail.ToUpperInvariant();
+                user.NormalizedUserName = newEmail.ToUpperInvariant();
+
+                var result = await UserManager.UpdateAsync(user);
+                if (result.Succeeded)
+                {
+                    email = newEmail;
+                    editingEmail = false;
+                    successMessage = "Email updated successfully! Please log in again with your new email.";
+                }
+                else
+                {
+                    error = string.Join(" ", result.Errors.Select(e => e.Description));
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            saving = false;
         }
     }
 

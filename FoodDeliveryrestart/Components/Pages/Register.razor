@@ -110,14 +110,11 @@
             if (result.Succeeded)
             {
                 await UserManager.AddToRoleAsync(user, "Customer");
-                Success = "Account created successfully! Logging you in...";
+                Success = "Account created successfully! Redirecting to login...";
                 StateHasChanged();
 
-                var roles = await UserManager.GetRolesAsync(user);
-                AuthStateProvider.MarkUserAsAuthenticated(user.Email, user.Id, roles);
-
-                await Task.Delay(1000);
-                Nav.NavigateTo("/profile", forceLoad: true);
+                await Task.Delay(1500);
+                Nav.NavigateTo("/login", forceLoad: true);
             }
             else
             {

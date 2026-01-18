@@ -25,6 +25,7 @@
 .table-wrap{
     overflow-x: auto;
 }
+.table{ margin: 0 auto; max-width: 900px; width: 100%; }
 
 .order-top{
     display:flex;

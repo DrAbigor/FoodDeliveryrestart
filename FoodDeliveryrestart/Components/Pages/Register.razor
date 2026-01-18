@@ -2,20 +2,30 @@
 @using Microsoft.AspNetCore.Identity
 @using FoodDeliveryrestart.Data
 @rendermode InteractiveServer
+<link rel="stylesheet" href="/css/register.css" />
 @inject NavigationManager Nav
 @inject UserManager<FoodDeliveryrestartUser> UserManager
 @inject FoodDeliveryrestart.Services.CustomAuthenticationStateProvider AuthStateProvider
 
 <div class="auth-page">
     <div class="auth-card">
+        <div class="logo-container">
+            <div class="app-logo">FoodLeh?</div>
+            <div class="app-tagline">Your favorite meals, delivered fast</div>
+        </div>
         <h2 class="auth-title">Register</h2>
         <p class="auth-sub">Create your account.</p>
 
-        <label class="auth-label">First Name</label>
-        <input class="auth-input" @bind="FirstName" placeholder="John" />
-
-        <label class="auth-label">Last Name</label>
-        <input class="auth-input" @bind="LastName" placeholder="Doe" />
+        <div class="form-row">
+            <div class="form-group">
+                <label class="auth-label">First Name</label>
+                <input class="auth-input" @bind="FirstName" placeholder="John" />
+            </div>
+            <div class="form-group">
+                <label class="auth-label">Last Name</label>
+                <input class="auth-input" @bind="LastName" placeholder="Doe" />
+            </div>
+        </div>
 
         <label class="auth-label">Email</label>
         <input class="auth-input" @bind="Email" placeholder="name@email.com" />

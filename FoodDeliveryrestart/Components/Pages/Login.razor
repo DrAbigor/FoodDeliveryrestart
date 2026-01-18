@@ -8,8 +8,14 @@
 @inject SignInManager<FoodDeliveryrestartUser> SignInManager
 @inject IJSRuntime JS
 
+<link rel="stylesheet" href="/css/login.css" />
+
 <div class="auth-page">
     <div class="auth-card">
+        <div class="logo-container">
+            <div class="app-logo">FoodLeh?</div>
+            <div class="app-tagline">Your favorite meals, delivered fast</div>
+        </div>
         <h2 class="auth-title">Login</h2>
         <p class="auth-sub">Welcome back! Please sign in.</p>
 
@@ -33,7 +39,6 @@
             @(IsLoading ? "Logging in..." : "Login")
         </button>
 
-        <!-- ✅ Forgot password link -->
         <div class="auth-footer" style="margin-top:10px;">
             <a class="auth-link" href="/forgot-password">Forgot password?</a>
         </div>

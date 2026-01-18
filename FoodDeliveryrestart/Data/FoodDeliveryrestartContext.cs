@@ -24,6 +24,8 @@ namespace FoodDeliveryrestart.Data
         public DbSet<Payment> Payment { get; set; } = default!;
         public DbSet<PaymentMethod> PaymentMethod { get; set; } = default!;
         public DbSet<GroupOrderRestaurant> GroupOrderRestaurant { get; set; } = default!;
+        public DbSet<Voucher> Voucher { get; set; } = default!;
+        public DbSet<UserVoucher> UserVoucher { get; set; } = default!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -117,6 +119,65 @@ namespace FoodDeliveryrestart.Data
             modelBuilder.Entity<Restaurant>()
                 .Property(x => x.Rating)
                 .HasPrecision(2, 1);
+
+            // ============================
+            // Voucher configuration
+            // ============================
+            modelBuilder.Entity<Voucher>()
+                .Property(x => x.DiscountValue)
+                .HasPrecision(10, 2);
+
+            modelBuilder.Entity<Voucher>()
+                .Property(x => x.MinimumOrder)
+                .HasPrecision(10, 2);
+
+            modelBuilder.Entity<UserVoucher>()
+                .HasOne(uv => uv.Voucher)
+                .WithMany(v => v.UserVouchers)
+                .HasForeignKey(uv => uv.VoucherId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<UserVoucher>()
+                .HasOne(uv => uv.Order)
+                .WithMany()
+                .HasForeignKey(uv => uv.OrderId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // Seed vouchers
+            modelBuilder.Entity<Voucher>().HasData(
+                new Voucher
+                {
+                    Id = 1,
+                    Code = "SAVE20",
+                    Name = "20% OFF for New Users",
+                    Description = "Get 20% off your order! Perfect for first-time customers.",
+                    DiscountType = "Percentage",
+                    DiscountValue = 20,
+                    MinimumOrder = null,
+                    IsActive = true,
+                    ExpiryDate = null,
+                    DateCreated = DateTime.UtcNow,
+                    DateUpdated = DateTime.UtcNow,
+                    CreatedBy = "System",
+                    UpdatedBy = "System"
+                },
+                new Voucher
+                {
+                    Id = 2,
+                    Code = "FREEDELIVERY15",
+                    Name = "Free Delivery For Orders Above $15!",
+                    Description = "Enjoy free delivery when you order $15 or more.",
+                    DiscountType = "FreeDelivery",
+                    DiscountValue = 0,
+                    MinimumOrder = 15,
+                    IsActive = true,
+                    ExpiryDate = null,
+                    DateCreated = DateTime.UtcNow,
+                    DateUpdated = DateTime.UtcNow,
+                    CreatedBy = "System",
+                    UpdatedBy = "System"
+                }
+            );
         }
     }
 }

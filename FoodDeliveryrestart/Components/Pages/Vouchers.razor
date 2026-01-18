@@ -1,0 +1,215 @@
+@page "/vouchers"
+@rendermode InteractiveServer
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.Authorization
+@using FoodDeliveryrestart.Domain
+@using System.Security.Claims
+
+@inject IDbContextFactory<FoodDeliveryrestart.Data.FoodDeliveryrestartContext> DbFactory
+@inject AuthenticationStateProvider Auth
+@inject NavigationManager Nav
+
+<PageTitle>Vouchers</PageTitle>
+
+<div class="vouchers-hero">
+    <div class="hero-content">
+        <h1>Available Vouchers</h1>
+        <p class="subtitle">Claim vouchers and save on your next order!</p>
+    </div>
+</div>
+
+<div class="vouchers-container">
+    @if (loading)
+    {
+        <div class="loading-card">Loading vouchers...</div>
+    }
+    else if (!string.IsNullOrWhiteSpace(error))
+    {
+        <div class="error-card">@error</div>
+    }
+    else
+    {
+        @if (!string.IsNullOrWhiteSpace(successMessage))
+        {
+            <div class="success-message">@successMessage</div>
+        }
+
+        <div class="vouchers-grid">
+            @foreach (var voucher in availableVouchers)
+            {
+                var isClaimed = claimedVoucherIds.Contains(voucher.Id);
+                <div class="voucher-card @(isClaimed ? "claimed" : "")">
+                    <div class="voucher-badge">
+                        @if (voucher.DiscountType == "Percentage")
+                        {
+                            <span>@voucher.DiscountValue% OFF</span>
+                        }
+                        else if (voucher.DiscountType == "FreeDelivery")
+                        {
+                            <span>FREE DELIVERY</span>
+                        }
+                        else
+                        {
+                            <span>$@voucher.DiscountValue OFF</span>
+                        }
+                    </div>
+                    <div class="voucher-content">
+                        <h3 class="voucher-name">@voucher.Name</h3>
+                        <p class="voucher-desc">@voucher.Description</p>
+                        @if (voucher.MinimumOrder.HasValue)
+                        {
+                            <p class="voucher-min">Min. order: $@voucher.MinimumOrder.Value.ToString("0.00")</p>
+                        }
+                        <p class="voucher-code">Code: <strong>@voucher.Code</strong></p>
+                    </div>
+                    <div class="voucher-action">
+                        @if (isClaimed)
+                        {
+                            <button class="btn-claimed" disabled>
+                                <i class="bi bi-check-circle-fill"></i> Claimed
+                            </button>
+                        }
+                        else
+                        {
+                            <button class="btn-claim" @onclick="() => ClaimVoucher(voucher.Id)" disabled="@claiming">
+                                @(claiming ? "Claiming..." : "Claim")
+                            </button>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        @if (!availableVouchers.Any())
+        {
+            <div class="empty-state">
+                <div class="empty-icon">??</div>
+                <h3>No vouchers available</h3>
+                <p>Check back later for new promotions!</p>
+            </div>
+        }
+
+        <div class="vouchers-footer">
+            <button class="btn-ghost" @onclick="GoToMyVouchers">
+                <i class="bi bi-ticket-perforated"></i> View My Vouchers
+            </button>
+            <button class="btn-ghost" @onclick="GoHome">
+                <i class="bi bi-house"></i> Back to Home
+            </button>
+        </div>
+    }
+</div>
+
+@code {
+    private bool loading = true;
+    private bool claiming = false;
+    private string? error;
+    private string? successMessage;
+    private string? userId;
+
+    private List<Voucher> availableVouchers = new();
+    private HashSet<int> claimedVoucherIds = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var state = await Auth.GetAuthenticationStateAsync();
+            var user = state.User;
+
+            if (user?.Identity?.IsAuthenticated != true)
+            {
+                error = "Please log in to view vouchers.";
+                return;
+            }
+
+            userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            await LoadVouchers();
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task LoadVouchers()
+    {
+        await using var db = await DbFactory.CreateDbContextAsync();
+
+        // Get all active vouchers
+        availableVouchers = await db.Voucher
+            .Where(v => v.IsActive && (v.ExpiryDate == null || v.ExpiryDate > DateTime.UtcNow))
+            .OrderBy(v => v.Id)
+            .ToListAsync();
+
+        // Get user's claimed voucher IDs (not used yet)
+        if (!string.IsNullOrEmpty(userId))
+        {
+            claimedVoucherIds = (await db.UserVoucher
+                .Where(uv => uv.UserId == userId && !uv.IsUsed)
+                .Select(uv => uv.VoucherId)
+                .ToListAsync())
+                .ToHashSet();
+        }
+    }
+
+    private async Task ClaimVoucher(int voucherId)
+    {
+        if (string.IsNullOrEmpty(userId)) return;
+
+        claiming = true;
+        successMessage = null;
+
+        try
+        {
+            await using var db = await DbFactory.CreateDbContextAsync();
+
+            // Check if already claimed
+            var existing = await db.UserVoucher
+                .FirstOrDefaultAsync(uv => uv.UserId == userId && uv.VoucherId == voucherId && !uv.IsUsed);
+
+            if (existing != null)
+            {
+                successMessage = "You have already claimed this voucher!";
+                return;
+            }
+
+            // Claim the voucher
+            var userVoucher = new UserVoucher
+            {
+                UserId = userId,
+                VoucherId = voucherId,
+                ClaimedAt = DateTime.UtcNow,
+                IsUsed = false,
+                DateCreated = DateTime.UtcNow,
+                DateUpdated = DateTime.UtcNow,
+                CreatedBy = userId,
+                UpdatedBy = userId
+            };
+
+            db.UserVoucher.Add(userVoucher);
+            await db.SaveChangesAsync();
+
+            claimedVoucherIds.Add(voucherId);
+            successMessage = "?? Voucher claimed successfully! Check 'My Vouchers' to use it.";
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            claiming = false;
+        }
+    }
+
+    private void GoToMyVouchers() => Nav.NavigateTo("/myvouchers");
+    private void GoHome() => Nav.NavigateTo("/");
+}

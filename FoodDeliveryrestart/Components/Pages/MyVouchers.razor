@@ -1,0 +1,145 @@
+@page "/myvouchers"
+@rendermode InteractiveServer
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.Authorization
+@using FoodDeliveryrestart.Domain
+@using System.Security.Claims
+
+@inject IDbContextFactory<FoodDeliveryrestart.Data.FoodDeliveryrestartContext> DbFactory
+@inject AuthenticationStateProvider Auth
+@inject NavigationManager Nav
+
+<PageTitle>My Vouchers</PageTitle>
+
+<div class="myvouchers-hero">
+    <div class="hero-content">
+        <h1>My Vouchers</h1>
+        <p class="subtitle">Your claimed vouchers ready to use!</p>
+    </div>
+</div>
+
+<div class="myvouchers-container">
+    @if (loading)
+    {
+        <div class="loading-card">Loading your vouchers...</div>
+    }
+    else if (!string.IsNullOrWhiteSpace(error))
+    {
+        <div class="error-card">@error</div>
+    }
+    else
+    {
+        @if (myVouchers.Any())
+        {
+            <div class="vouchers-grid">
+                @foreach (var uv in myVouchers)
+                {
+                    <div class="voucher-card">
+                        <div class="voucher-badge">
+                            @if (uv.Voucher?.DiscountType == "Percentage")
+                            {
+                                <span>@uv.Voucher.DiscountValue% OFF</span>
+                            }
+                            else if (uv.Voucher?.DiscountType == "FreeDelivery")
+                            {
+                                <span>FREE DELIVERY</span>
+                            }
+                            else
+                            {
+                                <span>$@(uv.Voucher?.DiscountValue ?? 0) OFF</span>
+                            }
+                        </div>
+                        <div class="voucher-content">
+                            <h3 class="voucher-name">@uv.Voucher?.Name</h3>
+                            <p class="voucher-desc">@uv.Voucher?.Description</p>
+                            @if (uv.Voucher?.MinimumOrder.HasValue == true)
+                            {
+                                <p class="voucher-min">Min. order: $@uv.Voucher.MinimumOrder.Value.ToString("0.00")</p>
+                            }
+                            <p class="voucher-code">Code: <strong>@uv.Voucher?.Code</strong></p>
+                            <p class="voucher-claimed">Claimed: @uv.ClaimedAt.ToString("MMM dd, yyyy")</p>
+                        </div>
+                        <div class="voucher-status">
+                            <span class="status-ready">
+                                <i class="bi bi-check-circle-fill"></i> Ready to use
+                            </span>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="empty-state">
+                <div class="empty-icon">??</div>
+                <h3>No vouchers yet</h3>
+                <p>Claim vouchers from promotions to see them here!</p>
+                <button class="btn-primary" @onclick="GoToVouchers">
+                    Browse Vouchers
+                </button>
+            </div>
+        }
+
+        <div class="myvouchers-footer">
+            <button class="btn-ghost" @onclick="GoToVouchers">
+                <i class="bi bi-gift"></i> Browse More Vouchers
+            </button>
+            <button class="btn-ghost" @onclick="GoToProfile">
+                <i class="bi bi-person"></i> Back to Profile
+            </button>
+        </div>
+    }
+</div>
+
+@code {
+    private bool loading = true;
+    private string? error;
+    private string? userId;
+
+    private List<UserVoucher> myVouchers = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var state = await Auth.GetAuthenticationStateAsync();
+            var user = state.User;
+
+            if (user?.Identity?.IsAuthenticated != true)
+            {
+                error = "Please log in to view your vouchers.";
+                return;
+            }
+
+            userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            await LoadMyVouchers();
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task LoadMyVouchers()
+    {
+        if (string.IsNullOrEmpty(userId)) return;
+
+        await using var db = await DbFactory.CreateDbContextAsync();
+
+        myVouchers = await db.UserVoucher
+            .Include(uv => uv.Voucher)
+            .Where(uv => uv.UserId == userId && !uv.IsUsed)
+            .OrderByDescending(uv => uv.ClaimedAt)
+            .ToListAsync();
+    }
+
+    private void GoToVouchers() => Nav.NavigateTo("/vouchers");
+    private void GoToProfile() => Nav.NavigateTo("/profile");
+}

@@ -180,3 +180,140 @@
   padding: 18px;
   box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06);
 }
+
+/* Voucher Section */
+.voucher-section {
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 14px;
+  border: 1px dashed #e5e7eb;
+}
+
+.voucher-section .label {
+  margin: 0 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #374151;
+}
+
+.voucher-section .label i {
+  color: #f97316;
+}
+
+.voucher-select {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 10px 12px;
+  outline: none;
+  font-weight: 600;
+  background: white;
+}
+
+.voucher-select:focus {
+  border-color: #f97316;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+}
+
+.voucher-applied {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 10px;
+  color: #065f46;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.voucher-applied i {
+  color: #10b981;
+}
+
+.voucher-remove {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.voucher-remove:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.no-vouchers {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.voucher-link {
+  color: #f97316;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.voucher-link:hover {
+  text-decoration: underline;
+}
+
+/* Discount styling */
+.discount-row {
+  color: #059669;
+}
+
+.discount-row i {
+  margin-right: 4px;
+}
+
+.discount-value {
+  color: #059669;
+  font-weight: 700;
+}
+
+.discount-applied {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.strikethrough {
+  text-decoration: line-through;
+  color: #9ca3af;
+}
+
+.free {
+  color: #059669;
+  font-weight: 800;
+}
+
+.input {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 10px 12px;
+  outline: none;
+}
+
+.input:focus {
+  border-color: #f97316;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+}

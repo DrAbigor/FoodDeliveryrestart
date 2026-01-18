@@ -103,14 +103,16 @@
     <!-- PROMOS -->
     <section class="promos">
         <div class="promo-grid">
-            <div class="promo-card promo-orange">
+            <div class="promo-card promo-orange clickable" @onclick="GoToVouchers">
                 <div class="promo-title">🔥 20% Off Selected Restaurants</div>
                 <div class="promo-sub">Use code <b>SAVE20</b> at checkout</div>
+                <div class="promo-cta">Click to claim →</div>
             </div>
 
-            <div class="promo-card promo-purple">
+            <div class="promo-card promo-purple clickable" @onclick="GoToVouchers">
                 <div class="promo-title">🚚 Free Delivery for Orders above $15</div>
                 <div class="promo-sub">Limited time offer</div>
+                <div class="promo-cta">Click to claim →</div>
             </div>
 
             <div class="promo-card promo-green">
@@ -208,6 +210,8 @@
     }
 
     private void GoToRestaurant(int id) => Nav.NavigateTo($"/restaurants/{id}/menu");
+
+    private void GoToVouchers() => Nav.NavigateTo("/vouchers");
 
     private void ClearSearch()
     {

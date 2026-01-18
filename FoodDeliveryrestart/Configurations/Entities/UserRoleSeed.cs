@@ -11,7 +11,8 @@ namespace FoodDeliveryrestart.Configurations.Entities
             builder.HasData(
                 new IdentityUserRole<string>
                 {
-                    UserId = "c1a2b3c4-d5e6-4789-8901-234567890abc", // Admin User ID
+                    // Match the seeded admin user Id from UserSeed.cs
+                    UserId = "3781efa7-66dc-47f0-860f-e506d04102e4",
                     RoleId = "ad2bcf0c-20db-474f-8407-5a6b159518ba" // Administrator Role ID
                 }
             );

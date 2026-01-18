@@ -1,17 +1,43 @@
 ﻿@page "/"
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.EntityFrameworkCore
+@using FoodDeliveryrestart.Domain
+@inject IJSRuntime JS
+@inject IDbContextFactory<FoodDeliveryrestart.Data.FoodDeliveryrestartContext> DbFactory
+@inject NavigationManager Nav
 
 <div class="landing">
 
     <!-- HERO -->
     <section class="hero">
         <div class="hero-inner">
-            <div class="deliver-row">
-                <span class="pin" aria-hidden="true"><i class="bi bi-geo-alt"></i></span>
-                <span class="deliver-label">Delivering to:</span>
-
-                <button class="deliver-pill" type="button">
-                    @SelectedLocation <span class="caret">▾</span>
-                </button>
+            <div>
+                @if (!editingLocation)
+                {
+                    <div class="delivery-location-bar" role="button" @onclick="ToggleEdit">
+                        <div class="delivery-icon"><i class="bi bi-geo-alt"></i></div>
+                        <div class="delivery-text-section">
+                            <div class="delivery-label">Delivering to:</div>
+                            <div class="delivery-address">@SelectedLocation</div>
+                        </div>
+                        <div class="delivery-dropdown-arrow" aria-hidden="true"><i class="bi bi-caret-down-fill"></i></div>
+                    </div>
+                }
+                else
+                {
+                    <div class="delivery-location-bar">
+                        <div class="delivery-icon updating"><i class="bi bi-geo-alt"></i></div>
+                        <div class="delivery-input-section">
+                            <input class="delivery-address-input" @bind="LocationInput" @onkeydown="OnLocationKeyDown" placeholder="Enter delivery address or use current location" />
+                        </div>
+                        <div class="delivery-actions">
+                            <button class="delivery-btn delivery-btn-save" @onclick="SaveLocation">Save</button>
+                            <button class="delivery-btn delivery-btn-cancel" @onclick="CancelEdit">Cancel</button>
+                            <button class="delivery-btn delivery-btn-current" @onclick="UseMyLocation"><i class="bi bi-geo-alt"></i> Use my current location</button>
+                        </div>
+                    </div>
+                }
             </div>
 
             <h1 class="hero-title">Welcome to FoodLeh?</h1>
@@ -19,11 +45,43 @@
                 Discover your favorite meals from the best restaurants in town
             </p>
 
-            <div class="search-wrap">
-                <span class="search-icon" aria-hidden="true"><i class="bi bi-search"></i></span>
-                <input class="search-input"
-                       placeholder="Search for food or restaurants..."
-                       @bind="SearchText" />
+            <div class="search-bar-container">
+                <div class="search-bar-wrapper">
+                    <span class="search-icon" aria-hidden="true"><i class="bi bi-search"></i></span>
+                    <input class="search-input"
+                           placeholder="Search for food or restaurants..."
+                           value="@SearchText"
+                           @oninput="OnSearchChanged"
+                           @onkeydown="OnSearchKeyDown" />
+
+                    <button class="search-clear-btn @(string.IsNullOrWhiteSpace(SearchText) ? string.Empty : "visible")" type="button" @onclick="ClearSearch">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+
+                    <div class="search-dropdown @(suggestions?.Any() == true ? "show" : string.Empty)">
+                        @if (suggestions?.Any() == true)
+                        {
+                            @foreach (var s in suggestions)
+                            {
+                                <div class="search-result-item" @onclick="() => GoToRestaurant(s.Id)">
+                                    <div class="search-result-icon"><i class="bi bi-shop"></i></div>
+                                    <div class="search-result-info">
+                                        <div class="search-result-name">@s.Name</div>
+                                        <div class="search-result-meta">@s.CuisineType</div>
+                                    </div>
+                                    <div class="search-result-badge">View</div>
+                                </div>
+                            }
+                        }
+                        else if (!string.IsNullOrWhiteSpace(SearchText))
+                        {
+                            <div class="search-no-results">
+                                <div class="search-no-results-icon">🔍</div>
+                                <p class="search-no-results-text">No restaurants found.</p>
+                            </div>
+                        }
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -89,6 +147,8 @@
     private string SelectedLocation = "Pasir Ris, Singapore";
     private string SearchText = "";
     private string SelectedCategory = "All";
+    private bool editingLocation = false;
+    private string LocationInput = "";
 
     private List<(string Name, string Icon)> Categories = new()
     {
@@ -100,10 +160,127 @@
         ("Dessert", "🍰"),
     };
 
+    private List<Restaurant> restaurantResults = new();
+    private List<Restaurant>? suggestions;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // load restaurants from DB for search
+        try
+        {
+            await using var ctx = await DbFactory.CreateDbContextAsync();
+            restaurantResults = await ctx.Restaurant.OrderBy(r => r.Name).ToListAsync();
+        }
+        catch
+        {
+            // ignore DB errors for now
+        }
+    }
+
+    private async Task OnSearchChanged(ChangeEventArgs e)
+    {
+        SearchText = e?.Value?.ToString() ?? "";
+        if (string.IsNullOrWhiteSpace(SearchText))
+        {
+            suggestions = null;
+            return;
+        }
+
+        var q = SearchText.Trim();
+        // perform simple starts-with and contains matches prioritizing starts-with
+        suggestions = restaurantResults
+            .Select(r => new { r, name = (r.Name ?? "").Trim(), cuisine = (r.CuisineType ?? "").Trim() })
+            .Where(x => x.name.Contains(q, StringComparison.OrdinalIgnoreCase) || x.cuisine.Contains(q, StringComparison.OrdinalIgnoreCase))
+            .OrderBy(x => !x.name.StartsWith(q, StringComparison.OrdinalIgnoreCase))
+            .ThenBy(x => x.name)
+            .Take(8)
+            .Select(x => x.r)
+            .ToList();
+    }
+
+    private void OnSearchKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && suggestions?.Count == 1)
+        {
+            GoToRestaurant(suggestions[0].Id);
+        }
+    }
+
+    private void GoToRestaurant(int id) => Nav.NavigateTo($"/restaurants/{id}/menu");
+
+    private void ClearSearch()
+    {
+        SearchText = string.Empty;
+        suggestions = null;
+    }
+
     private List<(string Name, string Tag, string Time, string ImageUrl)> Restaurants = new()
     {
         ("Pasta Corner", "Italian", "25–35 min", "https://images.unsplash.com/photo-1521389508051-d7ffb5dc8b8b?auto=format&fit=crop&w=1200&q=60"),
         ("Pizza House", "Pizza", "20–30 min", "https://images.unsplash.com/photo-1548365328-8b849e6f7f82?auto=format&fit=crop&w=1200&q=60"),
         ("Burger Lab", "Burgers", "15–25 min", "https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1200&q=60"),
     };
+
+    private void ToggleEdit()
+    {
+        editingLocation = true;
+        LocationInput = SelectedLocation;
+    }
+
+    private void CancelEdit()
+    {
+        editingLocation = false;
+        LocationInput = "";
+    }
+
+    private void SaveLocation()
+    {
+        if (!string.IsNullOrWhiteSpace(LocationInput))
+            SelectedLocation = LocationInput.Trim();
+
+        editingLocation = false;
+    }
+
+    private void OnLocationKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            SaveLocation();
+        }
+        else if (e.Key == "Escape")
+        {
+            CancelEdit();
+        }
+    }
+
+    private async Task UseMyLocation()
+    {
+        try
+        {
+            var result = await JS.InvokeAsync<object>("getCurrentPositionAndReverseGeocode");
+            if (result is null) return;
+
+            // result is a JS object - use dynamic binding
+            var dict = (System.Text.Json.JsonElement)result;
+            if (dict.TryGetProperty("success", out var successProp) && successProp.GetBoolean())
+            {
+                if (dict.TryGetProperty("display", out var displayProp))
+                {
+                    SelectedLocation = displayProp.GetString() ?? SelectedLocation;
+                }
+            }
+            else
+            {
+                // optional: show message to user
+            }
+        }
+        catch
+        {
+            // ignore
+        }
+        finally
+        {
+            editingLocation = false;
+        }
+    }
 }

@@ -61,6 +61,16 @@
                         Join Group by Code
                     </button>
 
+                    @if (isAdmin)
+                    {
+                        <button class="btn-ghost" @onclick="GoManageRestaurant">
+                            Manage Restaurant
+                        </button>
+                        <button class="btn-ghost" @onclick="GoManageMenuItem">
+                            Manage Menu Item
+                        </button>
+                    }
+
                     <button class="btn-danger" @onclick="Logout">
                         Logout
                     </button>
@@ -77,6 +87,7 @@
     private string name = "-";
     private string email = "-";
     private string role = "User";
+    private bool isAdmin;
 
     protected override async Task OnInitializedAsync()
     {
@@ -96,10 +107,18 @@
                    ?? user.Identity?.Name
                    ?? "User";
 
-            // Try to show 1 role if exists
-            var roles = user.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+            // Try to show roles from common claim types (ClaimTypes.Role and "role") and detect admin (case-insensitive)
+            var roles = user.FindAll(ClaimTypes.Role).Select(r => r.Value)
+                        .Concat(user.FindAll("role").Select(r => r.Value))
+                        .Where(v => !string.IsNullOrWhiteSpace(v))
+                        .Select(v => v.Trim())
+                        .ToList();
+
             if (roles.Count > 0)
                 role = roles[0];
+
+            isAdmin = roles.Any(r => string.Equals(r, "Administrator", StringComparison.OrdinalIgnoreCase))
+                      || user.IsInRole("Administrator");
         }
         catch (Exception ex)
         {
@@ -114,6 +133,8 @@
     private void GoRestaurants() => Nav.NavigateTo("/restaurants");
     private void GoMyGroupOrders() => Nav.NavigateTo("/grouporders/my");
     private void GoJoinGroup() => Nav.NavigateTo("/grouporders/join");
+    private void GoManageRestaurant() => Nav.NavigateTo("/admin/manage-restaurant");
+    private void GoManageMenuItem() => Nav.NavigateTo("/admin/manage-menu-item");
 
     // Identity default logout endpoint (works if Identity is set up normally)
     private void Logout() => Nav.NavigateTo("/auth/logout", forceLoad: true);

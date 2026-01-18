@@ -1,0 +1,120 @@
+@page "/admin/manage-restaurant"
+@using Microsoft.AspNetCore.Authorization
+@rendermode InteractiveServer
+
+@using Microsoft.EntityFrameworkCore
+@using FoodDeliveryrestart.Domain
+@inject IDbContextFactory<FoodDeliveryrestart.Data.FoodDeliveryrestartContext> DbFactory
+@inject NavigationManager Nav
+
+@attribute [Authorize(Roles = "Administrator")]
+
+<PageTitle>Manage Restaurant</PageTitle>
+
+<AuthorizeView Roles="Administrator">
+    <Authorized Context="auth">
+        <h1>Manage Restaurant</h1>
+
+        @if (loading)
+        {
+            <p>Loading…</p>
+        }
+        else if (!string.IsNullOrWhiteSpace(error))
+        {
+            <div class="error">@error</div>
+        }
+        else
+        {
+            <div class="cardish">
+                <label for="restaurantSelect">Select a restaurant to edit</label>
+                <select id="restaurantSelect" @onchange="OnSelectChanged" class="form-select">
+                    <option value="">-- Choose --</option>
+                    @foreach (var r in restaurants)
+                    {
+                        <option value="@r.Id">@r.Name (@(r.Mall?.MallName ?? ""))</option>
+                    }
+                </select>
+
+                @if (selected is not null)
+                {
+                    <EditForm Model="selected" OnValidSubmit="Save">
+                        <DataAnnotationsValidator />
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Name</label>
+                            <InputText id="name" @bind-Value="selected.Name" class="form-control" />
+                        </div>
+                        <div class="mb-3">
+                            <label for="location" class="form-label">Location within mall</label>
+                            <InputText id="location" @bind-Value="selected.LocationWithinMall" class="form-control" />
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </EditForm>
+                }
+            </div>
+        }
+    </Authorized>
+    <NotAuthorized Context="notAuth">
+        <div class="cardish">
+            <h3>Access denied</h3>
+            <p>You must be an administrator to access this page.</p>
+            <button class="btn-ghost" @onclick='() => Nav.NavigateTo("/profile")'>Back to profile</button>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private bool loading = true;
+    private string? error;
+
+    private List<Restaurant>? restaurants;
+    private Restaurant? selected;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            using var ctx = DbFactory.CreateDbContext();
+            restaurants = await ctx.Restaurant.Include(r => r.Mall).OrderBy(r => r.Name).ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task OnSelectChanged(ChangeEventArgs e)
+    {
+        error = null;
+        selected = null;
+
+        if (int.TryParse(e?.Value?.ToString(), out var id))
+        {
+            using var ctx = DbFactory.CreateDbContext();
+            selected = await ctx.Restaurant.FirstOrDefaultAsync(r => r.Id == id);
+            if (selected is null)
+                error = "Restaurant not found.";
+        }
+    }
+
+    private async Task Save()
+    {
+        try
+        {
+            using var ctx = DbFactory.CreateDbContext();
+            ctx.Attach(selected!).State = EntityState.Modified;
+            await ctx.SaveChangesAsync();
+
+            // reload restaurants list for updated display
+            restaurants = await ctx.Restaurant.Include(r => r.Mall).OrderBy(r => r.Name).ToListAsync();
+            error = "Saved.";
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+    }
+}

@@ -1,0 +1,159 @@
+@page "/admin/manage-menu-item"
+@rendermode InteractiveServer
+
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Authorization
+@using FoodDeliveryrestart.Domain
+@inject IDbContextFactory<FoodDeliveryrestart.Data.FoodDeliveryrestartContext> DbFactory
+@inject NavigationManager Nav
+
+@attribute [Authorize(Roles = "Administrator")]
+
+<PageTitle>Manage Menu Item</PageTitle>
+
+<h1>Manage Menu Item</h1>
+
+@if (loading)
+{
+    <p>Loading…</p>
+}
+else if (!string.IsNullOrWhiteSpace(error))
+{
+    <div class="error">@error</div>
+}
+else
+{
+    <div class="cardish">
+        <label for="restaurantSelect">Select a restaurant</label>
+        <select id="restaurantSelect" @onchange="OnRestaurantChanged" class="form-select">
+            <option value="">-- Choose restaurant --</option>
+            @foreach (var r in restaurants)
+            {
+                <option value="@r.Id">@r.Name (@(r.Mall?.MallName ?? ""))</option>
+            }
+        </select>
+
+        @if (selectedRestaurant != null)
+        {
+            <div class="mt-3">
+                <label for="menuSelect">Select menu item</label>
+                <select id="menuSelect" @onchange="OnMenuItemChanged" class="form-select">
+                    <option value="">-- Choose item --</option>
+                    @foreach (var m in menuItems)
+                    {
+                        <option value="@m.Id">@m.ItemName</option>
+                    }
+                </select>
+            </div>
+        }
+
+        @if (selected is not null)
+        {
+            <EditForm Model="selected" OnValidSubmit="Save">
+                <DataAnnotationsValidator />
+                <div class="mb-3">
+                    <label for="itemname" class="form-label">Item Name</label>
+                    <InputText id="itemname" @bind-Value="selected.ItemName" class="form-input" />
+                </div>
+                <div class="mb-3">
+                    <label for="price" class="form-label">Price</label>
+                    <InputNumber id="price" @bind-Value="selected.Price" class="form-input" />
+                </div>
+                <div class="mb-3">
+                    <label for="calories" class="form-label">Calories</label>
+                    <InputNumber id="calories" @bind-Value="selected.Calories" class="form-input" />
+                </div>
+                <div class="mb-3">
+                    <label for="carbs" class="form-label">Carbohydrates (g)</label>
+                    <InputNumber id="carbs" @bind-Value="selected.CarbohydratesG" class="form-input" />
+                </div>
+                <div class="mb-3">
+                    <label for="protein" class="form-label">Protein (g)</label>
+                    <InputNumber id="protein" @bind-Value="selected.ProteinG" class="form-input" />
+                </div>
+                <div class="mb-3">
+                    <label for="fat" class="form-label">Fat (g)</label>
+                    <InputNumber id="fat" @bind-Value="selected.FatG" class="form-input" />
+                </div>
+
+                <button type="submit" class="btn-save-restaurant">Save</button>
+                <button type="button" class="btn-back-to-list" @onclick='() => Nav.NavigateTo("/admin/manage-restaurant")'>Back</button>
+            </EditForm>
+        }
+    </div>
+}
+
+@code {
+    private bool loading = true;
+    private string? error;
+
+    private List<Restaurant>? restaurants;
+    private Restaurant? selectedRestaurant;
+    private List<MenuItem>? menuItems = new();
+    private MenuItem? selected;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            using var ctx = DbFactory.CreateDbContext();
+            restaurants = await ctx.Restaurant.Include(r => r.Mall).OrderBy(r => r.Name).ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task OnRestaurantChanged(ChangeEventArgs e)
+    {
+        selected = null;
+        menuItems = new();
+        selectedRestaurant = null;
+
+        if (int.TryParse(e?.Value?.ToString(), out var id))
+        {
+            using var ctx = DbFactory.CreateDbContext();
+            selectedRestaurant = await ctx.Restaurant.FirstOrDefaultAsync(r => r.Id == id);
+            if (selectedRestaurant != null)
+            {
+                menuItems = await ctx.MenuItem.Where(m => m.RestaurantId == id).OrderBy(m => m.ItemName).ToListAsync();
+            }
+        }
+    }
+
+    private async Task OnMenuItemChanged(ChangeEventArgs e)
+    {
+        selected = null;
+        if (int.TryParse(e?.Value?.ToString(), out var id))
+        {
+            using var ctx = DbFactory.CreateDbContext();
+            selected = await ctx.MenuItem.FirstOrDefaultAsync(m => m.Id == id);
+            if (selected is null)
+                error = "Menu item not found.";
+        }
+    }
+
+    private async Task Save()
+    {
+        try
+        {
+            using var ctx = DbFactory.CreateDbContext();
+            ctx.Attach(selected!).State = EntityState.Modified;
+            await ctx.SaveChangesAsync();
+            error = "Saved.";
+
+            // refresh list
+            if (selectedRestaurant != null)
+                menuItems = await ctx.MenuItem.Where(m => m.RestaurantId == selectedRestaurant.Id).OrderBy(m => m.ItemName).ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+    }
+}

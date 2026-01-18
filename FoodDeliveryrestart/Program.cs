@@ -79,6 +79,39 @@ builder.Services.AddScoped<GroupOrderState>();
 
 var app = builder.Build();
 
+// Ensure roles and admin user role mapping exist in database at startup
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+        var userManager = services.GetRequiredService<UserManager<FoodDeliveryrestartUser>>();
+
+        // Ensure roles
+        var rolesToEnsure = new[] { "Administrator", "Customer" };
+        foreach (var r in rolesToEnsure)
+        {
+            if (!roleManager.RoleExistsAsync(r).GetAwaiter().GetResult())
+            {
+                roleManager.CreateAsync(new IdentityRole(r)).GetAwaiter().GetResult();
+            }
+        }
+
+        // Ensure seeded admin user is in Administrator role
+        var adminEmail = "admin@localhost.com";
+        var adminUser = userManager.FindByEmailAsync(adminEmail).GetAwaiter().GetResult();
+        if (adminUser != null && !userManager.IsInRoleAsync(adminUser, "Administrator").GetAwaiter().GetResult())
+        {
+            userManager.AddToRoleAsync(adminUser, "Administrator").GetAwaiter().GetResult();
+        }
+    }
+    catch
+    {
+        // ignore startup seeding errors
+    }
+}
+
 // =======================
 // Custom Auth Endpoints
 // =======================

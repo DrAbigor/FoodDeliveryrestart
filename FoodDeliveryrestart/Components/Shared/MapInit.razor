@@ -1,0 +1,26 @@
+@code {
+    [Parameter] public double Latitude { get; set; }
+    [Parameter] public double Longitude { get; set; }
+
+    [Inject] IJSRuntime JS { get; set; } = default!;
+    private bool _initialized;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // small delay to ensure #map div is rendered
+        await Task.Delay(100);
+        if (!_initialized)
+        {
+            try
+            {
+                await JS.InvokeVoidAsync("fdMap.init", Latitude, Longitude);
+                _initialized = true;
+            }
+            catch { /* ignore */ }
+        }
+        else
+        {
+            try { await JS.InvokeVoidAsync("fdMap.update", Latitude, Longitude); } catch { }
+        }
+    }
+}

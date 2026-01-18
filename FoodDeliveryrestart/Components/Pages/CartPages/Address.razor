@@ -1,0 +1,147 @@
+@page "/cart/address"
+@rendermode InteractiveServer
+
+@using System.Linq
+@using System.Globalization
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+@inject FoodDeliveryrestart.Services.CartService CartSvc
+
+<PageTitle>Delivery Address</PageTitle>
+<link rel="stylesheet" href="/css/address.css" />
+
+<div class="checkout-page">
+    <h1>Customer Location</h1>
+    <div class="cart-info">
+        <div class="cart-count">Cart: @CartSvc.Count() item(s)</div>
+        <button class="btn-cart-back" @onclick="GoCart">Back to cart</button>
+    </div>
+
+    @if (!CartSvc.Items.Any())
+    {
+        <div class="cart-empty-shell">
+            <div class="cart-empty-card">
+                <h3>Your cart is empty</h3>
+                <button class="cart-btn-primary" type="button" @onclick="GoRestaurants">Browse restaurants</button>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="location-container">
+                <div class="delivery-location-bar">
+                    <div class="delivery-icon"><i class="bi bi-geo-alt"></i></div>
+                    <div class="delivery-text-section">
+                        <div class="delivery-label">Delivering to:</div>
+                        <div class="delivery-address">@(!string.IsNullOrWhiteSpace(DetectedAddress) ? DetectedAddress : "Locating…")</div>
+                    </div>
+                    <div class="delivery-dropdown-arrow" aria-hidden="true"><i class="bi bi-caret-down-fill"></i></div>
+                </div>
+                <div class="address-grid">
+                    <div class="field-group">
+                        <label>Block</label>
+                        <input @bind="AddressBlock" placeholder="Block / Building" />
+                    </div>
+                    <div class="field-group">
+                        <label>Unit Number</label>
+                        <input @bind="AddressUnit" placeholder="Unit number" />
+                    </div>
+                    <div class="field-group address-field-full">
+                        <label>Street</label>
+                        <input @bind="AddressStreet" placeholder="Street / Road" />
+                    </div>
+                    <div class="field-group">
+                        <label>Postal Code</label>
+                        <input inputmode="numeric" maxlength="10" @bind="AddressPostal" placeholder="Postal code" />
+                    </div>
+                    <div class="field-group">
+                        <label>City</label>
+                        <input @bind="AddressCity" placeholder="City / Town" />
+                    </div>
+                </div>
+
+                @if (!IsLocationValid)
+                {
+                    <div class="validation-message">Please provide a valid address (all fields required; postal code must be 4–10 digits).</div>
+                }
+
+                <div class="checkout-buttons">
+                    <button class="btn-proceed" @onclick="GoCheckout" disabled="@(!IsLocationValid)">Proceed to Checkout</button>
+                    <button class="btn-back" @onclick="GoCart">Back to cart</button>
+                </div>
+        </div>
+    }
+</div>
+
+@code {
+    private string AddressBlock = string.Empty;
+    private string AddressUnit = string.Empty;
+    private string AddressStreet = string.Empty;
+    private string AddressPostal = string.Empty;
+    private string AddressCity = string.Empty;
+    private double? Latitude;
+    private double? Longitude;
+    private bool HasCoords => Latitude.HasValue && Longitude.HasValue;
+    private bool _requested;
+    private string? DetectedAddress;
+
+    private bool IsLocationValid =>
+        !string.IsNullOrWhiteSpace(AddressBlock)
+        && !string.IsNullOrWhiteSpace(AddressUnit)
+        && !string.IsNullOrWhiteSpace(AddressStreet)
+        && !string.IsNullOrWhiteSpace(AddressCity)
+        && PostalValid(AddressPostal);
+
+    private static bool PostalValid(string s)
+    {
+        var digits = new string((s ?? string.Empty).Where(char.IsDigit).ToArray());
+        return digits.Length >= 4 && digits.Length <= 10;
+    }
+
+    private void GoRestaurants() => Nav.NavigateTo("/restaurants");
+    private void GoCart() => Nav.NavigateTo("/cart");
+    private void GoCheckout() => Nav.NavigateTo("/checkout");
+
+    private async Task UseMyLocation()
+    {
+        try
+        {
+            var extended = await JS.InvokeAsync<object>("getCurrentPositionAndReverseGeocode");
+            if (extended is System.Text.Json.JsonElement el && el.TryGetProperty("success", out var ok) && ok.GetBoolean())
+            {
+                if (el.TryGetProperty("lat", out var latEl)) Latitude = latEl.GetDouble();
+                if (el.TryGetProperty("lon", out var lonEl)) Longitude = lonEl.GetDouble();
+                if (el.TryGetProperty("display", out var dispEl)) DetectedAddress = dispEl.GetString();
+            }
+            else
+            {
+                var coords = await JS.InvokeAsync<GeolocationResult>("fd.getCurrentPosition");
+                Latitude = coords?.Latitude;
+                Longitude = coords?.Longitude;
+            }
+            StateHasChanged();
+        }
+        catch
+        {
+            // ignore, keep manual entry
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_requested)
+        {
+            _requested = true;
+            await UseMyLocation();
+        }
+    }
+
+    private class GeolocationResult
+    {
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
+        public double Accuracy { get; set; }
+    }
+
+    
+}

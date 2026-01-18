@@ -3,8 +3,10 @@
 
 @using System.Globalization
 @using System.Linq
+@using Microsoft.EntityFrameworkCore
 @inject FoodDeliveryrestart.Services.CartService CartSvc
 @inject NavigationManager Nav
+@inject IDbContextFactory<FoodDeliveryrestart.Data.FoodDeliveryrestartContext> DbFactory
 
 <div class="cart-wrap">
 
@@ -139,6 +141,18 @@
                         <span>Estimated Total Calories</span>
                         <span class="kcal">@TotalCalories kcal</span>
                     </div>
+                    <div class="nut-row">
+                        <span>Total Carbohydrates</span>
+                        <span>@TotalCarbs g</span>
+                    </div>
+                    <div class="nut-row">
+                        <span>Total Protein</span>
+                        <span>@TotalProtein g</span>
+                    </div>
+                    <div class="nut-row">
+                        <span>Total Fat</span>
+                        <span>@TotalFat g</span>
+                    </div>
 
                     @if (TotalCalories >= 2000)
                     {
@@ -146,7 +160,7 @@
                     }
                 </div>
 
-                <button class="btn checkout-btn" @onclick="GoCheckout">Proceed to Checkout</button>
+                <button class="btn checkout-btn" @onclick="GoAddress">Add delivery address</button>
                 <button class="btn btn-outline-secondary w-100 mt-2" @onclick="GoRestaurants">Continue Shopping</button>
             </div>
 
@@ -161,6 +175,11 @@
     private decimal Subtotal => CartSvc.Subtotal();
     private decimal Total => CartSvc.Total();
     private int TotalCalories => CartSvc.TotalCalories();
+    private int TotalCarbs;
+    private int TotalProtein;
+    private int TotalFat;
+
+    // Address entry moved to /cart/address
 
     private void GoRestaurants() => Nav.NavigateTo("/restaurants");
     private void GoCheckout() => Nav.NavigateTo("/checkout");
@@ -173,6 +192,28 @@
         var item = CartSvc.Items.First(x => x.MenuItemId == id);
         CartSvc.Add(item.MenuItemId, item.RestaurantId, item.ItemName, item.Price, item.ImageUrl, item.Calories, 1);
     }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // Compute macro totals using MenuItem data
+        TotalCarbs = 0;
+        TotalProtein = 0;
+        TotalFat = 0;
+
+        await using var db = await DbFactory.CreateDbContextAsync();
+        foreach (var ci in CartSvc.Items)
+        {
+            var mi = await db.MenuItem.FirstOrDefaultAsync(x => x.Id == ci.MenuItemId);
+            if (mi is not null)
+            {
+                TotalCarbs += (mi.CarbohydratesG) * ci.Quantity;
+                TotalProtein += (mi.ProteinG) * ci.Quantity;
+                TotalFat += (mi.FatG) * ci.Quantity;
+            }
+        }
+    }
+
+    private void GoAddress() => Nav.NavigateTo("/cart/address");
 
     private void Dec(int id)
     {

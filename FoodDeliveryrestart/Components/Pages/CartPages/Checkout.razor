@@ -47,14 +47,42 @@
                     </div>
 
                     <label class="label">Payment Method</label>
-                    <select class="select" @bind="SelectedPaymentMethodId">
-                        @foreach (var pm in PaymentMethods)
-                        {
-                            <option value="@pm.Id">
-                                @pm.CardType - @pm.CardHolderName (exp @pm.ExpiryMonth/@pm.ExpiryYear)
-                            </option>
-                        }
+                    <select class="select" @bind="SelectedPaymentType">
+                        <option value="Cash">Cash</option>
+                        <option value="Card">Card</option>
                     </select>
+
+                    @if (SelectedPaymentType == "Card")
+                    {
+                        <div class="mini muted" style="margin-top:8px;">Enter card details:</div>
+                        <div class="form-grid" style="margin-top:8px; gap:8px; display:grid; grid-template-columns: 1fr 1fr;">
+                            <div style="grid-column: span 2;">
+                                <label class="label">Card Type</label>
+                                <select class="select" @bind="NewCardType">
+                                    <option value="">-- Select card type --</option>
+                                    <option>Visa</option>
+                                    <option>MasterCard</option>
+                                    <option>AMEX</option>
+                                </select>
+                            </div>
+                            <div style="grid-column: span 2;">
+                                <label class="label">Card Number</label>
+                                <input class="input" type="text" inputmode="numeric" autocomplete="cc-number" placeholder="1234 5678 9012 3456" @bind="NewCardNumber" />
+                            </div>
+                            <div>
+                                <label class="label">Expiry Month</label>
+                                <input class="input" type="number" min="1" max="12" @bind="NewExpiryMonth" />
+                            </div>
+                            <div>
+                                <label class="label">Expiry Year</label>
+                                <input class="input" type="number" min="2024" max="2100" @bind="NewExpiryYear" />
+                            </div>
+                            <div style="grid-column: span 2;">
+                                <label class="label">Cardholder Name</label>
+                                <input class="input" type="text" @bind="NewCardHolderName" />
+                            </div>
+                        </div>
+                    }
 
                     <div class="actions">
                         <button class="btn-primary" @onclick="PlaceOrder">Pay &amp; Place Order</button>
@@ -119,9 +147,15 @@
 
 @code {
     private List<PaymentMethod> PaymentMethods = new();
-    private int SelectedPaymentMethodId;
+    private int SelectedPaymentMethodId; // kept for internal use when reusing existing methods if needed
     private bool IsSaving;
     private string? Error;
+    private string SelectedPaymentType = "Cash";
+    private string? NewCardType;
+    private string? NewCardNumber;
+    private int NewExpiryMonth;
+    private int NewExpiryYear;
+    private string? NewCardHolderName;
 
     // TEMP until Identity → Domain.User mapping
     private const int DomainUserId = 1;
@@ -136,7 +170,8 @@
             .OrderBy(pm => pm.Id)
             .ToListAsync();
 
-        SelectedPaymentMethodId = PaymentMethods.FirstOrDefault()?.Id ?? 0;
+        // default to Cash
+        SelectedPaymentType = "Cash";
     }
 
     private void GoRestaurants() => Nav.NavigateTo("/restaurants");
@@ -146,10 +181,23 @@
     {
         Error = null;
 
-        if (SelectedPaymentMethodId == 0)
+        // Validate if Card selected
+        var useCard = SelectedPaymentType == "Card";
+        if (useCard)
         {
-            Error = "No payment method found. Please add or seed a payment method.";
-            return;
+            if (string.IsNullOrWhiteSpace(NewCardType) || string.IsNullOrWhiteSpace(NewCardHolderName) || NewExpiryMonth < 1 || NewExpiryMonth > 12 || NewExpiryYear < DateTime.UtcNow.Year)
+            {
+                Error = "Please enter valid card details (type, name, expiry).";
+                return;
+            }
+
+            // Basic card number validation (length 12-19 digits). Not stored.
+            var digits = new string((NewCardNumber ?? string.Empty).Where(char.IsDigit).ToArray());
+            if (string.IsNullOrWhiteSpace(digits) || digits.Length < 12 || digits.Length > 19)
+            {
+                Error = "Please enter a valid card number.";
+                return;
+            }
         }
 
         IsSaving = true;
@@ -195,15 +243,59 @@
                 });
             }
 
+            // Use existing or create new PaymentMethod from entered details
+            int paymentMethodId;
+            if (!useCard)
+            {
+                // Ensure a "Cash" payment method exists for this user
+                var cashPm = await db.PaymentMethod.FirstOrDefaultAsync(x => x.UserId == DomainUserId && x.CardType == "Cash");
+                if (cashPm is null)
+                {
+                    cashPm = new PaymentMethod
+                    {
+                        CardType = "Cash",
+                        ExpiryMonth = 0,
+                        ExpiryYear = 0,
+                        CardHolderName = "Cash",
+                        UserId = DomainUserId,
+                        DateCreated = DateTime.UtcNow,
+                        DateUpdated = DateTime.UtcNow,
+                        CreatedBy = "System",
+                        UpdatedBy = "System"
+                    };
+                    db.PaymentMethod.Add(cashPm);
+                    await db.SaveChangesAsync();
+                }
+                paymentMethodId = cashPm.Id;
+            }
+            else
+            {
+                var pm = new PaymentMethod
+                {
+                    CardType = NewCardType,
+                    ExpiryMonth = NewExpiryMonth,
+                    ExpiryYear = NewExpiryYear,
+                    CardHolderName = NewCardHolderName,
+                    UserId = DomainUserId,
+                    DateCreated = DateTime.UtcNow,
+                    DateUpdated = DateTime.UtcNow,
+                    CreatedBy = "System",
+                    UpdatedBy = "System"
+                };
+                db.PaymentMethod.Add(pm);
+                await db.SaveChangesAsync();
+                paymentMethodId = pm.Id;
+            }
+
             // Payment
             db.Payment.Add(new Payment
             {
-                Name = "Card Payment",
+                Name = useCard ? "Card Payment" : "Cash Payment",
                 PaymentDate = DateTime.UtcNow,
                 PaymentStatus = "Paid",
                 Amount = order.TotalAmount,
                 OrderId = order.Id,
-                PaymentMethodId = SelectedPaymentMethodId,
+                PaymentMethodId = paymentMethodId,
                 UserId = DomainUserId,
                 DateCreated = DateTime.UtcNow,
                 DateUpdated = DateTime.UtcNow,

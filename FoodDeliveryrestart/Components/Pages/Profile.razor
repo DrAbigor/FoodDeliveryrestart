@@ -101,6 +101,10 @@
                         Browse Restaurants
                     </button>
 
+                    <button class="btn-ghost" @onclick="GoMyVouchers">
+                        My Vouchers
+                    </button>
+
                     <button class="btn-ghost" @onclick="GoMyGroupOrders">
                         My Group Orders
                     </button>
@@ -311,6 +315,7 @@
     }
 
     private void GoRestaurants() => Nav.NavigateTo("/restaurants");
+    private void GoMyVouchers() => Nav.NavigateTo("/myvouchers");
     private void GoMyGroupOrders() => Nav.NavigateTo("/grouporders/my");
     private void GoJoinGroup() => Nav.NavigateTo("/grouporders/join");
     private void GoAdminDashboard() => Nav.NavigateTo("/admin/dashboard");

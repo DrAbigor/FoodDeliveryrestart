@@ -76,6 +76,7 @@ builder.Services.AddTransient<IEmailSender<FoodDeliveryrestartUser>, NoOpEmailSe
 // App services
 builder.Services.AddScoped<CartService>();
 builder.Services.AddScoped<GroupOrderState>();
+builder.Services.AddScoped<VoucherService>();
 
 var app = builder.Build();
 

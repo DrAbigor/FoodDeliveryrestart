@@ -1,11 +1,16 @@
 ﻿@page "/checkout"
 @rendermode InteractiveServer
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
 
 @using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.Authorization
 @using FoodDeliveryrestart.Domain
+@using System.Security.Claims
+
 @inject FoodDeliveryrestart.Services.CartService CartSvc
 @inject IDbContextFactory<FoodDeliveryrestart.Data.FoodDeliveryrestartContext> DbFactory
 @inject NavigationManager Nav
+@inject AuthenticationStateProvider Auth
 
 <PageTitle>Checkout</PageTitle>
 
@@ -102,6 +107,42 @@
                         <div class="pill">@CartSvc.Count() item(s)</div>
                     </div>
 
+                    <!-- Voucher Section -->
+                    <div class="voucher-section">
+                        <label class="label">
+                            <i class="bi bi-ticket-perforated"></i> Add Voucher
+                        </label>
+                        @if (userVouchers.Any())
+                        {
+                            <select class="select voucher-select" @bind="SelectedVoucherId" @bind:after="OnVoucherChanged">
+                                <option value="0">-- Select a voucher --</option>
+                                @foreach (var uv in userVouchers)
+                                {
+                                    <option value="@uv.Id">
+                                        @uv.Voucher?.Name (@(uv.Voucher?.DiscountType == "Percentage" ? $"{uv.Voucher?.DiscountValue}% OFF" : uv.Voucher?.DiscountType == "FreeDelivery" ? "Free Delivery" : $"${uv.Voucher?.DiscountValue} OFF"))
+                                    </option>
+                                }
+                            </select>
+                            @if (selectedVoucher != null)
+                            {
+                                <div class="voucher-applied">
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    <span>@selectedVoucher.Voucher?.Name applied!</span>
+                                    <button class="voucher-remove" @onclick="RemoveVoucher">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="no-vouchers">
+                                <span>No vouchers available</span>
+                                <a href="/vouchers" class="voucher-link">Claim vouchers →</a>
+                            </div>
+                        }
+                    </div>
+
                     <div class="rows">
                         <div class="row">
                             <span>Subtotal</span>
@@ -110,7 +151,17 @@
 
                         <div class="row">
                             <span>Delivery Fee</span>
-                            <span>$@CartSvc.DeliveryFee.ToString("0.00")</span>
+                            @if (selectedVoucher?.Voucher?.DiscountType == "FreeDelivery" && CartSvc.Subtotal() >= (selectedVoucher.Voucher.MinimumOrder ?? 0))
+                            {
+                                <span class="discount-applied">
+                                    <span class="strikethrough">$@CartSvc.DeliveryFee.ToString("0.00")</span>
+                                    <span class="free">FREE</span>
+                                </span>
+                            }
+                            else
+                            {
+                                <span>$@CartSvc.DeliveryFee.ToString("0.00")</span>
+                            }
                         </div>
 
                         <div class="row">
@@ -118,11 +169,21 @@
                             <span>$@CartSvc.Tip.ToString("0.00")</span>
                         </div>
 
+                        @if (voucherDiscount > 0)
+                        {
+                            <div class="row discount-row">
+                                <span>
+                                    <i class="bi bi-tag-fill"></i> Voucher Discount
+                                </span>
+                                <span class="discount-value">-$@voucherDiscount.ToString("0.00")</span>
+                            </div>
+                        }
+
                         <div class="divider"></div>
 
                         <div class="row total">
                             <span>Total</span>
-                            <span>$@CartSvc.Total().ToString("0.00")</span>
+                            <span>$@CalculateTotal().ToString("0.00")</span>
                         </div>
                     </div>
 
@@ -157,12 +218,27 @@
     private int NewExpiryYear;
     private string? NewCardHolderName;
 
+    // Voucher state
+    private string? userId;
+    private List<UserVoucher> userVouchers = new();
+    private int SelectedVoucherId = 0;
+    private UserVoucher? selectedVoucher;
+    private decimal voucherDiscount = 0;
+
     // TEMP until Identity → Domain.User mapping
     private const int DomainUserId = 1;
     private const int DefaultMallId = 1;
 
     protected override async Task OnInitializedAsync()
     {
+        // Get user ID
+        var state = await Auth.GetAuthenticationStateAsync();
+        var user = state.User;
+        if (user?.Identity?.IsAuthenticated == true)
+        {
+            userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        }
+
         await using var db = await DbFactory.CreateDbContextAsync();
 
         PaymentMethods = await db.PaymentMethod
@@ -170,8 +246,77 @@
             .OrderBy(pm => pm.Id)
             .ToListAsync();
 
+        // Load user's available vouchers
+        if (!string.IsNullOrEmpty(userId))
+        {
+            userVouchers = await db.UserVoucher
+                .Include(uv => uv.Voucher)
+                .Where(uv => uv.UserId == userId && !uv.IsUsed)
+                .ToListAsync();
+        }
+
         // default to Cash
         SelectedPaymentType = "Cash";
+    }
+
+    private void OnVoucherChanged()
+    {
+        selectedVoucher = userVouchers.FirstOrDefault(uv => uv.Id == SelectedVoucherId);
+        CalculateVoucherDiscount();
+    }
+
+    private void RemoveVoucher()
+    {
+        SelectedVoucherId = 0;
+        selectedVoucher = null;
+        voucherDiscount = 0;
+    }
+
+    private void CalculateVoucherDiscount()
+    {
+        voucherDiscount = 0;
+
+        if (selectedVoucher?.Voucher == null) return;
+
+        var voucher = selectedVoucher.Voucher;
+        var subtotal = CartSvc.Subtotal();
+
+        // Check minimum order requirement
+        if (voucher.MinimumOrder.HasValue && subtotal < voucher.MinimumOrder.Value)
+        {
+            // Minimum not met, no discount
+            return;
+        }
+
+        switch (voucher.DiscountType)
+        {
+            case "Percentage":
+                voucherDiscount = subtotal * (voucher.DiscountValue / 100);
+                break;
+            case "Fixed":
+                voucherDiscount = voucher.DiscountValue;
+                break;
+            case "FreeDelivery":
+                // Free delivery is handled separately in the display
+                voucherDiscount = 0;
+                break;
+        }
+    }
+
+    private decimal CalculateTotal()
+    {
+        var subtotal = CartSvc.Subtotal();
+        var deliveryFee = CartSvc.DeliveryFee;
+        var tip = CartSvc.Tip;
+
+        // Apply free delivery if applicable
+        if (selectedVoucher?.Voucher?.DiscountType == "FreeDelivery" && 
+            subtotal >= (selectedVoucher.Voucher.MinimumOrder ?? 0))
+        {
+            deliveryFee = 0;
+        }
+
+        return subtotal + deliveryFee + tip - voucherDiscount;
     }
 
     private void GoRestaurants() => Nav.NavigateTo("/restaurants");
@@ -218,12 +363,12 @@
             db.GroupOrder.Add(groupOrder);
             await db.SaveChangesAsync();
 
-            // Create Order
+            // Create Order with discounted total
             var order = new Order
             {
                 DateTime = DateTime.UtcNow,
                 Status = "Paid",
-                TotalAmount = CartSvc.Total(),
+                TotalAmount = CalculateTotal(),
                 UserId = DomainUserId,
                 GroupOrderId = groupOrder.Id
             };
@@ -241,6 +386,19 @@
                     ItemPrice = ci.Price,
                     Subtotal = ci.Price * ci.Quantity
                 });
+            }
+
+            // Mark voucher as used
+            if (selectedVoucher != null)
+            {
+                var uvToUpdate = await db.UserVoucher.FindAsync(selectedVoucher.Id);
+                if (uvToUpdate != null)
+                {
+                    uvToUpdate.IsUsed = true;
+                    uvToUpdate.UsedAt = DateTime.UtcNow;
+                    uvToUpdate.OrderId = order.Id;
+                    uvToUpdate.DateUpdated = DateTime.UtcNow;
+                }
             }
 
             // Use existing or create new PaymentMethod from entered details

@@ -170,6 +170,31 @@
     background: linear-gradient(90deg, #4bbf7e, #74c69d);
 }
 
+/* Clickable promo cards */
+.promo-card.clickable {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.promo-card.clickable:hover {
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: 0 18px 40px rgba(0,0,0,0.2);
+}
+
+.promo-cta {
+    margin-top: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    opacity: 0.9;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.promo-card.clickable:hover .promo-cta {
+    opacity: 1;
+}
+
 /* POPULAR */
 .popular {
     padding: 14px 24px 50px;

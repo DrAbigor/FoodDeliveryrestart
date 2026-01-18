@@ -7,63 +7,126 @@
 
 @inject IDbContextFactory<FoodDeliveryrestartContext> DbFactory
 @inject NavigationManager Nav
+@inject IJSRuntime JS
 
-<h2>Group Order Lobby</h2>
+<div class="lobby-page">
+    <div class="lobby-header">
+        <div>
+            <h1 class="lobby-title">Group Order Lobby</h1>
+            <p class="lobby-subtitle">Share the code with friends so they can join and order together.</p>
+        </div>
 
-@if (groupOrder == null)
-{
-    <p>Loading...</p>
-}
-else
-{
-    <div class="card p-3 mb-3">
-        <h4>
-            Code: <span class="badge bg-dark">@groupOrder.GroupCode</span>
-        </h4>
-        <p>Status: <strong>@groupOrder.Status</strong></p>
-        <p>Mall: <strong>@groupOrder.Mall?.MallName</strong></p>
+        <div class="lobby-actions">
+            <a class="btn-outline" href="/grouporders/join">Join another group</a>
+        </div>
     </div>
 
-    <h4>Selected Restaurants</h4>
-    @if (restaurants.Count == 0)
+    @if (groupOrder == null)
     {
-        <p>No restaurants selected yet.</p>
+        <div class="cardish">
+            <div class="skeleton-line w-40"></div>
+            <div class="skeleton-line w-70"></div>
+            <div class="skeleton-line w-55"></div>
+        </div>
     }
     else
     {
-        <ul>
-            @foreach (var r in restaurants)
-            {
-                <li>
-                    <button class="btn btn-link p-0" @onclick="() => GoMenu(r.Id)">
-                        @r.Name
-                    </button>
-                </li>
-            }
-        </ul>
-    }
+        <div class="summary-grid">
+            <div class="cardish summary-card">
+                <div class="summary-top">
+                    <div class="code-block">
+                        <div class="label">Group Code</div>
+                        <div class="code-row">
+                            <span class="code-badge">@groupOrder.GroupCode</span>
+                            <button class="btn-primary" @onclick="CopyCode">Copy</button>
+                        </div>
+                        <div class="hint">Anyone can join using this code.</div>
+                    </div>
 
-    <h4 class="mt-4">Members</h4>
-    @if (members.Count == 0)
-    {
-        <p>No members yet.</p>
-    }
-    else
-    {
-        <ul>
-            @foreach (var m in members)
-            {
-                <li>
-                    @(m.User?.Email ?? $"User #{m.UserId}") — @m.Status
-                </li>
-            }
-        </ul>
-    }
+                    <div class="status-block">
+                        <div class="label">Status</div>
+                        <span class="status-pill @StatusClass(groupOrder.Status)">
+                            @groupOrder.Status
+                        </span>
 
-    <div class="mt-4">
-        <a class="btn btn-outline-primary" href="/grouporders/join">Join another group</a>
-    </div>
-}
+                        <div class="label mt-10">Mall</div>
+                        <div class="mall-name">@groupOrder.Mall?.MallName</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cardish">
+                <div class="section-title-row">
+                    <h2 class="section-title">Selected Restaurants</h2>
+                    <span class="count-pill">@restaurants.Count</span>
+                </div>
+
+                @if (restaurants.Count == 0)
+                {
+                    <p class="muted">No restaurants selected yet.</p>
+                }
+                else
+                {
+                    <div class="pill-wrap">
+                        @foreach (var r in restaurants.OrderBy(r => r.Name))
+                        {
+                            <button class="pill"
+                                    title="Open menu"
+                                    @onclick="() => GoMenu(r.Id)">
+                                @r.Name
+                                <span class="pill-arrow">→</span>
+                            </button>
+                        }
+                    </div>
+
+                    <div class="muted small mt-10">
+                        Tip: Click a restaurant to open its menu.
+                    </div>
+                }
+            </div>
+
+            <div class="cardish">
+                <div class="section-title-row">
+                    <h2 class="section-title">Members</h2>
+                    <span class="count-pill">@members.Count</span>
+                </div>
+
+                @if (members.Count == 0)
+                {
+                    <p class="muted">No members yet.</p>
+                }
+                else
+                {
+                    <div class="member-list">
+                        @foreach (var m in members)
+                        {
+                            <div class="member-row">
+                                <div class="member-avatar">
+                                    @Initials(m.User?.Email ?? $"User {m.UserId}")
+                                </div>
+
+                                <div class="member-info">
+                                    <div class="member-email">
+                                        @(m.User?.Email ?? $"User #{m.UserId}")
+                                    </div>
+                                    <div class="member-meta muted small">
+                                        Joined @m.JoinTime.ToLocalTime().ToString("dd MMM, HH:mm")
+                                    </div>
+                                </div>
+
+                                <div class="member-badges">
+                                    <span class="role-pill @RoleClass(m.Status)">
+                                        @m.Status
+                                    </span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
 
 @code {
     [Parameter] public string Code { get; set; } = "";
@@ -95,7 +158,57 @@ else
     }
 
     private void GoMenu(int restaurantId)
+        => Nav.NavigateTo($"/grouporders/restaurants/{restaurantId}/menuitems");
+
+    private async Task CopyCode()
     {
-        Nav.NavigateTo($"/grouporders/restaurants/{restaurantId}/menuitems");
+        if (groupOrder is null) return;
+
+        try
+        {
+            // Uses browser clipboard API
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", groupOrder.GroupCode);
+        }
+        catch
+        {
+            // If clipboard blocked, at least show an alert
+            await JS.InvokeVoidAsync("alert", $"Copy this code: {groupOrder.GroupCode}");
+        }
+    }
+
+    private static string StatusClass(string? status)
+    {
+        status ??= "";
+        status = status.Trim().ToLowerInvariant();
+
+        return status switch
+        {
+            "active" => "status-active",
+            "locked" => "status-locked",
+            "completed" => "status-completed",
+            _ => "status-default"
+        };
+    }
+
+    private static string RoleClass(string? role)
+    {
+        role ??= "";
+        role = role.Trim().ToLowerInvariant();
+
+        return role switch
+        {
+            "host" => "role-host",
+            "member" => "role-member",
+            _ => "role-default"
+        };
+    }
+
+    private static string Initials(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email)) return "?";
+        var parts = email.Split('@', StringSplitOptions.RemoveEmptyEntries);
+        var name = parts[0];
+        if (name.Length == 1) return name.ToUpperInvariant();
+        return $"{char.ToUpperInvariant(name[0])}{char.ToUpperInvariant(name[^1])}";
     }
 }

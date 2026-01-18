@@ -19,7 +19,7 @@
         <h1>Select Restaurants</h1>
         @if (mall != null)
         {
-            <p class="subtitle">Choose restaurants from @mall.MallName</p>
+            <p class="subtitle">Choose up to <strong>@MaxRestaurants</strong> restaurants from <strong>@mall.MallName</strong></p>
         }
     </div>
 </div>
@@ -27,18 +27,26 @@
 <div class="group-order-container">
     @if (restaurants is null)
     {
-        <p>Loading restaurants...</p>
+        <div class="card p-3">Loading restaurants...</div>
     }
     else if (!restaurants.Any())
     {
-        <p>No restaurants available.</p>
-        <button class="btn-cancel" @onclick="GoBack">Back</button>
+        <div class="card p-3">
+            <div class="mb-2">No restaurants available for this mall.</div>
+            <button class="btn btn-outline-secondary" @onclick="GoBack">Back</button>
+        </div>
     }
     else
     {
         <div class="restaurant-selection-card">
             <div class="selection-header">
-                <h2>Available Restaurants</h2>
+                <div>
+                    <h2 class="mb-1">Available Restaurants</h2>
+                    <div class="text-muted small">
+                        Pick <strong>1 to @MaxRestaurants</strong>. Your group members will be able to order from the selected restaurants.
+                    </div>
+                </div>
+
                 <div class="selection-count">
                     <span class="count-badge">@selected.Count</span> selected
                 </div>
@@ -48,9 +56,12 @@
                 @foreach (var restaurant in restaurants)
                 {
                     var isSelected = selected.Contains(restaurant.Id);
+                    var isDisabled = !isSelected && selected.Count >= MaxRestaurants;
 
-                    <div class="restaurant-select-card @(isSelected ? "selected" : "")"
-                         @onclick="() => Toggle(restaurant.Id)">
+                    <div class="restaurant-select-card @(isSelected ? "selected" : "") @(isDisabled ? "opacity-50" : "")"
+                         style="@(isDisabled ? "cursor:not-allowed;" : "cursor:pointer;")"
+                         @onclick="async () => { if (!isDisabled) Toggle(restaurant.Id); await Task.CompletedTask; }">
+
                         <div class="select-checkbox">
                             @if (isSelected)
                             {
@@ -71,6 +82,13 @@
                                     <span> • @restaurant.LocationWithinMall</span>
                                 }
                             </div>
+
+                            @if (restaurant.Rating > 0)
+                            {
+                                <div class="text-muted small mt-1">
+                                    Rating: <strong>@restaurant.Rating.ToString("0.0")</strong> • Busy: <strong>@restaurant.BusyLevel</strong>
+                                </div>
+                            }
                         </div>
                     </div>
                 }
@@ -78,14 +96,14 @@
 
             @if (!string.IsNullOrWhiteSpace(error))
             {
-                <div class="text-danger mt-3">@error</div>
+                <div class="alert alert-danger mt-3 mb-0">@error</div>
             }
 
             <div class="action-buttons">
                 <button class="btn-cancel" @onclick="GoBack" disabled="@isSaving">Back</button>
 
                 <button class="btn-continue"
-                        disabled="@(!selected.Any() || isSaving)"
+                        disabled="@(selected.Count == 0 || isSaving)"
                         @onclick="Finish">
                     @(isSaving
                         ? "Creating..."
@@ -98,6 +116,8 @@
 
 @code {
     [Parameter] public int MallId { get; set; }
+
+    private const int MaxRestaurants = 3;
 
     private List<Restaurant>? restaurants;
     private Mall? mall;
@@ -120,21 +140,42 @@
 
     private void Toggle(int id)
     {
-        if (!selected.Add(id))
+        error = null;
+
+        if (selected.Contains(id))
+        {
             selected.Remove(id);
+            return;
+        }
+
+        if (selected.Count >= MaxRestaurants)
+        {
+            error = $"You can select up to {MaxRestaurants} restaurants only.";
+            return;
+        }
+
+        selected.Add(id);
     }
 
     private void GoBack() => Nav.NavigateTo("/grouporders/selectmall");
 
     private async Task Finish()
     {
-        // ✅ prevents double-click duplicate insert
         if (isSaving) return;
 
         error = null;
 
-        if (!selected.Any())
+        if (selected.Count < 1)
+        {
+            error = "Please select at least 1 restaurant.";
             return;
+        }
+
+        if (selected.Count > MaxRestaurants)
+        {
+            error = $"Please select at most {MaxRestaurants} restaurants.";
+            return;
+        }
 
         isSaving = true;
 
@@ -171,18 +212,20 @@
                 await ctx.SaveChangesAsync();
             }
 
-            // 3) Create GroupOrder
-            var code = GenerateCode();
+            // 3) Create GroupOrder (unique code + cutoff time)
+            var code = await GenerateUniqueCodeAsync(ctx);
 
+            var now = DateTime.UtcNow;
             var groupOrder = new GroupOrder
             {
                 GroupCode = code,
-                CreatedTime = DateTime.UtcNow,
+                CreatedTime = now,
                 Status = "Active",
+                ClosedTime = now.AddMinutes(60), // ✅ 60-min cutoff (change if you want)
                 MallId = MallId,
                 UserId = domainUser.Id,
-                DateCreated = DateTime.UtcNow,
-                DateUpdated = DateTime.UtcNow,
+                DateCreated = now,
+                DateUpdated = now,
                 CreatedBy = email,
                 UpdatedBy = email
             };
@@ -195,17 +238,16 @@
             {
                 GroupOrderId = groupOrder.Id,
                 UserId = domainUser.Id,
-                JoinTime = DateTime.UtcNow,
+                JoinTime = now,
                 Status = "Host",
-                DateCreated = DateTime.UtcNow,
-                DateUpdated = DateTime.UtcNow,
+                DateCreated = now,
+                DateUpdated = now,
                 CreatedBy = email,
                 UpdatedBy = email
             });
 
-            // 5) Add selected restaurants (distinct)
+            // 5) Add selected restaurants
             var restaurantIds = selected.Distinct().ToList();
-
             foreach (var rid in restaurantIds)
             {
                 ctx.GroupOrderRestaurant.Add(new GroupOrderRestaurant
@@ -217,7 +259,7 @@
 
             await ctx.SaveChangesAsync();
 
-            // 6) Store state (optional but useful)
+            // 6) Store state (optional)
             GroupOrderState.Clear();
             GroupOrderState.GroupOrderId = groupOrder.Id;
             GroupOrderState.GroupCode = groupOrder.GroupCode;
@@ -229,7 +271,6 @@
         }
         catch (Exception ex)
         {
-            // ✅ show real DB reason
             error = ex.InnerException?.Message ?? ex.Message;
         }
         finally
@@ -240,4 +281,17 @@
 
     private static string GenerateCode()
         => Guid.NewGuid().ToString("N")[..6].ToUpperInvariant();
+
+    private static async Task<string> GenerateUniqueCodeAsync(FoodDeliveryrestartContext ctx)
+    {
+        for (var attempt = 0; attempt < 10; attempt++)
+        {
+            var code = GenerateCode();
+            var exists = await ctx.GroupOrder.AnyAsync(g => g.GroupCode == code);
+            if (!exists) return code;
+        }
+
+        // Extremely unlikely fallback
+        return Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
+    }
 }

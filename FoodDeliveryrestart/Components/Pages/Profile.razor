@@ -63,11 +63,8 @@
 
                     @if (isAdmin)
                     {
-                        <button class="btn-ghost" @onclick="GoManageRestaurant">
-                            Manage Restaurant
-                        </button>
-                        <button class="btn-ghost" @onclick="GoManageMenuItem">
-                            Manage Menu Item
+                        <button class="btn-ghost" @onclick="GoAdminDashboard">
+                            Admin Dashboard
                         </button>
                     }
 
@@ -133,8 +130,7 @@
     private void GoRestaurants() => Nav.NavigateTo("/restaurants");
     private void GoMyGroupOrders() => Nav.NavigateTo("/grouporders/my");
     private void GoJoinGroup() => Nav.NavigateTo("/grouporders/join");
-    private void GoManageRestaurant() => Nav.NavigateTo("/admin/manage-restaurant");
-    private void GoManageMenuItem() => Nav.NavigateTo("/admin/manage-menu-item");
+    private void GoAdminDashboard() => Nav.NavigateTo("/admin/dashboard");
 
     // Identity default logout endpoint (works if Identity is set up normally)
     private void Logout() => Nav.NavigateTo("/auth/logout", forceLoad: true);

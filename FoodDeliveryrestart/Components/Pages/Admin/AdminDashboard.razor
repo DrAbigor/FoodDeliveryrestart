@@ -1,0 +1,312 @@
+@page "/admin/dashboard"
+@rendermode InteractiveServer
+
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Authorization
+@using FoodDeliveryrestart.Domain
+@inject IDbContextFactory<FoodDeliveryrestart.Data.FoodDeliveryrestartContext> DbFactory
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+
+@attribute [Authorize(Roles = "Administrator")]
+
+<PageTitle>Admin Dashboard</PageTitle>
+
+<div class="admin-manage-page">
+    <div class="admin-manage-container">
+        <header class="admin-manage-header">
+            <h1 class="admin-manage-title">Admin Dashboard</h1>
+        </header>
+
+        <div class="admin-action-buttons">
+            <button class="admin-create-btn" @onclick='() => Nav.NavigateTo("/restaurants/create")'>Create Restaurant</button>
+            <button class="admin-create-btn" @onclick='() => Nav.NavigateTo("/menuitems/create")'>Create Menu Item</button>
+        </div>
+
+        <div class="admin-manage-grid">
+            <section class="admin-section-card">
+                <div class="admin-section-header">
+                    <div class="admin-section-icon"><i class="bi bi-shop"></i></div>
+                    <h2 class="admin-section-title">Restaurants</h2>
+                    <span class="admin-stats-badge">Total <span class="admin-stats-number">@restaurants?.Count</span></span>
+                </div>
+
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Select restaurant</label>
+                    <select class="admin-form-select" @onchange="OnRestaurantChanged">
+                        <option value="">-- Choose restaurant --</option>
+                        @foreach (var r in restaurants)
+                        {
+                            <option value="@r.Id">@r.Name</option>
+                        }
+                    </select>
+                </div>
+
+                @if (selectedRestaurant is not null)
+                {
+                    <EditForm Model="selectedRestaurant" OnValidSubmit="SaveRestaurant">
+                        <DataAnnotationsValidator />
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">Name</label>
+                            <InputText class="form-input" @bind-Value="selectedRestaurant.Name" />
+                        </div>
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">Cuisine</label>
+                            <InputText class="form-input" @bind-Value="selectedRestaurant.CuisineType" />
+                        </div>
+
+                        <div class="admin-card-actions">
+                            <button class="admin-btn-primary" type="submit">Save Restaurant</button>
+                            <button class="admin-btn-secondary" type="button" @onclick='() => Nav.NavigateTo("/restaurants/create")'>Create New</button>
+                            <button class="admin-btn-secondary" type="button" @onclick="DeleteRestaurant">Delete</button>
+                        </div>
+                    </EditForm>
+                }
+                else
+                {
+                    <div class="admin-empty-state">
+                    <div class="admin-empty-icon"><i class="bi bi-building"></i></div>
+                        <div class="admin-empty-title">No restaurant selected</div>
+                        <div class="admin-empty-description">Choose a restaurant from the selector or create a new one.</div>
+                        <button class="admin-empty-action" @onclick='() => Nav.NavigateTo("/restaurants/create")'>Create Restaurant</button>
+                    </div>
+                }
+            </section>
+
+            <section class="admin-section-card">
+                <div class="admin-section-header">
+                    <div class="admin-section-icon"><i class="bi bi-list"></i></div>
+                    <h2 class="admin-section-title">Menu Items</h2>
+                    <span class="admin-stats-badge">Filtered <span class="admin-stats-number">@menuItems?.Count</span></span>
+                </div>
+
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Restaurant Filter</label>
+                    <select class="admin-form-select" @onchange="OnRestaurantFilterChanged">
+                        <option value="">-- All restaurants --</option>
+                        @foreach (var r in restaurants)
+                        {
+                            <option value="@r.Id">@r.Name</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Menu Items</label>
+                    <select class="admin-form-select" @onchange="OnMenuItemChanged">
+                        <option value="">-- Choose item --</option>
+                        @foreach (var m in menuItems)
+                        {
+                            <option value="@m.Id">@m.ItemName</option>
+                        }
+                    </select>
+                </div>
+
+                @if (selectedMenuItem is not null)
+                {
+                    <EditForm Model="selectedMenuItem" OnValidSubmit="SaveMenuItem">
+                        <DataAnnotationsValidator />
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">Item Name</label>
+                            <InputText class="form-input" @bind-Value="selectedMenuItem.ItemName" />
+                        </div>
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">Price</label>
+                            <InputNumber class="form-input" @bind-Value="selectedMenuItem.Price" />
+                        </div>
+
+                        <div class="admin-card-actions">
+                            <button class="admin-btn-primary" type="submit">Save Item</button>
+                            <button class="admin-btn-secondary" type="button" @onclick='() => Nav.NavigateTo("/menuitems/create")'>Create New</button>
+                            <button class="admin-btn-secondary" type="button" @onclick="DeleteMenuItem">Delete</button>
+                        </div>
+                    </EditForm>
+                }
+                else
+                {
+                    <div class="admin-empty-state">
+                    <div class="admin-empty-icon"><i class="bi bi-inbox"></i></div>
+                        <div class="admin-empty-title">No menu item selected</div>
+                        <div class="admin-empty-description">Filter menu items by restaurant or create a new one.</div>
+                        <button class="admin-empty-action" @onclick='() => Nav.NavigateTo("/menuitems/create")'>Create Menu Item</button>
+                    </div>
+                }
+            </section>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<Restaurant> restaurants = new();
+    private Restaurant? selectedRestaurant;
+
+    private List<MenuItem> menuItems = new();
+    private MenuItem? selectedMenuItem;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // subscribe to location changes so when user navigates away and back we refresh data
+        Nav.LocationChanged += OnLocationChanged;
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        try
+        {
+            await using var ctx = await DbFactory.CreateDbContextAsync();
+            restaurants = await ctx.Restaurant.OrderBy(r => r.Name).ToListAsync();
+            // don't load all menu items on init (can be large) - load on demand via filter
+            menuItems = new List<MenuItem>();
+            selectedRestaurant = null;
+            selectedMenuItem = null;
+            StateHasChanged();
+        }
+        catch
+        {
+            // ignore
+        }
+    }
+
+    private async void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        // if we're back on the admin dashboard, refresh data
+        try
+        {
+            var uri = new Uri(e.Location);
+            if (uri.AbsolutePath.TrimEnd('/').Equals("/admin/dashboard", StringComparison.OrdinalIgnoreCase))
+            {
+                await LoadDataAsync();
+            }
+        }
+        catch
+        {
+            // ignore
+        }
+    }
+
+    public void Dispose()
+    {
+        Nav.LocationChanged -= OnLocationChanged;
+    }
+
+    private async Task OnRestaurantChanged(ChangeEventArgs e)
+    {
+        selectedRestaurant = null;
+        if (int.TryParse(e?.Value?.ToString(), out var id))
+        {
+            await using var ctx = await DbFactory.CreateDbContextAsync();
+            selectedRestaurant = await ctx.Restaurant.FirstOrDefaultAsync(r => r.Id == id);
+        }
+    }
+
+    private async Task OnRestaurantFilterChanged(ChangeEventArgs e)
+    {
+        menuItems.Clear();
+        if (int.TryParse(e?.Value?.ToString(), out var id))
+        {
+            await using var ctx = await DbFactory.CreateDbContextAsync();
+            menuItems = await ctx.MenuItem.Where(m => m.RestaurantId == id).OrderBy(m => m.ItemName).ToListAsync();
+        }
+        else
+        {
+            await using var ctx = await DbFactory.CreateDbContextAsync();
+            menuItems = await ctx.MenuItem.OrderBy(m => m.ItemName).ToListAsync();
+        }
+    }
+
+    private async Task OnMenuItemChanged(ChangeEventArgs e)
+    {
+        selectedMenuItem = null;
+        if (int.TryParse(e?.Value?.ToString(), out var id))
+        {
+            await using var ctx = await DbFactory.CreateDbContextAsync();
+            selectedMenuItem = await ctx.MenuItem.FirstOrDefaultAsync(m => m.Id == id);
+        }
+    }
+
+    private async Task SaveRestaurant()
+    {
+        if (selectedRestaurant is null) return;
+        await using var ctx = await DbFactory.CreateDbContextAsync();
+        if (selectedRestaurant.Id == 0)
+        {
+            selectedRestaurant.DateCreated = DateTime.UtcNow;
+            selectedRestaurant.DateUpdated = DateTime.UtcNow;
+            ctx.Restaurant.Add(selectedRestaurant);
+        }
+        else
+        {
+            selectedRestaurant.DateUpdated = DateTime.UtcNow;
+            ctx.Attach(selectedRestaurant).State = EntityState.Modified;
+        }
+        await ctx.SaveChangesAsync();
+        restaurants = await ctx.Restaurant.OrderBy(r => r.Name).ToListAsync();
+    }
+
+    private async Task CreateRestaurant()
+    {
+        var r = new Restaurant { Name = "New Restaurant", CuisineType = "", DateCreated = DateTime.UtcNow, DateUpdated = DateTime.UtcNow };
+        await using var ctx = await DbFactory.CreateDbContextAsync();
+        ctx.Restaurant.Add(r);
+        await ctx.SaveChangesAsync();
+        restaurants = await ctx.Restaurant.OrderBy(r => r.Name).ToListAsync();
+        selectedRestaurant = restaurants.FirstOrDefault(x => x.Id == r.Id);
+    }
+
+    private async Task DeleteRestaurant()
+    {
+        if (selectedRestaurant is null) return;
+        var ok = await JS.InvokeAsync<bool>("confirm", $"Delete restaurant '{selectedRestaurant.Name}'?");
+        if (!ok) return;
+        await using var ctx = await DbFactory.CreateDbContextAsync();
+        ctx.Restaurant.Remove(selectedRestaurant);
+        await ctx.SaveChangesAsync();
+        restaurants = await ctx.Restaurant.OrderBy(r => r.Name).ToListAsync();
+        selectedRestaurant = null;
+        menuItems = await ctx.MenuItem.OrderBy(m => m.ItemName).ToListAsync();
+    }
+
+    private async Task SaveMenuItem()
+    {
+        if (selectedMenuItem is null) return;
+        await using var ctx = await DbFactory.CreateDbContextAsync();
+        if (selectedMenuItem.Id == 0)
+        {
+            selectedMenuItem.DateCreated = DateTime.UtcNow;
+            selectedMenuItem.DateUpdated = DateTime.UtcNow;
+            ctx.MenuItem.Add(selectedMenuItem);
+        }
+        else
+        {
+            selectedMenuItem.DateUpdated = DateTime.UtcNow;
+            ctx.Attach(selectedMenuItem).State = EntityState.Modified;
+        }
+        await ctx.SaveChangesAsync();
+        menuItems = await ctx.MenuItem.OrderBy(m => m.ItemName).ToListAsync();
+    }
+
+    private async Task CreateMenuItem()
+    {
+        if (!restaurants.Any()) return;
+        var restId = restaurants.First().Id;
+        var m = new MenuItem { RestaurantId = restId, ItemName = "New Item", Price = 0m, DateCreated = DateTime.UtcNow, DateUpdated = DateTime.UtcNow };
+        await using var ctx = await DbFactory.CreateDbContextAsync();
+        ctx.MenuItem.Add(m);
+        await ctx.SaveChangesAsync();
+        menuItems = await ctx.MenuItem.OrderBy(x => x.ItemName).ToListAsync();
+        selectedMenuItem = menuItems.FirstOrDefault(x => x.Id == m.Id);
+    }
+
+    private async Task DeleteMenuItem()
+    {
+        if (selectedMenuItem is null) return;
+        var ok = await JS.InvokeAsync<bool>("confirm", $"Delete menu item '{selectedMenuItem.ItemName}'?");
+        if (!ok) return;
+        await using var ctx = await DbFactory.CreateDbContextAsync();
+        ctx.MenuItem.Remove(selectedMenuItem);
+        await ctx.SaveChangesAsync();
+        menuItems = await ctx.MenuItem.OrderBy(x => x.ItemName).ToListAsync();
+        selectedMenuItem = null;
+    }
+}

@@ -151,7 +151,8 @@ app.MapPost("/auth/login", async (
 
     var roles = await userManager.GetRolesAsync(user);
     if (roles.Contains("Administrator"))
-        return Results.Redirect("/admin");
+        // Redirect admins to the new admin dashboard
+        return Results.Redirect("/admin/dashboard");
 
     return Results.Redirect("/profile");
 });

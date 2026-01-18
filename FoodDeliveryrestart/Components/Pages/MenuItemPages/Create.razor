@@ -1,4 +1,5 @@
 ﻿@page "/menuitems/create"
+@rendermode InteractiveServer
 @using Microsoft.EntityFrameworkCore
 @using FoodDeliveryrestart.Domain
 @inject IDbContextFactory<FoodDeliveryrestart.Data.FoodDeliveryrestartContext> DbFactory
@@ -6,95 +7,109 @@
 
 <PageTitle>Create</PageTitle>
 
-<h1>Create</h1>
+<div class="form-page">
+    <div class="form-card">
+        <h1>Create</h1>
+        <h2>Menu Item</h2>
 
-<h2>MenuItem</h2>
-<hr />
-<div class="row">
-    <div class="col-md-4">
         <EditForm method="post" Model="MenuItem" OnValidSubmit="AddMenuItem" FormName="create" Enhance>
             <DataAnnotationsValidator />
-            <ValidationSummary class="text-danger" role="alert"/>
-            <div class="mb-3">
-                <label for="itemname" class="form-label">ItemName:</label> 
-                <InputText id="itemname" @bind-Value="MenuItem.ItemName" class="form-control" /> 
-                <ValidationMessage For="() => MenuItem.ItemName" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="price" class="form-label">Price:</label> 
-                <InputNumber id="price" @bind-Value="MenuItem.Price" class="form-control" /> 
-                <ValidationMessage For="() => MenuItem.Price" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="description" class="form-label">Description:</label> 
-                <InputText id="description" @bind-Value="MenuItem.Description" class="form-control" /> 
-                <ValidationMessage For="() => MenuItem.Description" class="text-danger" /> 
+            <ValidationSummary class="form-error" />
+
+            <div class="form-section">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="itemname">Item Name</label>
+                        <InputText id="itemname" @bind-Value="MenuItem.ItemName" />
+                        <ValidationMessage For="() => MenuItem.ItemName" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="price">Price</label>
+                        <InputNumber id="price" @bind-Value="MenuItem.Price" />
+                        <ValidationMessage For="() => MenuItem.Price" />
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <InputText id="description" @bind-Value="MenuItem.Description" />
+                        <ValidationMessage For="() => MenuItem.Description" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="restaurantid">Restaurant</label>
+                        <select id="restaurantid" @bind="MenuItem.RestaurantId">
+                            <option value="0">-- Select restaurant --</option>
+                            @if (restaurants != null)
+                            {
+                                @foreach (var r in restaurants)
+                                {
+                                    <option value="@r.Id">@r.Name (@(r.Mall?.MallName ?? ""))</option>
+                                }
+                            }
+                        </select>
+                        <ValidationMessage For="() => MenuItem.RestaurantId" />
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="calories">Calories (kcal)</label>
+                        <InputNumber id="calories" @bind-Value="MenuItem.Calories" />
+                        <ValidationMessage For="() => MenuItem.Calories" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="carbs">Carbohydrates (g)</label>
+                        <InputNumber id="carbs" @bind-Value="MenuItem.CarbohydratesG" />
+                        <ValidationMessage For="() => MenuItem.CarbohydratesG" />
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="protein">Protein (g)</label>
+                        <InputNumber id="protein" @bind-Value="MenuItem.ProteinG" />
+                        <ValidationMessage For="() => MenuItem.ProteinG" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fat">Fat (g)</label>
+                        <InputNumber id="fat" @bind-Value="MenuItem.FatG" />
+                        <ValidationMessage For="() => MenuItem.FatG" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="allergens">Allergens</label>
+                    <InputText id="allergens" @bind-Value="MenuItem.Allergens" />
+                    <ValidationMessage For="() => MenuItem.Allergens" />
+                </div>
             </div>
 
-            <!-- explicit nutrition fields -->
-            <div class="mb-3">
-                <label for="calories" class="form-label">Calories (kcal):</label>
-                <InputNumber id="calories" @bind-Value="MenuItem.Calories" class="form-control" />
-                <ValidationMessage For="() => MenuItem.Calories" class="text-danger" />
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">Create</button>
+                <button type="button" class="btn-secondary" @onclick='() => NavigationManager.NavigateTo("/admin/dashboard")'>Cancel</button>
             </div>
-            <div class="mb-3">
-                <label for="carbs" class="form-label">Carbohydrates (g):</label>
-                <InputNumber id="carbs" @bind-Value="MenuItem.CarbohydratesG" class="form-control" />
-                <ValidationMessage For="() => MenuItem.CarbohydratesG" class="text-danger" />
-            </div>
-            <div class="mb-3">
-                <label for="protein" class="form-label">Protein (g):</label>
-                <InputNumber id="protein" @bind-Value="MenuItem.ProteinG" class="form-control" />
-                <ValidationMessage For="() => MenuItem.ProteinG" class="text-danger" />
-            </div>
-            <div class="mb-3">
-                <label for="fat" class="form-label">Fat (g):</label>
-                <InputNumber id="fat" @bind-Value="MenuItem.FatG" class="form-control" />
-                <ValidationMessage For="() => MenuItem.FatG" class="text-danger" />
-            </div>
-            <div class="mb-3">
-                <label for="allergens" class="form-label">Allergens:</label>
-                <InputText id="allergens" @bind-Value="MenuItem.Allergens" class="form-control" />
-                <ValidationMessage For="() => MenuItem.Allergens" class="text-danger" />
-            </div>
-
-            <div class="mb-3">
-                <label for="restaurantid" class="form-label">RestaurantId:</label> 
-                <InputNumber id="restaurantid" @bind-Value="MenuItem.RestaurantId" class="form-control" /> 
-                <ValidationMessage For="() => MenuItem.RestaurantId" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="datecreated" class="form-label">DateCreated:</label> 
-                <InputDate id="datecreated" @bind-Value="MenuItem.DateCreated" class="form-control" /> 
-                <ValidationMessage For="() => MenuItem.DateCreated" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="dateupdated" class="form-label">DateUpdated:</label> 
-                <InputDate id="dateupdated" @bind-Value="MenuItem.DateUpdated" class="form-control" /> 
-                <ValidationMessage For="() => MenuItem.DateUpdated" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="createdby" class="form-label">CreatedBy:</label> 
-                <InputText id="createdby" @bind-Value="MenuItem.CreatedBy" class="form-control" /> 
-                <ValidationMessage For="() => MenuItem.CreatedBy" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="updatedby" class="form-label">UpdatedBy:</label> 
-                <InputText id="updatedby" @bind-Value="MenuItem.UpdatedBy" class="form-control" /> 
-                <ValidationMessage For="() => MenuItem.UpdatedBy" class="text-danger" /> 
-            </div>        
-            <button type="submit" class="btn btn-primary">Create</button>
         </EditForm>
-    </div>
-</div>
 
-<div>
-    <a href="/menuitems">Back to List</a>
+        <a class="back-link" href="/admin/dashboard">Back to Dashboard</a>
+    </div>
 </div>
 
 @code {
     [SupplyParameterFromForm]
     private MenuItem MenuItem { get; set; } = new();
+
+    private List<Restaurant>? restaurants;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await using var ctx = await DbFactory.CreateDbContextAsync();
+        restaurants = await ctx.Restaurant.OrderBy(r => r.Name).ToListAsync();
+    }
 
     // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
     private async Task AddMenuItem()
@@ -102,6 +117,6 @@
         using var context = DbFactory.CreateDbContext();
         context.MenuItem.Add(MenuItem);
         await context.SaveChangesAsync();
-        NavigationManager.NavigateTo("/menuitems");
+        NavigationManager.NavigateTo("/admin/dashboard");
     }
 }

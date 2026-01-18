@@ -1,4 +1,5 @@
 ﻿@page "/orders/{OrderId:int}"
+@rendermode InteractiveServer
 @using FoodDeliveryrestart.Domain
 @using Microsoft.EntityFrameworkCore
 @inject IDbContextFactory<FoodDeliveryrestart.Data.FoodDeliveryrestartContext> DbFactory
@@ -19,26 +20,30 @@
     else if (!string.IsNullOrWhiteSpace(Error))
     {
         <div class="alert alert-danger">@Error</div>
-        <button class="btn btn-outline-secondary" @onclick="GoRestaurants">Back to restaurants</button>
+        <div class="order-actions">
+            <button class="action-btn secondary" @onclick="GoRestaurants">Back to restaurants</button>
+        </div>
     }
     else if (Order is null)
     {
         <div class="cardish">
             <p>Order not found.</p>
-            <button class="btn btn-outline-secondary" @onclick="GoRestaurants">Back to restaurants</button>
+            <div class="order-actions">
+                <button class="action-btn secondary" @onclick="GoRestaurants">Back to restaurants</button>
+            </div>
         </div>
     }
     else
     {
         <div class="cardish mb-3">
             <div class="order-top">
-                <div>
+                <div class="order-meta">
                     <div><strong>Order ID:</strong> @Order.Id</div>
                     <div><strong>Status:</strong> @Order.Status</div>
                     <div><strong>Date:</strong> @Order.DateTime.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</div>
                 </div>
 
-                <div class="right">
+                <div class="order-summary">
                     <div class="total-value">@Order.TotalAmount.ToString("0.00")</div>
                     <div class="muted">Total paid</div>
 
@@ -64,13 +69,13 @@
             else
             {
                 <div class="table-wrap">
-                    <table class="table">
+                    <table class="order-table">
                         <thead>
                             <tr>
                                 <th>Item</th>
-                                <th style="width:110px;">Qty</th>
-                                <th style="width:140px;">Price</th>
-                                <th style="width:140px;">Subtotal</th>
+                                <th class="num">Qty</th>
+                                <th class="num">Price</th>
+                                <th class="num">Subtotal</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -78,9 +83,9 @@
                             {
                                 <tr>
                                     <td>@row.ItemName</td>
-                                    <td>@row.Quantity</td>
-                                    <td>@row.ItemPrice.ToString("0.00")</td>
-                                    <td>@row.Subtotal.ToString("0.00")</td>
+                                    <td class="num">@row.Quantity</td>
+                                    <td class="num">@row.ItemPrice.ToString("0.00")</td>
+                                    <td class="num">@row.Subtotal.ToString("0.00")</td>
                                 </tr>
                             }
                         </tbody>
@@ -93,16 +98,18 @@
         {
             <div class="cardish mt-3">
                 <h4 class="mb-2">Payment Method</h4>
-                <div><strong>Type:</strong> @PaymentMethod.CardType</div>
-                <div><strong>Name:</strong> @PaymentMethod.CardHolderName</div>
-                <div><strong>Expiry:</strong> @PaymentMethod.ExpiryMonth/@PaymentMethod.ExpiryYear</div>
-                <div class="muted">Card number is not stored for security reasons.</div>
+                <div class="pm-grid">
+                    <div><strong>Type:</strong> @PaymentMethod.CardType</div>
+                    <div><strong>Name:</strong> @PaymentMethod.CardHolderName</div>
+                    <div><strong>Expiry:</strong> @PaymentMethod.ExpiryMonth/@PaymentMethod.ExpiryYear</div>
+                </div>
+                <div class="muted pm-note">Card number is not stored for security reasons.</div>
             </div>
         }
 
-        <div class="mt-4">
-            <button class="btn btn-primary" @onclick="GoRestaurants">Order more</button>
-            <button class="btn btn-outline-secondary ms-2" @onclick="GoCart">Back to cart</button>
+        <div class="order-actions">
+            <button class="action-btn primary" @onclick="GoRestaurants">Order more</button>
+            <button class="action-btn secondary" @onclick="GoCart">Back to cart</button>
         </div>
     }
 </div>

@@ -1,0 +1,300 @@
+﻿/* Page layout */
+.lobby-page{
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 22px 16px 40px 16px;
+}
+
+.lobby-header{
+    display:flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.lobby-title{
+    margin: 0;
+    font-size: 1.7rem;
+    font-weight: 800;
+    letter-spacing: -0.2px;
+}
+
+.lobby-subtitle{
+    margin: 6px 0 0 0;
+    opacity: .78;
+}
+
+.lobby-actions{
+    display:flex;
+    gap: 10px;
+}
+
+/* Shared components */
+.cardish{
+    border-radius: 18px;
+    padding: 18px;
+    background: rgba(255,255,255,0.96);
+    border: 1px solid rgba(0,0,0,0.08);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+}
+
+.muted{ opacity: .75; }
+.small{ font-size: .9rem; }
+.mt-10{ margin-top: 10px; }
+
+.summary-grid{
+    display:grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+}
+
+@media (min-width: 900px){
+    .summary-grid{
+        grid-template-columns: 1.2fr 1fr;
+        align-items: start;
+    }
+    .summary-card{
+        grid-column: 1 / -1;
+    }
+}
+
+/* Buttons */
+.btn-primary{
+    border: none;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-weight: 700;
+    cursor: pointer;
+    background: #ff7a18;
+    color: #fff;
+    box-shadow: 0 10px 18px rgba(255, 122, 24, 0.25);
+}
+
+.btn-primary:hover{ filter: brightness(0.98); }
+.btn-primary:active{ transform: translateY(1px); }
+
+.btn-outline{
+    display:inline-block;
+    text-decoration: none;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-weight: 700;
+    border: 1px solid rgba(0,0,0,0.18);
+    color: #111;
+    background: rgba(255,255,255,0.85);
+}
+
+.btn-outline:hover{ background: rgba(255,255,255,1); }
+
+/* Summary */
+.summary-top{
+    display:flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.label{
+    font-size: .82rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    opacity: .6;
+    margin-bottom: 6px;
+}
+
+.code-row{
+    display:flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.code-badge{
+    display:inline-block;
+    padding: 10px 14px;
+    border-radius: 14px;
+    background: #111;
+    color: #fff;
+    font-weight: 800;
+    letter-spacing: .14em;
+}
+
+.hint{
+    margin-top: 8px;
+    opacity: .65;
+    font-size: .92rem;
+}
+
+.mall-name{
+    font-weight: 800;
+    font-size: 1.05rem;
+}
+
+/* Status pills */
+.status-pill{
+    display:inline-flex;
+    align-items:center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-weight: 800;
+    font-size: .92rem;
+    border: 1px solid rgba(0,0,0,0.12);
+}
+
+.status-active{
+    background: rgba(34,197,94,0.14);
+}
+
+.status-locked{
+    background: rgba(234,179,8,0.18);
+}
+
+.status-completed{
+    background: rgba(59,130,246,0.15);
+}
+
+.status-default{
+    background: rgba(148,163,184,0.18);
+}
+
+/* Section titles */
+.section-title-row{
+    display:flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.section-title{
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 800;
+}
+
+.count-pill{
+    display:inline-flex;
+    min-width: 30px;
+    height: 28px;
+    padding: 0 10px;
+    align-items:center;
+    justify-content:center;
+    border-radius: 999px;
+    font-weight: 800;
+    border: 1px solid rgba(0,0,0,0.10);
+    background: rgba(0,0,0,0.03);
+}
+
+/* Restaurant pills */
+.pill-wrap{
+    display:flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.pill{
+    border: 1px solid rgba(0,0,0,0.12);
+    background: rgba(255,255,255,0.85);
+    border-radius: 999px;
+    padding: 10px 14px;
+    cursor:pointer;
+    font-weight: 800;
+    display:inline-flex;
+    gap: 10px;
+    align-items:center;
+}
+
+.pill:hover{
+    background: rgba(255,255,255,1);
+}
+
+.pill-arrow{
+    opacity: .6;
+    font-weight: 900;
+}
+
+/* Members */
+.member-list{
+    display:flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.member-row{
+    display:flex;
+    gap: 12px;
+    align-items: center;
+    padding: 10px 12px;
+    border-radius: 14px;
+    border: 1px solid rgba(0,0,0,0.08);
+    background: rgba(0,0,0,0.015);
+}
+
+.member-avatar{
+    width: 38px;
+    height: 38px;
+    border-radius: 999px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight: 900;
+    background: rgba(255,122,24,0.14);
+    border: 1px solid rgba(255,122,24,0.20);
+}
+
+.member-info{
+    flex: 1;
+    min-width: 0;
+}
+
+.member-email{
+    font-weight: 900;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.member-badges{
+    display:flex;
+    gap: 8px;
+    align-items:center;
+}
+
+/* Role pills */
+.role-pill{
+    display:inline-flex;
+    align-items:center;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-weight: 900;
+    font-size: .85rem;
+    border: 1px solid rgba(0,0,0,0.10);
+    background: rgba(0,0,0,0.03);
+}
+
+.role-host{
+    background: rgba(255,122,24,0.18);
+}
+
+.role-member{
+    background: rgba(59,130,246,0.12);
+}
+
+.role-default{
+    background: rgba(148,163,184,0.18);
+}
+
+/* Loading skeleton */
+.skeleton-line{
+    height: 14px;
+    border-radius: 10px;
+    background: rgba(0,0,0,0.08);
+    margin-bottom: 10px;
+}
+
+.w-40{ width: 40%; }
+.w-55{ width: 55%; }
+.w-70{ width: 70%; }

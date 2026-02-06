@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace FoodDeliveryrestart.Migrations
 {
     /// <inheritdoc />
-    public partial class regenMigration : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -90,6 +90,30 @@ namespace FoodDeliveryrestart.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_User", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Voucher",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Code = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DiscountType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DiscountValue = table.Column<decimal>(type: "decimal(10,2)", precision: 10, scale: 2, nullable: false),
+                    MinimumOrder = table.Column<decimal>(type: "decimal(10,2)", precision: 10, scale: 2, nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    ExpiryDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DateUpdated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Voucher", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -404,7 +428,7 @@ namespace FoodDeliveryrestart.Migrations
                         column: x => x.RestaurantId,
                         principalTable: "Restaurant",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.NoAction);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -508,6 +532,40 @@ namespace FoodDeliveryrestart.Migrations
                         onDelete: ReferentialAction.Restrict);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "UserVoucher",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    VoucherId = table.Column<int>(type: "int", nullable: false),
+                    ClaimedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsUsed = table.Column<bool>(type: "bit", nullable: false),
+                    UsedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    OrderId = table.Column<int>(type: "int", nullable: true),
+                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DateUpdated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserVoucher", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_UserVoucher_Order_OrderId",
+                        column: x => x.OrderId,
+                        principalTable: "Order",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_UserVoucher_Voucher_VoucherId",
+                        column: x => x.VoucherId,
+                        principalTable: "Voucher",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.InsertData(
                 table: "AspNetRoles",
                 columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
@@ -520,31 +578,40 @@ namespace FoodDeliveryrestart.Migrations
             migrationBuilder.InsertData(
                 table: "AspNetUsers",
                 columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "Email", "EmailConfirmed", "FirstName", "LastName", "LockoutEnabled", "LockoutEnd", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "TwoFactorEnabled", "UserName" },
-                values: new object[] { "3781efa7-66dc-47f0-860f-e506d04102e4", 0, "a0f548ae-6aaf-4ba0-905f-87a107bb0138", "admin@localhost.com", true, "Admin", "User", false, null, "ADMIN@LOCALHOST.COM", "ADMIN@LOCALHOST.COM", "AQAAAAIAAYagAAAAEH+j/FvZxxy4R/JPwvsE49RETcNlGMPfPSoKxJmyTjCpKx4cQMaqRe/SHxDLsBlOcw==", null, false, "2acbd5a2-fd4b-4782-b701-533216d21390", false, "admin@localhost.com" });
+                values: new object[] { "3781efa7-66dc-47f0-860f-e506d04102e4", 0, "726b05e2-889d-4e49-91ed-e09836580469", "admin@localhost.com", true, "Admin", "User", false, null, "ADMIN@LOCALHOST.COM", "ADMIN@LOCALHOST.COM", "AQAAAAIAAYagAAAAEOCR54w9YNZ1DEZglTTFF3sQ3ZXbSIKFJuf+3NtvKQ0jLSKHLByenlN/lLi9cbDGvA==", null, false, "e4db6840-91ab-4cdc-af8d-c2d07a60bfad", false, "admin@localhost.com" });
 
             migrationBuilder.InsertData(
                 table: "Mall",
                 columns: new[] { "Id", "Address", "CreatedBy", "DateCreated", "DateUpdated", "MallName", "UpdatedBy" },
                 values: new object[,]
                 {
-                    { 1, "4 Tampines Central 5, Singapore 529510", "System", new DateTime(2026, 1, 18, 10, 58, 48, 642, DateTimeKind.Local).AddTicks(7012), new DateTime(2026, 1, 18, 10, 58, 48, 642, DateTimeKind.Local).AddTicks(7025), "Tampines Mall", "System" },
-                    { 2, "1 HarbourFront Walk, Singapore 098585", "System", new DateTime(2026, 1, 18, 10, 58, 48, 642, DateTimeKind.Local).AddTicks(7027), new DateTime(2026, 1, 18, 10, 58, 48, 642, DateTimeKind.Local).AddTicks(7027), "Vivo City", "System" },
-                    { 3, "181 Orchard Rd, Singapore 238896", "System", new DateTime(2026, 1, 18, 10, 58, 48, 642, DateTimeKind.Local).AddTicks(7028), new DateTime(2026, 1, 18, 10, 58, 48, 642, DateTimeKind.Local).AddTicks(7029), "Orchard Central", "System" }
+                    { 1, "4 Tampines Central 5, Singapore 529510", "System", new DateTime(2026, 2, 3, 14, 28, 48, 134, DateTimeKind.Local).AddTicks(4749), new DateTime(2026, 2, 3, 14, 28, 48, 134, DateTimeKind.Local).AddTicks(4762), "Tampines Mall", "System" },
+                    { 2, "1 HarbourFront Walk, Singapore 098585", "System", new DateTime(2026, 2, 3, 14, 28, 48, 134, DateTimeKind.Local).AddTicks(4763), new DateTime(2026, 2, 3, 14, 28, 48, 134, DateTimeKind.Local).AddTicks(4763), "Vivo City", "System" },
+                    { 3, "181 Orchard Rd, Singapore 238896", "System", new DateTime(2026, 2, 3, 14, 28, 48, 134, DateTimeKind.Local).AddTicks(4765), new DateTime(2026, 2, 3, 14, 28, 48, 134, DateTimeKind.Local).AddTicks(4765), "Orchard Central", "System" }
                 });
 
             migrationBuilder.InsertData(
                 table: "User",
                 columns: new[] { "Id", "CreatedBy", "DateCreated", "DateUpdated", "Email", "Name", "Password", "PhoneNumber", "UpdatedBy" },
-                values: new object[] { 1, "System", new DateTime(2026, 1, 18, 2, 58, 48, 642, DateTimeKind.Utc).AddTicks(5131), new DateTime(2026, 1, 18, 2, 58, 48, 642, DateTimeKind.Utc).AddTicks(5135), "system@local", "System", "changeme", null, "System" });
+                values: new object[] { 1, "System", new DateTime(2026, 2, 3, 6, 28, 48, 134, DateTimeKind.Utc).AddTicks(3344), new DateTime(2026, 2, 3, 6, 28, 48, 134, DateTimeKind.Utc).AddTicks(3351), "system@local", "System", "changeme", null, "System" });
+
+            migrationBuilder.InsertData(
+                table: "Voucher",
+                columns: new[] { "Id", "Code", "CreatedBy", "DateCreated", "DateUpdated", "Description", "DiscountType", "DiscountValue", "ExpiryDate", "IsActive", "MinimumOrder", "Name", "UpdatedBy" },
+                values: new object[,]
+                {
+                    { 1, "SAVE20", "System", new DateTime(2026, 2, 3, 6, 28, 48, 135, DateTimeKind.Utc).AddTicks(7762), new DateTime(2026, 2, 3, 6, 28, 48, 135, DateTimeKind.Utc).AddTicks(7763), "Get 20% off your order! Perfect for first-time customers.", "Percentage", 20m, null, true, null, "20% OFF for New Users", "System" },
+                    { 2, "FREEDELIVERY15", "System", new DateTime(2026, 2, 3, 6, 28, 48, 135, DateTimeKind.Utc).AddTicks(7769), new DateTime(2026, 2, 3, 6, 28, 48, 135, DateTimeKind.Utc).AddTicks(7770), "Enjoy free delivery when you order $15 or more.", "FreeDelivery", 0m, null, true, 15m, "Free Delivery For Orders Above $15!", "System" }
+                });
 
             migrationBuilder.InsertData(
                 table: "PaymentMethod",
                 columns: new[] { "Id", "CardHolderName", "CardType", "CreatedBy", "DateCreated", "DateUpdated", "ExpiryMonth", "ExpiryYear", "UpdatedBy", "UserId" },
                 values: new object[,]
                 {
-                    { 1, "Seed User", "Visa", "System", new DateTime(2026, 1, 18, 2, 58, 48, 642, DateTimeKind.Utc).AddTicks(6828), new DateTime(2026, 1, 18, 2, 58, 48, 642, DateTimeKind.Utc).AddTicks(6829), 12, 2026, "System", 1 },
-                    { 2, "Seed User", "MasterCard", "System", new DateTime(2026, 1, 18, 2, 58, 48, 642, DateTimeKind.Utc).AddTicks(6832), new DateTime(2026, 1, 18, 2, 58, 48, 642, DateTimeKind.Utc).AddTicks(6832), 10, 2025, "System", 1 },
-                    { 3, "Seed User", "AMEX", "System", new DateTime(2026, 1, 18, 2, 58, 48, 642, DateTimeKind.Utc).AddTicks(6834), new DateTime(2026, 1, 18, 2, 58, 48, 642, DateTimeKind.Utc).AddTicks(6835), 6, 2027, "System", 1 }
+                    { 1, "Seed User", "Visa", "System", new DateTime(2026, 2, 3, 6, 28, 48, 134, DateTimeKind.Utc).AddTicks(4597), new DateTime(2026, 2, 3, 6, 28, 48, 134, DateTimeKind.Utc).AddTicks(4597), 12, 2026, "System", 1 },
+                    { 2, "Seed User", "MasterCard", "System", new DateTime(2026, 2, 3, 6, 28, 48, 134, DateTimeKind.Utc).AddTicks(4601), new DateTime(2026, 2, 3, 6, 28, 48, 134, DateTimeKind.Utc).AddTicks(4601), 10, 2025, "System", 1 },
+                    { 3, "Seed User", "AMEX", "System", new DateTime(2026, 2, 3, 6, 28, 48, 134, DateTimeKind.Utc).AddTicks(4603), new DateTime(2026, 2, 3, 6, 28, 48, 134, DateTimeKind.Utc).AddTicks(4603), 6, 2027, "System", 1 }
                 });
 
             migrationBuilder.InsertData(
@@ -552,15 +619,15 @@ namespace FoodDeliveryrestart.Migrations
                 columns: new[] { "Id", "BusyLevel", "CreatedBy", "CuisineType", "DateCreated", "DateUpdated", "ImageUrl", "LocationWithinMall", "MallId", "Name", "OperatingHours", "Rating", "UpdatedBy" },
                 values: new object[,]
                 {
-                    { 1, 1, "Seed", "Fast Food", new DateTime(2026, 1, 18, 10, 58, 48, 642, DateTimeKind.Local).AddTicks(7149), new DateTime(2026, 1, 18, 10, 58, 48, 642, DateTimeKind.Local).AddTicks(7150), "https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/All_American_Food_Logo.svg/1024px-All_American_Food_Logo.svg.png", "1-24", 1, "A&W", "10am-10pm", 4.4m, "Seed" },
-                    { 2, 2, "Seed", "Western", new DateTime(2026, 1, 18, 10, 58, 48, 642, DateTimeKind.Local).AddTicks(7152), new DateTime(2026, 1, 18, 10, 58, 48, 642, DateTimeKind.Local).AddTicks(7153), "https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1600&q=70", "1-68", 1, "Burger Lab", "10am-10pm", 4.6m, "Seed" },
-                    { 3, 1, "Seed", "Fast Food", new DateTime(2026, 1, 18, 10, 58, 48, 642, DateTimeKind.Local).AddTicks(7155), new DateTime(2026, 1, 18, 10, 58, 48, 642, DateTimeKind.Local).AddTicks(7155), "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Jollibee_Foods_Corporation_logo.png/1024px-Jollibee_Foods_Corporation_logo.png", "8-90", 1, "Jollibee", "10am-10pm", 4.7m, "Seed" },
-                    { 4, 2, "Seed", "Fast Food", new DateTime(2026, 1, 18, 10, 58, 48, 642, DateTimeKind.Local).AddTicks(7157), new DateTime(2026, 1, 18, 10, 58, 48, 642, DateTimeKind.Local).AddTicks(7158), "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/KFC_logo.svg/1024px-KFC_logo.svg.png", "8-89", 1, "KFC", "24/7", 4.2m, "Seed" },
-                    { 5, 2, "Seed", "Fast Food", new DateTime(2026, 1, 18, 10, 58, 48, 642, DateTimeKind.Local).AddTicks(7160), new DateTime(2026, 1, 18, 10, 58, 48, 642, DateTimeKind.Local).AddTicks(7160), "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/McDonald%27s_logo.svg/1024px-McDonald%27s_logo.svg.png", "8-88", 1, "McDonald's", "24/7", 4.3m, "Seed" },
-                    { 6, 0, "Seed", "Western", new DateTime(2026, 1, 18, 10, 58, 48, 642, DateTimeKind.Local).AddTicks(7162), new DateTime(2026, 1, 18, 10, 58, 48, 642, DateTimeKind.Local).AddTicks(7163), "https://images.unsplash.com/photo-1521389508051-d7ffb5dc8f6f?auto=format&fit=crop&w=1600&q=70", "1-67", 1, "Pasta Corner", "24/7", 4.1m, "Seed" },
-                    { 7, 1, "Seed", "Western Food", new DateTime(2026, 1, 18, 10, 58, 48, 642, DateTimeKind.Local).AddTicks(7164), new DateTime(2026, 1, 18, 10, 58, 48, 642, DateTimeKind.Local).AddTicks(7165), "https://images.unsplash.com/photo-1548365328-8b849e6a1e05?auto=format&fit=crop&w=1600&q=70", "1-66", 1, "Pizza House", "24/7", 4.5m, "Seed" },
-                    { 8, 1, "Seed", "Thai Food", new DateTime(2026, 1, 18, 10, 58, 48, 642, DateTimeKind.Local).AddTicks(7167), new DateTime(2026, 1, 18, 10, 58, 48, 642, DateTimeKind.Local).AddTicks(7167), "https://images.unsplash.com/photo-1559847844-5315695dadae?auto=format&fit=crop&w=1600&q=70", "1-25", 1, "Sanook Kitchen", "10am-10pm", 4.6m, "Seed" },
-                    { 9, 0, "Seed", "Dessert", new DateTime(2026, 1, 18, 10, 58, 48, 642, DateTimeKind.Local).AddTicks(7169), new DateTime(2026, 1, 18, 10, 58, 48, 642, DateTimeKind.Local).AddTicks(7170), "https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&w=1600&q=70", "1-23", 1, "Yochi", "10am-10pm", 4.8m, "Seed" }
+                    { 1, 1, "Seed", "Fast Food", new DateTime(2026, 2, 3, 14, 28, 48, 134, DateTimeKind.Local).AddTicks(4913), new DateTime(2026, 2, 3, 14, 28, 48, 134, DateTimeKind.Local).AddTicks(4914), "https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/All_American_Food_Logo.svg/1024px-All_American_Food_Logo.svg.png", "1-24", 1, "A&W", "10am-10pm", 4.4m, "Seed" },
+                    { 2, 2, "Seed", "Western", new DateTime(2026, 2, 3, 14, 28, 48, 134, DateTimeKind.Local).AddTicks(4917), new DateTime(2026, 2, 3, 14, 28, 48, 134, DateTimeKind.Local).AddTicks(4918), "https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1600&q=70", "1-68", 1, "Burger Lab", "10am-10pm", 4.6m, "Seed" },
+                    { 3, 1, "Seed", "Fast Food", new DateTime(2026, 2, 3, 14, 28, 48, 134, DateTimeKind.Local).AddTicks(4920), new DateTime(2026, 2, 3, 14, 28, 48, 134, DateTimeKind.Local).AddTicks(4920), "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Jollibee_Foods_Corporation_logo.png/1024px-Jollibee_Foods_Corporation_logo.png", "8-90", 1, "Jollibee", "10am-10pm", 4.7m, "Seed" },
+                    { 4, 2, "Seed", "Fast Food", new DateTime(2026, 2, 3, 14, 28, 48, 134, DateTimeKind.Local).AddTicks(4922), new DateTime(2026, 2, 3, 14, 28, 48, 134, DateTimeKind.Local).AddTicks(4922), "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/KFC_logo.svg/1024px-KFC_logo.svg.png", "8-89", 2, "KFC", "24/7", 4.2m, "Seed" },
+                    { 5, 2, "Seed", "Fast Food", new DateTime(2026, 2, 3, 14, 28, 48, 134, DateTimeKind.Local).AddTicks(4924), new DateTime(2026, 2, 3, 14, 28, 48, 134, DateTimeKind.Local).AddTicks(4925), "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/McDonald%27s_logo.svg/1024px-McDonald%27s_logo.svg.png", "8-88", 2, "McDonald's", "24/7", 4.3m, "Seed" },
+                    { 6, 0, "Seed", "Western", new DateTime(2026, 2, 3, 14, 28, 48, 134, DateTimeKind.Local).AddTicks(5050), new DateTime(2026, 2, 3, 14, 28, 48, 134, DateTimeKind.Local).AddTicks(5050), "https://images.unsplash.com/photo-1521389508051-d7ffb5dc8f6f?auto=format&fit=crop&w=1600&q=70", "1-67", 2, "Pasta Corner", "24/7", 4.1m, "Seed" },
+                    { 7, 1, "Seed", "Western Food", new DateTime(2026, 2, 3, 14, 28, 48, 134, DateTimeKind.Local).AddTicks(5052), new DateTime(2026, 2, 3, 14, 28, 48, 134, DateTimeKind.Local).AddTicks(5053), "https://images.unsplash.com/photo-1548365328-8b849e6a1e05?auto=format&fit=crop&w=1600&q=70", "1-66", 3, "Pizza House", "24/7", 4.5m, "Seed" },
+                    { 8, 1, "Seed", "Thai Food", new DateTime(2026, 2, 3, 14, 28, 48, 134, DateTimeKind.Local).AddTicks(5055), new DateTime(2026, 2, 3, 14, 28, 48, 134, DateTimeKind.Local).AddTicks(5055), "https://images.unsplash.com/photo-1559847844-5315695dadae?auto=format&fit=crop&w=1600&q=70", "1-25", 3, "Sanook Kitchen", "10am-10pm", 4.6m, "Seed" },
+                    { 9, 0, "Seed", "Dessert", new DateTime(2026, 2, 3, 14, 28, 48, 134, DateTimeKind.Local).AddTicks(5057), new DateTime(2026, 2, 3, 14, 28, 48, 134, DateTimeKind.Local).AddTicks(5058), "https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&w=1600&q=70", "1-23", 3, "Yochi", "10am-10pm", 4.8m, "Seed" }
                 });
 
             migrationBuilder.InsertData(
@@ -720,6 +787,16 @@ namespace FoodDeliveryrestart.Migrations
                 name: "IX_Restaurant_MallId",
                 table: "Restaurant",
                 column: "MallId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserVoucher_OrderId",
+                table: "UserVoucher",
+                column: "OrderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserVoucher_VoucherId",
+                table: "UserVoucher",
+                column: "VoucherId");
         }
 
         /// <inheritdoc />
@@ -756,6 +833,9 @@ namespace FoodDeliveryrestart.Migrations
                 name: "Payment");
 
             migrationBuilder.DropTable(
+                name: "UserVoucher");
+
+            migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
@@ -765,10 +845,13 @@ namespace FoodDeliveryrestart.Migrations
                 name: "MenuItem");
 
             migrationBuilder.DropTable(
+                name: "PaymentMethod");
+
+            migrationBuilder.DropTable(
                 name: "Order");
 
             migrationBuilder.DropTable(
-                name: "PaymentMethod");
+                name: "Voucher");
 
             migrationBuilder.DropTable(
                 name: "Restaurant");

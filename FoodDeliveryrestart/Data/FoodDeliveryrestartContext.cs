@@ -58,7 +58,7 @@ namespace FoodDeliveryrestart.Data
                 .HasOne(x => x.Restaurant)
                 .WithMany()
                 .HasForeignKey(x => x.RestaurantId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
             // ==========================================
             // FIX: multiple cascade paths (SQL Server)

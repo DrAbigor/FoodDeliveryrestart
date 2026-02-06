@@ -1,3 +1,4 @@
+@page "/uservoucherpages/myvouchers"
 @page "/myvouchers"
 @rendermode InteractiveServer
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
@@ -140,6 +141,6 @@
             .ToListAsync();
     }
 
-    private void GoToVouchers() => Nav.NavigateTo("/vouchers");
+    private void GoToVouchers() => Nav.NavigateTo("/uservoucherpages");
     private void GoToProfile() => Nav.NavigateTo("/profile");
 }

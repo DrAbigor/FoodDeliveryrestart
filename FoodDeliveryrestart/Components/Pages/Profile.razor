@@ -175,21 +175,33 @@
                     name = $"{dbUser.FirstName} {dbUser.LastName}".Trim();
                     if (string.IsNullOrWhiteSpace(name)) name = dbUser.UserName ?? "-";
                     email = dbUser.Email ?? "-";
+
+                    // Get roles directly from the database using UserManager (most reliable)
+                    var userRoles = await UserManager.GetRolesAsync(dbUser);
+                    if (userRoles.Count > 0)
+                    {
+                        role = userRoles[0];
+                    }
+
+                    isAdmin = userRoles.Any(r => string.Equals(r, "Administrator", StringComparison.OrdinalIgnoreCase));
                 }
             }
 
-            // Try to show roles from common claim types (ClaimTypes.Role and "role") and detect admin (case-insensitive)
-            var roles = user.FindAll(ClaimTypes.Role).Select(r => r.Value)
-                        .Concat(user.FindAll("role").Select(r => r.Value))
-                        .Where(v => !string.IsNullOrWhiteSpace(v))
-                        .Select(v => v.Trim())
-                        .ToList();
+            // Fallback: Try to show roles from claims if not loaded from database
+            if (!isAdmin)
+            {
+                var claimRoles = user.FindAll(ClaimTypes.Role).Select(r => r.Value)
+                            .Concat(user.FindAll("role").Select(r => r.Value))
+                            .Where(v => !string.IsNullOrWhiteSpace(v))
+                            .Select(v => v.Trim())
+                            .ToList();
 
-            if (roles.Count > 0)
-                role = roles[0];
+                if (claimRoles.Count > 0 && role == "User")
+                    role = claimRoles[0];
 
-            isAdmin = roles.Any(r => string.Equals(r, "Administrator", StringComparison.OrdinalIgnoreCase))
-                      || user.IsInRole("Administrator");
+                isAdmin = claimRoles.Any(r => string.Equals(r, "Administrator", StringComparison.OrdinalIgnoreCase))
+                          || user.IsInRole("Administrator");
+            }
         }
         catch (Exception ex)
         {
@@ -315,10 +327,10 @@
     }
 
     private void GoRestaurants() => Nav.NavigateTo("/restaurants");
-    private void GoMyVouchers() => Nav.NavigateTo("/myvouchers");
+    private void GoMyVouchers() => Nav.NavigateTo("/uservoucherpages/myvouchers");
     private void GoMyGroupOrders() => Nav.NavigateTo("/grouporders/my");
     private void GoJoinGroup() => Nav.NavigateTo("/grouporders/join");
-    private void GoAdminDashboard() => Nav.NavigateTo("/admin/dashboard");
+    private void GoAdminDashboard() => Nav.NavigateTo("/adminpages");
 
     // Identity default logout endpoint (works if Identity is set up normally)
     private void Logout() => Nav.NavigateTo("/auth/logout", forceLoad: true);

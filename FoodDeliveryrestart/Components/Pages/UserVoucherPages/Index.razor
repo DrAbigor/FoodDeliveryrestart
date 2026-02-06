@@ -1,3 +1,4 @@
+@page "/uservoucherpages"
 @page "/vouchers"
 @rendermode InteractiveServer
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
@@ -11,7 +12,7 @@
 @inject AuthenticationStateProvider Auth
 @inject NavigationManager Nav
 
-<PageTitle>Vouchers</PageTitle>
+<PageTitle>Available Vouchers</PageTitle>
 
 <div class="vouchers-hero">
     <div class="hero-content">
@@ -143,13 +144,11 @@
     {
         await using var db = await DbFactory.CreateDbContextAsync();
 
-        // Get all active vouchers
         availableVouchers = await db.Voucher
             .Where(v => v.IsActive && (v.ExpiryDate == null || v.ExpiryDate > DateTime.UtcNow))
             .OrderBy(v => v.Id)
             .ToListAsync();
 
-        // Get user's claimed voucher IDs (not used yet)
         if (!string.IsNullOrEmpty(userId))
         {
             claimedVoucherIds = (await db.UserVoucher
@@ -171,7 +170,6 @@
         {
             await using var db = await DbFactory.CreateDbContextAsync();
 
-            // Check if already claimed
             var existing = await db.UserVoucher
                 .FirstOrDefaultAsync(uv => uv.UserId == userId && uv.VoucherId == voucherId && !uv.IsUsed);
 
@@ -181,7 +179,6 @@
                 return;
             }
 
-            // Claim the voucher
             var userVoucher = new UserVoucher
             {
                 UserId = userId,
@@ -210,6 +207,6 @@
         }
     }
 
-    private void GoToMyVouchers() => Nav.NavigateTo("/myvouchers");
+    private void GoToMyVouchers() => Nav.NavigateTo("/uservoucherpages/myvouchers");
     private void GoHome() => Nav.NavigateTo("/");
 }

@@ -1,0 +1,112 @@
+@page "/voucherpages/create"
+@rendermode InteractiveServer
+@using Microsoft.EntityFrameworkCore
+@using FoodDeliveryrestart.Domain
+@using Microsoft.AspNetCore.Authorization
+@inject IDbContextFactory<FoodDeliveryrestart.Data.FoodDeliveryrestartContext> DbFactory
+@inject NavigationManager NavigationManager
+
+@attribute [Authorize(Roles = "Administrator")]
+
+<PageTitle>Create Voucher</PageTitle>
+
+<div class="form-page">
+    <div class="form-card">
+        <h1>Create</h1>
+        <h2>Voucher</h2>
+
+        <EditForm Model="Voucher" OnValidSubmit="AddVoucher">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="form-error" />
+
+            <div class="form-section">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="code">Code</label>
+                        <InputText id="code" @bind-Value="Voucher.Code" />
+                        <ValidationMessage For="() => Voucher.Code" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="name">Name</label>
+                        <InputText id="name" @bind-Value="Voucher.Name" />
+                        <ValidationMessage For="() => Voucher.Name" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <InputTextArea id="description" @bind-Value="Voucher.Description" />
+                    <ValidationMessage For="() => Voucher.Description" />
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="discounttype">Discount Type</label>
+                        <InputSelect id="discounttype" @bind-Value="Voucher.DiscountType">
+                            <option value="">-- Select Type --</option>
+                            <option value="Percentage">Percentage</option>
+                            <option value="FixedAmount">Fixed Amount</option>
+                            <option value="FreeDelivery">Free Delivery</option>
+                        </InputSelect>
+                        <ValidationMessage For="() => Voucher.DiscountType" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="discountvalue">Discount Value</label>
+                        <InputNumber id="discountvalue" @bind-Value="Voucher.DiscountValue" />
+                        <ValidationMessage For="() => Voucher.DiscountValue" />
+                        <p class="form-hint">Enter percentage (e.g., 20) or fixed amount (e.g., 5.00)</p>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="minimumorder">Minimum Order ($)</label>
+                        <InputNumber id="minimumorder" @bind-Value="Voucher.MinimumOrder" />
+                        <ValidationMessage For="() => Voucher.MinimumOrder" />
+                        <p class="form-hint">Leave empty for no minimum</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="expirydate">Expiry Date</label>
+                        <InputDate id="expirydate" @bind-Value="Voucher.ExpiryDate" />
+                        <ValidationMessage For="() => Voucher.ExpiryDate" />
+                        <p class="form-hint">Leave empty for no expiry</p>
+                    </div>
+                </div>
+
+                <div class="form-group checkbox-group">
+                    <label class="checkbox-label">
+                        <InputCheckbox id="isactive" @bind-Value="Voucher.IsActive" />
+                        <span>Is Active</span>
+                    </label>
+                    <ValidationMessage For="() => Voucher.IsActive" />
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">Create</button>
+                <button type="button" class="btn-secondary" @onclick='() => NavigationManager.NavigateTo("/adminpages")'>Cancel</button>
+            </div>
+        </EditForm>
+
+        <a class="back-link" href="/adminpages">Back to Dashboard</a>
+    </div>
+</div>
+
+@code {
+    private Voucher Voucher { get; set; } = new() { IsActive = true };
+
+    private async Task AddVoucher()
+    {
+        using var context = DbFactory.CreateDbContext();
+        Voucher.DateCreated = DateTime.UtcNow;
+        Voucher.DateUpdated = DateTime.UtcNow;
+        Voucher.CreatedBy = "Admin";
+        Voucher.UpdatedBy = "Admin";
+        context.Voucher.Add(Voucher);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/voucherpages");
+    }
+}

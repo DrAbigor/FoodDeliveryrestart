@@ -1,0 +1,81 @@
+@page "/voucherpages/details"
+@using Microsoft.EntityFrameworkCore
+@using FoodDeliveryrestart.Domain
+@using Microsoft.AspNetCore.Authorization
+@inject IDbContextFactory<FoodDeliveryrestart.Data.FoodDeliveryrestartContext> DbFactory
+@inject NavigationManager NavigationManager
+
+@attribute [Authorize(Roles = "Administrator")]
+
+<PageTitle>Voucher Details</PageTitle>
+
+<h1>Details</h1>
+
+<h2>Voucher</h2>
+<hr />
+@if (voucher is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <dl class="row">
+        <dt class="col-sm-2">Code</dt>
+        <dd class="col-sm-10">@voucher.Code</dd>
+
+        <dt class="col-sm-2">Name</dt>
+        <dd class="col-sm-10">@voucher.Name</dd>
+
+        <dt class="col-sm-2">Description</dt>
+        <dd class="col-sm-10">@voucher.Description</dd>
+
+        <dt class="col-sm-2">Discount Type</dt>
+        <dd class="col-sm-10">@voucher.DiscountType</dd>
+
+        <dt class="col-sm-2">Discount Value</dt>
+        <dd class="col-sm-10">@voucher.DiscountValue</dd>
+
+        <dt class="col-sm-2">Minimum Order</dt>
+        <dd class="col-sm-10">@voucher.MinimumOrder</dd>
+
+        <dt class="col-sm-2">Is Active</dt>
+        <dd class="col-sm-10">@voucher.IsActive</dd>
+
+        <dt class="col-sm-2">Expiry Date</dt>
+        <dd class="col-sm-10">@voucher.ExpiryDate</dd>
+
+        <dt class="col-sm-2">Date Created</dt>
+        <dd class="col-sm-10">@voucher.DateCreated</dd>
+
+        <dt class="col-sm-2">Date Updated</dt>
+        <dd class="col-sm-10">@voucher.DateUpdated</dd>
+
+        <dt class="col-sm-2">Created By</dt>
+        <dd class="col-sm-10">@voucher.CreatedBy</dd>
+
+        <dt class="col-sm-2">Updated By</dt>
+        <dd class="col-sm-10">@voucher.UpdatedBy</dd>
+    </dl>
+    <div>
+        <a href="@($"/voucherpages/edit?id={voucher.Id}")">Edit</a> |
+        <a href="/voucherpages">Back to List</a>
+    </div>
+}
+
+@code {
+    private Voucher? voucher;
+
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        voucher = await context.Voucher.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (voucher is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+}

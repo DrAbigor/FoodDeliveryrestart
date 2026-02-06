@@ -1,3 +1,4 @@
+@page "/adminpages"
 @page "/admin/dashboard"
 @rendermode InteractiveServer
 
@@ -21,6 +22,7 @@
         <div class="admin-action-buttons">
             <button class="admin-create-btn" @onclick='() => Nav.NavigateTo("/restaurants/create")'>Create Restaurant</button>
             <button class="admin-create-btn" @onclick='() => Nav.NavigateTo("/menuitems/create")'>Create Menu Item</button>
+            <button class="admin-create-btn" @onclick='() => Nav.NavigateTo("/voucherpages/create")'>Create Voucher</button>
         </div>
 
         <div class="admin-manage-grid">
@@ -65,7 +67,7 @@
                 else
                 {
                     <div class="admin-empty-state">
-                    <div class="admin-empty-icon"><i class="bi bi-building"></i></div>
+                        <div class="admin-empty-icon"><i class="bi bi-building"></i></div>
                         <div class="admin-empty-title">No restaurant selected</div>
                         <div class="admin-empty-description">Choose a restaurant from the selector or create a new one.</div>
                         <button class="admin-empty-action" @onclick='() => Nav.NavigateTo("/restaurants/create")'>Create Restaurant</button>
@@ -125,7 +127,7 @@
                 else
                 {
                     <div class="admin-empty-state">
-                    <div class="admin-empty-icon"><i class="bi bi-inbox"></i></div>
+                        <div class="admin-empty-icon"><i class="bi bi-inbox"></i></div>
                         <div class="admin-empty-title">No menu item selected</div>
                         <div class="admin-empty-description">Filter menu items by restaurant or create a new one.</div>
                         <button class="admin-empty-action" @onclick='() => Nav.NavigateTo("/menuitems/create")'>Create Menu Item</button>
@@ -133,30 +135,56 @@
                 }
             </section>
         </div>
+
+        <div class="admin-links-section">
+            <h3>Quick Links</h3>
+            <div class="admin-quick-links">
+                <a href="/voucherpages" class="admin-link-card">
+                    <i class="bi bi-ticket-perforated"></i>
+                    <span>Manage Vouchers</span>
+                </a>
+                <a href="/restaurants" class="admin-link-card">
+                    <i class="bi bi-shop"></i>
+                    <span>View Restaurants</span>
+                </a>
+                <a href="/menuitems" class="admin-link-card">
+                    <i class="bi bi-list-ul"></i>
+                    <span>View Menu Items</span>
+                </a>
+            </div>
+        </div>
     </div>
 </div>
 
 @code {
-    private List<Restaurant> restaurants = new();
-    private Restaurant? selectedRestaurant;
+private List<Restaurant> restaurants = new();
+private Restaurant? selectedRestaurant;
 
-    private List<MenuItem> menuItems = new();
-    private MenuItem? selectedMenuItem;
+private List<MenuItem> menuItems = new();
+private MenuItem? selectedMenuItem;
+private bool firstRender = true;
 
-    protected override async Task OnInitializedAsync()
+protected override async Task OnInitializedAsync()
+{
+    Nav.LocationChanged += OnLocationChanged;
+    await LoadDataAsync();
+}
+
+protected override async Task OnAfterRenderAsync(bool firstRender)
+{
+    if (firstRender || this.firstRender)
     {
-        // subscribe to location changes so when user navigates away and back we refresh data
-        Nav.LocationChanged += OnLocationChanged;
-        await LoadDataAsync();
+        this.firstRender = false;
+        await JS.InvokeVoidAsync("window.scrollTo", 0, 0);
     }
+}
 
-    private async Task LoadDataAsync()
+private async Task LoadDataAsync()
     {
         try
         {
             await using var ctx = await DbFactory.CreateDbContextAsync();
             restaurants = await ctx.Restaurant.OrderBy(r => r.Name).ToListAsync();
-            // don't load all menu items on init (can be large) - load on demand via filter
             menuItems = new List<MenuItem>();
             selectedRestaurant = null;
             selectedMenuItem = null;
@@ -170,11 +198,12 @@
 
     private async void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
     {
-        // if we're back on the admin dashboard, refresh data
         try
         {
             var uri = new Uri(e.Location);
-            if (uri.AbsolutePath.TrimEnd('/').Equals("/admin/dashboard", StringComparison.OrdinalIgnoreCase))
+            var path = uri.AbsolutePath.TrimEnd('/').ToLowerInvariant();
+            if (path.Equals("/adminpages", StringComparison.OrdinalIgnoreCase) || 
+                path.Equals("/admin/dashboard", StringComparison.OrdinalIgnoreCase))
             {
                 await LoadDataAsync();
             }
@@ -244,16 +273,6 @@
         restaurants = await ctx.Restaurant.OrderBy(r => r.Name).ToListAsync();
     }
 
-    private async Task CreateRestaurant()
-    {
-        var r = new Restaurant { Name = "New Restaurant", CuisineType = "", DateCreated = DateTime.UtcNow, DateUpdated = DateTime.UtcNow };
-        await using var ctx = await DbFactory.CreateDbContextAsync();
-        ctx.Restaurant.Add(r);
-        await ctx.SaveChangesAsync();
-        restaurants = await ctx.Restaurant.OrderBy(r => r.Name).ToListAsync();
-        selectedRestaurant = restaurants.FirstOrDefault(x => x.Id == r.Id);
-    }
-
     private async Task DeleteRestaurant()
     {
         if (selectedRestaurant is null) return;
@@ -284,18 +303,6 @@
         }
         await ctx.SaveChangesAsync();
         menuItems = await ctx.MenuItem.OrderBy(m => m.ItemName).ToListAsync();
-    }
-
-    private async Task CreateMenuItem()
-    {
-        if (!restaurants.Any()) return;
-        var restId = restaurants.First().Id;
-        var m = new MenuItem { RestaurantId = restId, ItemName = "New Item", Price = 0m, DateCreated = DateTime.UtcNow, DateUpdated = DateTime.UtcNow };
-        await using var ctx = await DbFactory.CreateDbContextAsync();
-        ctx.MenuItem.Add(m);
-        await ctx.SaveChangesAsync();
-        menuItems = await ctx.MenuItem.OrderBy(x => x.ItemName).ToListAsync();
-        selectedMenuItem = menuItems.FirstOrDefault(x => x.Id == m.Id);
     }
 
     private async Task DeleteMenuItem()

@@ -1,0 +1,132 @@
+@page "/voucherpages/edit"
+@rendermode InteractiveServer
+@using Microsoft.EntityFrameworkCore
+@using FoodDeliveryrestart.Domain
+@using Microsoft.AspNetCore.Authorization
+@inject IDbContextFactory<FoodDeliveryrestart.Data.FoodDeliveryrestartContext> DbFactory
+@inject NavigationManager NavigationManager
+
+@attribute [Authorize(Roles = "Administrator")]
+
+<PageTitle>Edit Voucher</PageTitle>
+
+<h1>Edit</h1>
+
+<h2>Voucher</h2>
+<hr />
+@if (Voucher is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm Model="Voucher" OnValidSubmit="UpdateVoucher">
+                <DataAnnotationsValidator />
+                <ValidationSummary class="text-danger" role="alert" />
+                <input type="hidden" name="Voucher.Id" value="@Voucher.Id" />
+                <div class="mb-3">
+                    <label for="code" class="form-label">Code:</label>
+                    <InputText id="code" @bind-Value="Voucher.Code" class="form-control" />
+                    <ValidationMessage For="() => Voucher.Code" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="name" class="form-label">Name:</label>
+                    <InputText id="name" @bind-Value="Voucher.Name" class="form-control" />
+                    <ValidationMessage For="() => Voucher.Name" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="description" class="form-label">Description:</label>
+                    <InputTextArea id="description" @bind-Value="Voucher.Description" class="form-control" />
+                    <ValidationMessage For="() => Voucher.Description" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="discounttype" class="form-label">Discount Type:</label>
+                    <InputSelect id="discounttype" @bind-Value="Voucher.DiscountType" class="form-control">
+                        <option value="Percentage">Percentage</option>
+                        <option value="FixedAmount">Fixed Amount</option>
+                        <option value="FreeDelivery">Free Delivery</option>
+                    </InputSelect>
+                    <ValidationMessage For="() => Voucher.DiscountType" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="discountvalue" class="form-label">Discount Value:</label>
+                    <InputNumber id="discountvalue" @bind-Value="Voucher.DiscountValue" class="form-control" />
+                    <ValidationMessage For="() => Voucher.DiscountValue" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="minimumorder" class="form-label">Minimum Order:</label>
+                    <InputNumber id="minimumorder" @bind-Value="Voucher.MinimumOrder" class="form-control" />
+                    <ValidationMessage For="() => Voucher.MinimumOrder" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="isactive" class="form-label">Is Active:</label>
+                    <InputCheckbox id="isactive" @bind-Value="Voucher.IsActive" class="form-check-input" />
+                    <ValidationMessage For="() => Voucher.IsActive" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="expirydate" class="form-label">Expiry Date:</label>
+                    <InputDate id="expirydate" @bind-Value="Voucher.ExpiryDate" class="form-control" />
+                    <ValidationMessage For="() => Voucher.ExpiryDate" class="text-danger" />
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/voucherpages">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+
+    [SupplyParameterFromForm]
+    private Voucher? Voucher { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        Voucher ??= await context.Voucher.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (Voucher is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    private async Task UpdateVoucher()
+    {
+        using var context = DbFactory.CreateDbContext();
+        Voucher!.DateUpdated = DateTime.UtcNow;
+        Voucher.UpdatedBy = "Admin";
+        context.Attach(Voucher!).State = EntityState.Modified;
+
+        try
+        {
+            await context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!VoucherExists(Voucher!.Id))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        NavigationManager.NavigateTo("/voucherpages");
+    }
+
+    private bool VoucherExists(int id)
+    {
+        using var context = DbFactory.CreateDbContext();
+        return context.Voucher.Any(e => e.Id == id);
+    }
+}

@@ -1,0 +1,46 @@
+@page "/voucherpages"
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using FoodDeliveryrestart.Domain
+@using FoodDeliveryrestart.Data
+@using Microsoft.AspNetCore.Authorization
+@implements IAsyncDisposable
+@inject IDbContextFactory<FoodDeliveryrestart.Data.FoodDeliveryrestartContext> DbFactory
+
+@attribute [Authorize(Roles = "Administrator")]
+
+<PageTitle>Vouchers</PageTitle>
+
+<h1>Vouchers</h1>
+
+<p>
+    <a href="voucherpages/create">Create New</a>
+</p>
+
+<QuickGrid Class="table" Items="context.Voucher">
+    <PropertyColumn Property="voucher => voucher.Code" />
+    <PropertyColumn Property="voucher => voucher.Name" />
+    <PropertyColumn Property="voucher => voucher.DiscountType" />
+    <PropertyColumn Property="voucher => voucher.DiscountValue" />
+    <PropertyColumn Property="voucher => voucher.MinimumOrder" />
+    <PropertyColumn Property="voucher => voucher.IsActive" />
+    <PropertyColumn Property="voucher => voucher.ExpiryDate" />
+    <PropertyColumn Property="voucher => voucher.DateCreated" />
+
+    <TemplateColumn Context="voucher">
+        <a href="@($"voucherpages/edit?id={voucher.Id}")">Edit</a> |
+        <a href="@($"voucherpages/details?id={voucher.Id}")">Details</a> |
+        <a href="@($"voucherpages/delete?id={voucher.Id}")">Delete</a>
+    </TemplateColumn>
+</QuickGrid>
+
+@code {
+    private FoodDeliveryrestartContext context = default!;
+
+    protected override void OnInitialized()
+    {
+        context = DbFactory.CreateDbContext();
+    }
+
+    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+}

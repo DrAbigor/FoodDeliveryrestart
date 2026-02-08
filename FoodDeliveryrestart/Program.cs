@@ -73,8 +73,10 @@ builder.Services.ConfigureApplicationCookie(options =>
 // Email sender
 builder.Services.AddTransient<IEmailSender<FoodDeliveryrestartUser>, NoOpEmailSender>();
 
+// =======================
 // App services
-builder.Services.AddScoped<CartService>();
+// =======================
+builder.Services.AddScoped<CartService>();          // ✅ only once
 builder.Services.AddScoped<GroupOrderState>();
 builder.Services.AddScoped<VoucherService>();
 

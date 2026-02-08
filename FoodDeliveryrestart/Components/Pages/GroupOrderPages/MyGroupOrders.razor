@@ -11,17 +11,18 @@
 @inject AuthenticationStateProvider Auth
 @inject NavigationManager Nav
 
-<PageTitle>My Group Orders</PageTitle>
+<PageTitle>History</PageTitle>
 
 <div class="mygo-wrap">
     <div class="mygo-hero">
         <div class="hero-content">
-            <h1>My Group Orders</h1>
-            <p class="muted">Your active and past group orders.</p>
+            <h1>History</h1>
+            <p class="muted">Active first, then History.</p>
         </div>
     </div>
 
     <div class="mygo-container">
+
         @if (loading)
         {
             <div class="cardish">Loading…</div>
@@ -30,56 +31,244 @@
         {
             <div class="error">@error</div>
         }
-        else if (orders.Count == 0)
-        {
-            <div class="cardish">
-                <h3>No group orders yet</h3>
-                <p class="muted">Start one, or join a friend’s group code.</p>
-
-                <div class="actions">
-                    <a class="btn-primary" href="/grouporders/selectmall">Start group order</a>
-                    <a class="btn-ghost" href="/grouporders/join">Join with code</a>
-                </div>
-            </div>
-        }
         else
         {
-            <div class="list">
-                @foreach (var go in orders)
-                {
-                    var code = (go.GroupCode ?? "").Trim();
-
-                    <div class="go-card @(string.IsNullOrWhiteSpace(code) ? "disabled" : "")"
-                         @onclick="() => GoLobby(code)">
-                        <div class="top">
-                            <div class="code">@(!string.IsNullOrWhiteSpace(code) ? code : "(No Code)")</div>
-                            <span class="badge">@go.Status</span>
-                        </div>
-                        <div class="meta">
-                            <span>MallId: @go.MallId</span>
-                            <span>Created: @go.CreatedTime.ToLocalTime()</span>
-                        </div>
-
-                        @if (string.IsNullOrWhiteSpace(code))
-                        {
-                            <div class="text-danger small mt-2">
-                                This group order has no code saved. Please re-create it.
-                            </div>
-                        }
-                    </div>
-                }
+            <!-- ACTIVE -->
+            <div class="section-head">
+                <h3>Active</h3>
+                <span class="count-pill">@active.Count</span>
             </div>
+
+            @if (active.Count == 0)
+            {
+                <div class="cardish">
+                    <h3>No active group orders</h3>
+                    <p class="muted">Start one, or join a friend’s group code.</p>
+
+                    <div class="actions">
+                        <a class="btn-primary" href="/grouporders/selectmall">Start group order</a>
+                        <a class="btn-ghost" href="/grouporders/join">Join with code</a>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="grid">
+                    @foreach (var go in active)
+                    {
+                        var code = (go.GroupCode ?? "").Trim();
+
+                        <div class="go-card"
+                             role="button"
+                             tabindex="0"
+                             @onclick="() => GoLobby(code)">
+                            <div class="top">
+                                <div class="code">@(!string.IsNullOrWhiteSpace(code) ? code : "(No Code)")</div>
+                                <span class="badge active">Active</span>
+                            </div>
+
+                            <div class="meta">
+                                <span><i class="bi bi-shop"></i> MallId: @go.MallId</span>
+                                <span><i class="bi bi-clock"></i> Created: @go.CreatedTime.ToLocalTime():dd MMM yyyy, HH:mm</span>
+                            </div>
+
+                            @if (string.IsNullOrWhiteSpace(code))
+                            {
+                                <div class="warn">
+                                    This group order has no code saved. Please re-create it.
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+
+            <!-- HISTORY -->
+            <div class="section-head" style="margin-top:22px;">
+                <h3>History</h3>
+                <span class="count-pill">@history.Count</span>
+            </div>
+
+            @if (history.Count == 0)
+            {
+                <div class="cardish muted">No history yet.</div>
+            }
+            else
+            {
+                <div class="grid">
+                    @foreach (var item in history)
+                    {
+                        <div class="go-card">
+                            <div class="top">
+                                <div class="code">@item.Code</div>
+                                <span class="badge">@item.Status</span>
+                            </div>
+
+                            <div class="meta">
+                                <span><i class="bi bi-shop"></i> MallId: @item.MallId</span>
+                                <span><i class="bi bi-clock"></i> Created: @item.CreatedLocal</span>
+                            </div>
+
+                            @if (item.LatestOrderId > 0)
+                            {
+                                <div class="receipt-line">
+                                    <i class="bi bi-receipt"></i>
+                                    <span>Latest receipt: <strong>#@item.LatestOrderId</strong> · <strong>$@item.LatestOrderTotal</strong> · @item.LatestOrderLocal</span>
+                                </div>
+                            }
+
+                            <div class="actions">
+                                <button type="button" class="btn-ghost" @onclick="() => ViewReceipt(item.LatestOrderId)" disabled="@(item.LatestOrderId <= 0)">
+                                    <i class="bi bi-file-earmark-text"></i>
+                                    View receipt
+                                </button>
+
+                                <button type="button" class="btn-danger" @onclick="() => Archive(item.GroupOrderId)">
+                                    <i class="bi bi-trash"></i>
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
         }
+
     </div>
 </div>
+
+<style>
+    .mygo-wrap { padding: 18px; }
+    .mygo-hero { text-align: center; padding: 18px 0 6px; }
+    .hero-content h1 { font-size: 3rem; font-weight: 900; margin: 0; }
+    .muted { opacity: .7; }
+
+    .mygo-container { max-width: 1100px; margin: 0 auto; }
+
+    .section-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 18px 0 10px;
+    }
+    .section-head h3 { margin: 0; font-weight: 900; }
+
+    .count-pill {
+        width: 34px; height: 34px;
+        border-radius: 999px;
+        background: #fff;
+        border: 1px solid #eee;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 900;
+        color: #111;
+    }
+
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+    .go-card {
+        background: #fff;
+        border: 1px solid #eee;
+        border-radius: 18px;
+        padding: 14px;
+        box-shadow: 0 10px 22px rgba(0,0,0,.06);
+        transition: transform .15s ease, border-color .15s ease;
+        cursor: pointer;
+    }
+    .go-card:hover { transform: translateY(-1px); border-color: #ddd; }
+    .go-card:has(.actions) { cursor: default; }
+    .go-card:has(.actions):hover { transform: none; }
+
+    .top { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom: 10px; }
+    .code { font-weight: 900; font-size: 1.05rem; }
+
+    .badge {
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid #eee;
+        background: #fafafa;
+        font-weight: 800;
+        font-size: .82rem;
+    }
+    .badge.active { background: #f0f6ff; border-color: #cfe0ff; }
+
+    .meta { display:flex; gap: 14px; flex-wrap: wrap; font-size: .95rem; opacity: .75; }
+    .meta span { display:flex; align-items:center; gap:8px; }
+
+    .warn {
+        margin-top: 10px;
+        background: #fff4f4;
+        border: 1px solid #ffd6d6;
+        color: #8b0000;
+        border-radius: 12px;
+        padding: 10px;
+        font-size: .92rem;
+        font-weight: 700;
+    }
+
+    .receipt-line {
+        margin-top: 10px;
+        padding: 10px 12px;
+        border: 1px solid #eee;
+        background: #fafafa;
+        border-radius: 12px;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        font-size: .95rem;
+    }
+
+    .actions { display:flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+
+    .btn-primary, .btn-ghost, .btn-danger {
+        border-radius: 12px;
+        padding: 10px 14px;
+        font-weight: 800;
+        border: 1px solid transparent;
+        cursor: pointer;
+        display: inline-flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .btn-primary { background:#e2712c; color:#fff; border-color:#e2712c; text-decoration:none; }
+    .btn-primary:hover { opacity:.92; }
+
+    .btn-ghost { background:#fff; border-color:#e6e6e6; }
+    .btn-ghost:hover { background:#fafafa; }
+
+    .btn-danger { background:#b3261e; color:#fff; border-color:#b3261e; }
+    .btn-danger:hover { opacity:.92; }
+
+    .cardish {
+        background:#fff;
+        border:1px solid #eee;
+        border-radius:18px;
+        padding:16px;
+        box-shadow:0 10px 22px rgba(0,0,0,.06);
+    }
+
+    .error { color: #b00020; font-weight: 900; padding: 10px 0; }
+
+    @@media (max-width: 900px) {
+        .grid { grid-template-columns: 1fr; }
+        .hero-content h1 { font-size: 2.2rem; }
+    }
+</style>
 
 @code {
     private bool loading = true;
     private string? error;
-    private List<GroupOrder> orders = new();
+
+    private List<GroupOrder> active = new();
+    private List<HistoryVm> history = new();
 
     protected override async Task OnInitializedAsync()
     {
+        loading = true;
+        error = null;
+
         try
         {
             var authState = await Auth.GetAuthenticationStateAsync();
@@ -95,12 +284,11 @@
 
             await using var ctx = await DbFactory.CreateDbContextAsync();
 
-            // Identity email -> Domain.User
             var domainUser = await ctx.User.FirstOrDefaultAsync(u => u.Email == email);
-
             if (domainUser == null)
             {
-                orders = new();
+                active = new();
+                history = new();
                 return;
             }
 
@@ -117,16 +305,51 @@
                 .ToListAsync();
 
             // Merge
-            orders = joined;
+            var all = joined;
             foreach (var h in hosted)
             {
-                if (!orders.Any(x => x.Id == h.Id))
-                    orders.Add(h);
+                if (!all.Any(x => x.Id == h.Id))
+                    all.Add(h);
             }
 
-            orders = orders
+            // Remove archived (our "delete")
+            all = all.Where(g => !string.Equals((g.Status ?? "").Trim(), "Archived", StringComparison.OrdinalIgnoreCase)).ToList();
+
+            // Active list
+            active = all
+                .Where(g => string.Equals((g.Status ?? "").Trim(), "Active", StringComparison.OrdinalIgnoreCase))
                 .OrderByDescending(g => g.CreatedTime)
                 .ToList();
+
+            // History list (everything not Active)
+            var historyGroups = all
+                .Where(g => !string.Equals((g.Status ?? "").Trim(), "Active", StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(g => g.CreatedTime)
+                .ToList();
+
+            // Build receipt info for History
+            history = new List<HistoryVm>();
+
+            foreach (var g in historyGroups)
+            {
+                var latest = await ctx.Order
+                    .Where(o => o.GroupOrderId == g.Id)
+                    .OrderByDescending(o => o.Id)
+                    .Select(o => new { o.Id, o.TotalAmount, o.DateTime })
+                    .FirstOrDefaultAsync();
+
+                history.Add(new HistoryVm
+                {
+                    GroupOrderId = g.Id,
+                    Code = (g.GroupCode ?? $"GO-{g.Id}").Trim(),
+                    Status = (g.Status ?? "Solo").Trim(),
+                    MallId = g.MallId,
+                    CreatedLocal = g.CreatedTime.ToLocalTime().ToString("dd MMM yyyy, HH:mm"),
+                    LatestOrderId = latest?.Id ?? 0,
+                    LatestOrderTotal = (latest?.TotalAmount ?? 0m).ToString("0.00"),
+                    LatestOrderLocal = latest == null ? "-" : latest.DateTime.ToLocalTime().ToString("dd MMM yyyy, HH:mm")
+                });
+            }
         }
         catch (Exception ex)
         {
@@ -144,5 +367,45 @@
             return;
 
         Nav.NavigateTo($"/grouporders/lobby/{code}");
+    }
+
+    private void ViewReceipt(int orderId)
+    {
+        if (orderId <= 0) return;
+        Nav.NavigateTo($"/orders/{orderId}");
+    }
+
+    // "Delete" = archive so you don't break FK with orders
+    private async Task Archive(int groupOrderId)
+    {
+        try
+        {
+            await using var ctx = await DbFactory.CreateDbContextAsync();
+            var g = await ctx.GroupOrder.FirstOrDefaultAsync(x => x.Id == groupOrderId);
+            if (g == null) return;
+
+            g.Status = "Archived";
+            await ctx.SaveChangesAsync();
+
+            // refresh
+            await OnInitializedAsync();
+        }
+        catch (Exception ex)
+        {
+            error = ex.InnerException?.Message ?? ex.Message;
+        }
+    }
+
+    private class HistoryVm
+    {
+        public int GroupOrderId { get; set; }
+        public string Code { get; set; } = "";
+        public string Status { get; set; } = "";
+        public int MallId { get; set; }
+        public string CreatedLocal { get; set; } = "";
+
+        public int LatestOrderId { get; set; }
+        public string LatestOrderTotal { get; set; } = "0.00";
+        public string LatestOrderLocal { get; set; } = "-";
     }
 }

@@ -421,7 +421,6 @@
                 }
 
                 var status = (g.Status ?? "Active").Trim();
-
                 var expired = g.ClosedTime.HasValue && DateTime.UtcNow > ToUtcSafe(g.ClosedTime.Value);
 
                 if (expired || !status.Equals("Active", StringComparison.OrdinalIgnoreCase))
@@ -434,7 +433,7 @@
             }
             else
             {
-                // Solo checkout fallback (still works for normal ordering)
+                // Solo checkout fallback
                 var firstRestaurantId = CartSvc.Items.First().RestaurantId;
                 var mallId = await db.Restaurant
                     .Where(r => r.Id == firstRestaurantId)
@@ -462,14 +461,22 @@
                 groupOrderId = solo.Id;
             }
 
-            // Create Order (per account)
+            // ✅ Start tracking fields NOW so DB won't insert NULL
+            var trackingNow = DateTime.UtcNow;
+
+            // Create Order
             var order = new Order
             {
-                DateTime = DateTime.UtcNow,
+                DateTime = trackingNow,
                 Status = "Paid",
                 TotalAmount = CalculateTotal(),
                 UserId = domainUser.Id,
-                GroupOrderId = groupOrderId
+                GroupOrderId = groupOrderId,
+
+                // ✅ FIX: non-null DeliveryStage + avoid int->byte cast issues
+                DeliveryStage = (byte)0,
+                DeliveryStartedUtc = trackingNow,
+                DeliveryStageUpdatedUtc = trackingNow
             };
 
             db.Order.Add(order);
@@ -488,12 +495,11 @@
                 });
             }
 
-            // Mark voucher as used only if it is applicable
+            // Mark voucher as used only if applicable
             if (selectedVoucher?.Voucher != null && !string.IsNullOrWhiteSpace(userId))
             {
                 var subtotal = CartSvc.Subtotal();
                 var min = selectedVoucher.Voucher.MinimumOrder ?? 0;
-
                 var applicable = subtotal >= min;
 
                 if (applicable)
@@ -577,8 +583,10 @@
 
             await db.SaveChangesAsync();
 
+            // ✅ Clear cart (badge should update now because DI is fixed)
             CartSvc.Clear();
 
+            // ✅ IMPORTANT: go receipt first
             Nav.NavigateTo($"/orders/{order.Id}");
         }
         catch (Exception ex)

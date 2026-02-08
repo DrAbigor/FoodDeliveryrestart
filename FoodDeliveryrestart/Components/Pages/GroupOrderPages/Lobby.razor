@@ -64,7 +64,7 @@
                         <div class="timer-text">@TimeLeftText</div>
 
                         <div class="muted small">
-                            Default is 15 minutes. If expired, host can re-open for 5 minutes.
+                            Default is 10 minutes. If expired, host can re-open for 5 minutes.
                         </div>
                     </div>
                 </div>
@@ -292,6 +292,30 @@
         }
     }
 
+    private static DateTime ToUtcAssumeUtc(DateTime dt)
+        => DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+
+    private static DateTime ResolveClosedUtc(DateTime dt)
+    {
+        // Try two interpretations: treat as UTC, or treat as Local and convert to UTC.
+        var asUtc = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+        var asLocalUtc = DateTime.SpecifyKind(dt, DateTimeKind.Local).ToUniversalTime();
+
+        // Prefer the interpretation that yields a time in the future (relative to now).
+        var now = DateTime.UtcNow;
+        if (asUtc > now && asLocalUtc <= now)
+            return asUtc;
+        if (asLocalUtc > now && asUtc <= now)
+            return asLocalUtc;
+
+        // If both are future, choose the one further in future (safer).
+        if (asUtc > now && asLocalUtc > now)
+            return asUtc > asLocalUtc ? asUtc : asLocalUtc;
+
+        // Otherwise return asUtc (fallback).
+        return asUtc;
+    }
+
     private void UpdateTimeLeftText()
     {
         if (groupOrder?.ClosedTime is null)
@@ -300,7 +324,8 @@
             return;
         }
 
-        var remaining = groupOrder.ClosedTime.Value.ToUniversalTime() - DateTime.UtcNow;
+        var closedUtc = ResolveClosedUtc(groupOrder.ClosedTime.Value);
+        var remaining = closedUtc - DateTime.UtcNow;
 
         if (remaining <= TimeSpan.Zero)
         {
@@ -308,13 +333,13 @@
             return;
         }
 
-        // mm:ss display (15:00 etc)
+        // mm:ss display (10:00 etc)
         var totalMinutes = (int)Math.Floor(remaining.TotalMinutes);
         TimeLeftText = $"{totalMinutes:00}:{remaining.Seconds:00} left";
     }
 
     private bool IsExpired(GroupOrder g)
-        => g.ClosedTime.HasValue && DateTime.UtcNow > g.ClosedTime.Value.ToUniversalTime();
+        => g.ClosedTime.HasValue && DateTime.UtcNow > ResolveClosedUtc(g.ClosedTime.Value);
 
     private bool IsOrderOpen(GroupOrder g)
         => !IsExpired(g) && (g.Status ?? "").Trim().Equals("Active", StringComparison.OrdinalIgnoreCase);
@@ -355,7 +380,7 @@
             // - If not expired (just locked), keep existing ClosedTime (don’t reset timer).
             if (newStatus.Equals("Active", StringComparison.OrdinalIgnoreCase))
             {
-                var expired = g.ClosedTime.HasValue && now > g.ClosedTime.Value.ToUniversalTime();
+                var expired = g.ClosedTime.HasValue && now > ToUtcAssumeUtc(g.ClosedTime.Value);
                 if (expired)
                 {
                     g.ClosedTime = now.AddMinutes(5);
